@@ -3,7 +3,6 @@ define('DB_HOST', 'localhost');
 define('DB_NAME', 'cat_tennis');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-
 try {
     $pdo = new PDO(
         'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8',
@@ -17,4 +16,4 @@ try {
     );
 } catch (PDOException $e) {
     die('Erreur de connexion : ' . $e->getMessage());
-}
+}   

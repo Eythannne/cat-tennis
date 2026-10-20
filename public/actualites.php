@@ -1,6 +1,7 @@
 <?php
 require_once '../src/config/database.php';
 $articles = $pdo->query("SELECT * FROM articles WHERE publie=1 ORDER BY created_at DESC")->fetchAll();
+$photos = $pdo->query("SELECT * FROM galerie ORDER BY ordre ASC, created_at DESC")->fetchAll();
 
 $pageTitle = "Actualités — CAT";
 $pageDesc = "Toutes les actualités et la galerie photos du Club Aulnaysien de Tennis.";
@@ -29,7 +30,6 @@ include '../templates/navbar.php';
     </div>
 </section>
 
-<!-- Onglets -->
 <section class="section-actu">
     <div class="container">
         <div class="tabs">
@@ -61,38 +61,18 @@ include '../templates/navbar.php';
         <!-- Onglet Galerie -->
         <div class="tab-content" id="tab-galerie">
             <div class="galerie-grid">
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#D6EAF8"><span>📸</span></div>
-                    <p>Tournoi interne 2026</p>
-                </div>
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#D5F5E3"><span>📸</span></div>
-                    <p>Cours enfants</p>
-                </div>
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#FDEBD0"><span>📸</span></div>
-                    <p>Portes ouvertes</p>
-                </div>
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#E8DAEF"><span>📸</span></div>
-                    <p>Championnat par équipes</p>
-                </div>
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#FADBD8"><span>📸</span></div>
-                    <p>Stage vacances</p>
-                </div>
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#D6EAF8"><span>📸</span></div>
-                    <p>Animations jeunes</p>
-                </div>
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#D5F5E3"><span>📸</span></div>
-                    <p>Soirée club</p>
-                </div>
-                <div class="galerie-item">
-                    <div class="galerie-img" style="background:#FDEBD0"><span>📸</span></div>
-                    <p>Terrains couverts</p>
-                </div>
+                <?php if (empty($photos)): ?>
+                    <p style="color:#999;grid-column:1/-1">Aucune photo pour l'instant.</p>
+                <?php else: ?>
+                    <?php foreach ($photos as $p): ?>
+                    <div class="galerie-item">
+                        <div class="galerie-img">
+                            <img src="assets/uploads/galerie/<?= htmlspecialchars($p['fichier']) ?>" alt="<?= htmlspecialchars($p['titre']) ?>">
+                        </div>
+                        <p><?= htmlspecialchars($p['titre']) ?></p>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>

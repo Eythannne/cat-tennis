@@ -1,4 +1,6 @@
 <?php
+require_once '../src/config/database.php';
+
 $pageTitle = "Contact — CAT";
 $pageDesc = "Contactez le Club Aulnaysien de Tennis à Aulnay-sous-Bois.";
 
@@ -16,7 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Adresse email invalide.';
     } else {
-        // Pour l'instant on simule l'envoi — on branchera mail() plus tard
+        $stmt = $pdo->prepare("INSERT INTO messages_contact (nom, email, sujet, message) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$nom, $email, $sujet, $message]);
         $success = true;
     }
 }
@@ -37,8 +40,6 @@ $activePage = 'contact';
 $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
-
-<section class="page-hero">
 
 <section class="page-hero">
     <div class="container">
