@@ -1,7 +1,12 @@
 <?php
 require_once 'auth.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$saved   = false;
+$pwMsg   = '';
+$pwError = false;
+
+// ── Infos club ────────────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'infos') {
     $champs = ['nom_club', 'adresse', 'email_contact', 'telephone', 'description'];
     foreach ($champs as $cle) {
         $valeur = trim($_POST[$cle] ?? '');
@@ -9,6 +14,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$cle, $valeur, $valeur]);
     }
     $saved = true;
+}
+
+// ── Changement de mot de passe ────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'password') {
+    $actuel    = $_POST['mdp_actuel']    ?? '';
+    $nouveau   = $_POST['mdp_nouveau']   ?? '';
+    $confirm   = $_POST['mdp_confirm']   ?? '';
+
+    // Récupère le hash actuel de l'admin (on prend le 1er compte)
+    $row = $pdo->query("SELECT id, mot_de_passe FROM admins LIMIT 1")->fetch();
+
+    if (!$row || !password_verify($actuel, $row['mot_de_passe'])) {
+        $pwMsg   = '❌ Mot de passe actuel incorrect.';
+        $pwError = true;
+    } elseif (strlen($nouveau) < 8) {
+        $pwMsg   = '❌ Le nouveau mot de passe doit faire au moins 8 caractères.';
+        $pwError = true;
+    } elseif ($nouveau !== $confirm) {
+        $pwMsg   = '❌ Les deux nouveaux mots de passe ne correspondent pas.';
+        $pwError = true;
+    } else {
+        $hash = password_hash($nouveau, PASSWORD_DEFAULT);
+        $pdo->prepare("UPDATE admins SET mot_de_passe=? WHERE id=?")->execute([$hash, $row['id']]);
+        $pwMsg = '✅ Mot de passe mis à jour avec succès.';
+    }
 }
 
 $params = [];
@@ -41,7 +71,9 @@ foreach ($pdo->query("SELECT cle, valeur FROM parametres")->fetchAll() as $row) 
         .form-group textarea { height:80px; resize:vertical; }
         .btn { padding:10px 24px; border:none; border-radius:6px; cursor:pointer; font-size:0.9rem; font-weight:600; }
         .btn-primary { background:#1A5276; color:#fff; }
-        .alert { padding:10px 16px; background:#d5f5e3; color:#1e8449; border-radius:6px; margin-bottom:20px; font-size:0.9rem; }
+        .alert { padding:10px 16px; border-radius:6px; margin-bottom:20px; font-size:0.9rem; }
+        .alert-success { background:#d5f5e3; color:#1e8449; }
+        .alert-error   { background:#fde8e8; color:#c0392b; }
     </style>
 </head>
 <body>
@@ -59,12 +91,18 @@ foreach ($pdo->query("SELECT cle, valeur FROM parametres")->fetchAll() as $row) 
 </div>
 <div class="main">
     <h1>⚙️ Paramètres du site</h1>
-    <?php if (isset($saved)): ?>
-        <div class="alert">✅ Paramètres enregistrés.</div>
+    <?php if ($saved): ?>
+        <div class="alert alert-success">✅ Paramètres enregistrés.</div>
     <?php endif; ?>
-    <div class="card">
+    <?php if ($pwMsg): ?>
+        <div class="alert <?= $pwError ? 'alert-error' : 'alert-success' ?>"><?= htmlspecialchars($pwMsg) ?></div>
+    <?php endif; ?>
+
+    <!-- ── Card : Infos club ── -->
+    <div class="card" style="margin-bottom:24px">
         <h2>Informations du club</h2>
         <form method="POST">
+            <input type="hidden" name="action" value="infos">
             <div class="form-group">
                 <label>Nom du club</label>
                 <input type="text" name="nom_club" value="<?= htmlspecialchars($params['nom_club'] ?? '') ?>">
@@ -86,6 +124,27 @@ foreach ($pdo->query("SELECT cle, valeur FROM parametres")->fetchAll() as $row) 
                 <textarea name="description"><?= htmlspecialchars($params['description'] ?? '') ?></textarea>
             </div>
             <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+        </form>
+    </div>
+
+    <!-- ── Card : Changer le mot de passe ── -->
+    <div class="card">
+        <h2>🔒 Changer le mot de passe</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="password">
+            <div class="form-group">
+                <label>Mot de passe actuel</label>
+                <input type="password" name="mdp_actuel" autocomplete="current-password" required>
+            </div>
+            <div class="form-group">
+                <label>Nouveau mot de passe <span style="color:#999;font-weight:400">(8 caractères min.)</span></label>
+                <input type="password" name="mdp_nouveau" autocomplete="new-password" minlength="8" required>
+            </div>
+            <div class="form-group">
+                <label>Confirmer le nouveau mot de passe</label>
+                <input type="password" name="mdp_confirm" autocomplete="new-password" minlength="8" required>
+            </div>
+            <button type="submit" class="btn btn-primary">🔑 Mettre à jour</button>
         </form>
     </div>
 </div>

@@ -9,6 +9,7 @@ $pageDesc = "Découvrez le Club Aulnaysien de Tennis : son histoire, ses terrain
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= $pageDesc ?>">
     <title><?= $pageTitle ?></title>
+    <link rel="icon" href="favicon.ico">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -19,10 +20,8 @@ $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
 
-<section class="page-hero">
-
 <!-- Hero page intérieure -->
-<section class="page-hero">
+<section class="page-hero page-hero--club">
     <div class="container">
         <h1>Le club</h1>
         <p>Notre histoire, nos terrains, nos entraîneurs</p>

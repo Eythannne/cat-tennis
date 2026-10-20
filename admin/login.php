@@ -53,6 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-box">
     <div class="login-logo">CAT</div>
     <div class="login-subtitle">Back-office administration</div>
+    <a href="/cat-tennis/index.php" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:24px;color:#1A5276;font-size:0.85rem;text-decoration:none;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+        ← Retour au site
+    </a>
 
     <?php if ($error): ?>
         <div class="form-error">⚠️ <?= htmlspecialchars($error) ?></div>

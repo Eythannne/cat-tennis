@@ -10,18 +10,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contenu = trim($_POST['contenu']);
         $publie = isset($_POST['publie']) ? 1 : 0;
 
+        // Gestion upload image (base64 depuis le cropper)
+        $image = $_POST['image_actuelle'] ?? null;
+        if (!empty($_POST['image_cropped'])) {
+            $upload_dir = __DIR__ . '/../public/assets/uploads/articles/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+            $base64 = $_POST['image_cropped'];
+            // Extrait les données brutes (data:image/jpeg;base64,XXX)
+            if (preg_match('/^data:image\/(jpeg|png|webp);base64,/', $base64, $m)) {
+                $ext      = $m[1] === 'jpeg' ? 'jpg' : $m[1];
+                $data     = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $base64));
+                $filename = uniqid('article_') . '.' . $ext;
+                if ($data && file_put_contents($upload_dir . $filename, $data)) {
+                    // Supprime l'ancienne image si elle existe
+                    if (!empty($_POST['image_actuelle'])) {
+                        $old = $upload_dir . $_POST['image_actuelle'];
+                        if (file_exists($old)) unlink($old);
+                    }
+                    $image = $filename;
+                }
+            }
+        }
+
         if ($action === 'create') {
-            $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, publie) VALUES (?, ?, ?)");
-            $stmt->execute([$titre, $contenu, $publie]);
+            $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, publie, image) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$titre, $contenu, $publie, $image]);
         } else {
             $id = (int)$_POST['id'];
-            $stmt = $pdo->prepare("UPDATE articles SET titre=?, contenu=?, publie=? WHERE id=?");
-            $stmt->execute([$titre, $contenu, $publie, $id]);
+            $stmt = $pdo->prepare("UPDATE articles SET titre=?, contenu=?, publie=?, image=? WHERE id=?");
+            $stmt->execute([$titre, $contenu, $publie, $image, $id]);
         }
     }
 
     if ($action === 'delete') {
         $id = (int)$_POST['id'];
+        // Supprime l'image associée
+        $art = $pdo->prepare("SELECT image FROM articles WHERE id=?");
+        $art->execute([$id]);
+        $row = $art->fetch();
+        if (!empty($row['image'])) {
+            $path = __DIR__ . '/../public/assets/uploads/articles/' . $row['image'];
+            if (file_exists($path)) unlink($path);
+        }
         $pdo->prepare("DELETE FROM articles WHERE id=?")->execute([$id]);
     }
 
@@ -46,6 +76,7 @@ if (isset($_GET['edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Articles — Admin CAT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; display: flex; min-height: 100vh; }
@@ -84,6 +115,34 @@ if (isset($_GET['edit'])) {
         .badge-green { background: #d5f5e3; color: #1e8449; }
         .badge-gray { background: #eee; color: #777; }
         .actions { display: flex; gap: 6px; }
+
+        /* ── Modal crop ── */
+        .crop-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .crop-overlay.active { display: flex; }
+        .crop-modal {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .crop-modal h3 { font-size: 1.1rem; color: #1A5276; }
+        .crop-container { max-height: 450px; overflow: hidden; background: #111; border-radius: 8px; }
+        .crop-container img { display: block; max-width: 100%; }
+        .crop-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        .crop-hint { font-size: 0.82rem; color: #888; }
     </style>
 </head>
 <body>
@@ -109,8 +168,9 @@ if (isset($_GET['edit'])) {
     <!-- Formulaire -->
     <div class="card">
         <h2><?= $edit ? 'Modifier l\'article' : 'Nouvel article' ?></h2>
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="<?= $edit ? 'edit' : 'create' ?>">
+            <input type="hidden" name="image_actuelle" value="<?= htmlspecialchars($edit['image'] ?? '') ?>">
             <?php if ($edit): ?>
                 <input type="hidden" name="id" value="<?= $edit['id'] ?>">
             <?php endif; ?>
@@ -121,6 +181,25 @@ if (isset($_GET['edit'])) {
             <div class="form-group">
                 <label>Contenu</label>
                 <textarea name="contenu"><?= htmlspecialchars($edit['contenu'] ?? '') ?></textarea>
+            </div>
+            <div class="form-group">
+                <label>Image (jpg, png, webp — max 5 Mo)</label>
+                <?php if (!empty($edit['image'])): ?>
+                    <div style="margin-bottom:10px;">
+                        <img src="../public/assets/uploads/articles/<?= htmlspecialchars($edit['image']) ?>"
+                             style="max-height:120px;border-radius:6px;border:1px solid #ddd;">
+                        <div style="font-size:0.8rem;color:#999;margin-top:4px;">Image actuelle — choisir un fichier pour la remplacer</div>
+                    </div>
+                <?php endif; ?>
+                <!-- Input caché qui recevra le base64 cropé -->
+                <input type="hidden" name="image_cropped" id="image_cropped">
+                <!-- Input file — déclenche le modal, ne sera PAS soumis -->
+                <input type="file" id="image_picker" accept="image/jpeg,image/png,image/webp" style="font-size:0.9rem;">
+                <div id="crop_preview_wrap" style="display:none;margin-top:10px;">
+                    <img id="crop_preview_thumb" style="max-height:80px;border-radius:6px;border:1px solid #ddd;">
+                    <span style="font-size:0.8rem;color:#1e8449;margin-left:8px;">✅ Image recadrée prête</span>
+                    <button type="button" id="crop_redo" style="margin-left:8px;background:none;border:none;color:#1A5276;cursor:pointer;font-size:0.85rem;text-decoration:underline;">Recadrer à nouveau</button>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-check">
@@ -178,5 +257,92 @@ if (isset($_GET['edit'])) {
     </div>
 </div>
 
+<!-- ── Modal Cropper ── -->
+<div class="crop-overlay" id="crop_overlay">
+    <div class="crop-modal">
+        <h3>✂️ Recadrer l'image</h3>
+        <p class="crop-hint">Déplacez et zoomez pour choisir la zone à afficher (ratio 16:9 fixe).</p>
+        <div class="crop-container">
+            <img id="crop_img" src="" alt="Crop">
+        </div>
+        <div class="crop-actions">
+            <button type="button" class="btn btn-secondary" id="crop_cancel">Annuler</button>
+            <button type="button" class="btn btn-primary" id="crop_confirm">✅ Valider le recadrage</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+(function() {
+    const picker      = document.getElementById('image_picker');
+    const overlay     = document.getElementById('crop_overlay');
+    const cropImg     = document.getElementById('crop_img');
+    const btnCancel   = document.getElementById('crop_cancel');
+    const btnConfirm  = document.getElementById('crop_confirm');
+    const hiddenInput = document.getElementById('image_cropped');
+    const previewWrap = document.getElementById('crop_preview_wrap');
+    const previewThumb= document.getElementById('crop_preview_thumb');
+    const btnRedo     = document.getElementById('crop_redo');
+
+    let cropper = null;
+    let originalFile = null;
+
+    function openCropper(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            cropImg.src = e.target.result;
+            overlay.classList.add('active');
+            // Init cropper après que l'image soit chargée
+            cropImg.onload = () => {
+                if (cropper) { cropper.destroy(); cropper = null; }
+                cropper = new Cropper(cropImg, {
+                    aspectRatio: 16 / 9,
+                    viewMode: 1,
+                    autoCropArea: 0.9,
+                    movable: true,
+                    zoomable: true,
+                    scalable: false,
+                    rotatable: false,
+                });
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    picker.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        originalFile = file;
+        openCropper(file);
+    });
+
+    btnCancel.addEventListener('click', () => {
+        overlay.classList.remove('active');
+        if (cropper) { cropper.destroy(); cropper = null; }
+        picker.value = '';
+        originalFile = null;
+    });
+
+    btnConfirm.addEventListener('click', () => {
+        if (!cropper) return;
+        // Génère un canvas 800×450 (16:9)
+        const canvas = cropper.getCroppedCanvas({ width: 800, height: 450 });
+        const base64 = canvas.toDataURL('image/jpeg', 0.88);
+
+        hiddenInput.value = base64;
+        previewThumb.src  = base64;
+        previewWrap.style.display = 'block';
+
+        overlay.classList.remove('active');
+        cropper.destroy(); cropper = null;
+    });
+
+    btnRedo.addEventListener('click', () => {
+        if (originalFile) openCropper(originalFile);
+        else picker.click();
+    });
+})();
+</script>
 </body>
 </html>

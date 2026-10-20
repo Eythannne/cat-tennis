@@ -31,7 +31,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= $pageDesc ?>">
     <title><?= $pageTitle ?></title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/leaflet.css">
+    <style>
+        #map { height: 280px; border-radius: 10px; margin-top: 28px; z-index: 1; }
+    </style>
 </head>
 <body>
 
@@ -52,7 +57,7 @@ include '../templates/navbar.php';
     <div class="container">
         <div class="contact-grid">
 
-            <!-- Infos -->
+            <!-- Infos + Carte -->
             <div class="contact-info">
                 <h2>Nous trouver</h2>
                 <div class="info-block">
@@ -80,9 +85,10 @@ include '../templates/navbar.php';
                     <span class="info-icon">🎾</span>
                     <div>
                         <strong>Réservation courts</strong>
-                        <p><a href="https://www.ten-up.com" target="_blank" rel="noopener">Via Ten'up →</a></p>
+                        <p><a href="https://tenup.fft.fr/" target="_blank" rel="noopener">Via Ten'up →</a></p>
                     </div>
                 </div>
+                <div id="map"></div>
             </div>
 
             <!-- Formulaire -->
@@ -133,5 +139,25 @@ include '../templates/navbar.php';
 <?php include '../templates/footer.php'; ?>
 
 <script src="assets/js/main.js"></script>
+<script src="assets/js/leaflet.js"></script>
+<script>
+    // Fix chemin des images markers (servis localement)
+    L.Icon.Default.imagePath = 'assets/images/';
+    const map = L.map('map').setView([48.9385, 2.4972], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(map);
+    const icon = L.divIcon({
+        html: '<div style="background:#1B6B2F;width:14px;height:14px;border-radius:50%;border:3px solid #F0C419;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+        className: ''
+    });
+    L.marker([48.9385, 2.4972], { icon })
+        .addTo(map)
+        .bindPopup('<strong>Club Aulnaysien de Tennis</strong><br>Aulnay-sous-Bois, 93600')
+        .openPopup();
+</script>
 </body>
 </html>

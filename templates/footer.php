@@ -22,7 +22,7 @@
             <div class="footer-col">
                 <h4>Liens utiles</h4>
                 <ul>
-                    <li><a href="https://www.ten-up.com" target="_blank">Ten'up</a></li>
+                    <li><a href="https://tenup.fft.fr/" target="_blank">Ten'up</a></li>
                     <li><a href="/cat-tennis/mentions-legales.php">Mentions légales</a></li>
                 </ul>
             </div>

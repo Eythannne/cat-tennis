@@ -1,0 +1,12 @@
+bouton publier pour les articles quand ils sont en brouillons
+en gros deplacer le bouton 
+--> action : je crée un nouvel article, je le mets en brouillon puis il y a un bouton publier mais on ne peut pas le publier quand on le crée
+
+idée, publier programmé
+
+
+---------------------------------------------------------------------------------
+
+Ajout d'une carte dynamique sur la page du club pour l'adresse
+
+---------------------------------------------------------------------------------
