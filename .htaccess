@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/cat-tennis/public/
+RewriteCond %{REQUEST_URI} !^/cat-tennis/admin/
+RewriteRule ^(.*)$ public/$1 [L]

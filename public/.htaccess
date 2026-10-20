@@ -1,0 +1,2 @@
+ErrorDocument 404 /cat-tennis/404.php
+RewriteEngine On
