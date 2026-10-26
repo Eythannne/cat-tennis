@@ -28,7 +28,7 @@ $pageDesc = "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Auln
         <div class="hero-content">
             <h1>Club Aulnaysien de Tennis</h1>
             <p>Rejoignez-nous à Aulnay-sous-Bois</p>
-            <a href="/cat-tennis/club.php" class="btn-primary">Nous rejoindre</a>
+            <a href="<?= BASE_URL ?>/club.php" class="btn-primary">Nous rejoindre</a>
         </div>
     </section>
 
@@ -82,7 +82,7 @@ $pageDesc = "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Auln
                         <?php if (!empty($a['image'])): ?>
                             <div class="news-img" style="background:url('assets/uploads/articles/<?= htmlspecialchars($a['image']) ?>') center/cover no-repeat"></div>
                         <?php else: ?>
-                            <div class="news-img news-img--placeholder"><span><?= htmlspecialchars($initiales) ?></span></div>
+                            <div class="news-img" style="background:url('assets/images/placeholder.png') center/cover no-repeat"></div>
                         <?php endif; ?>
                         <div class="news-body">
                             <span class="news-date"><?= date('d F Y', strtotime($a['created_at'])) ?></span>

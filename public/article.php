@@ -49,12 +49,10 @@ include '../templates/navbar.php';
     <div class="container article-container">
         <a href="actualites.php" class="btn-back">← Retour aux actualités</a>
 
-        <?php if (!empty($article['image'])): ?>
-            <div class="article-img-wrap">
-                <img src="assets/uploads/articles/<?= htmlspecialchars($article['image']) ?>"
-                     alt="<?= htmlspecialchars($article['titre']) ?>">
-            </div>
-        <?php endif; ?>
+        <div class="article-img-wrap">
+            <img src="<?= !empty($article['image']) ? 'assets/uploads/articles/'.htmlspecialchars($article['image']) : 'assets/images/placeholder.png' ?>"
+                 alt="<?= htmlspecialchars($article['titre']) ?>">
+        </div>
 
         <div class="article-content">
             <?= nl2br(htmlspecialchars($article['contenu'])) ?>

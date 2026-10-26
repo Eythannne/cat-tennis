@@ -111,7 +111,7 @@ include '../templates/navbar.php';
                                 <?php if (!empty($a['image'])): ?>
                                     <div class="news-img" style="background:url('assets/uploads/articles/<?= htmlspecialchars($a['image']) ?>') center/cover no-repeat; min-height:120px;"></div>
                                 <?php else: ?>
-                                    <div class="news-img news-img--placeholder" style="min-height:120px;"><span><?= htmlspecialchars($initiales) ?></span></div>
+                                    <div class="news-img" style="background:url('assets/images/placeholder.png') center/cover no-repeat; min-height:120px;"></div>
                                 <?php endif; ?>
                                 <div class="news-body">
                                     <span class="news-date"><?= date('d F Y', strtotime($a['created_at'])) ?></span>

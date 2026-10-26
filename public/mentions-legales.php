@@ -1,4 +1,5 @@
 <?php
+require_once '../src/config/database.php';
 $pageTitle = "Mentions légales — CAT";
 $pageDesc = "Mentions légales et politique de confidentialité du Club Aulnaysien de Tennis.";
 ?>
@@ -18,8 +19,6 @@ $activePage = 'mention-legales';
 $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
-
-<section class="page-hero">
 
 <section class="page-hero">
     <div class="container">
