@@ -56,6 +56,13 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
     color: #fff;
     text-decoration: none;
     letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+}
+.nav-logo-img {
+    height: 42px;
+    width: auto;
+    display: block;
 }
 .nav-links {
     list-style: none;
@@ -312,7 +319,9 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 
 /* ── PAGE HERO ── */
 .page-hero {
-    background: var(--vert-dark);
+    background:
+        linear-gradient(to bottom, rgba(27,107,47,0.55) 0%, rgba(18,74,32,0.65) 100%),
+        url('../images/placeholder.png') center/cover no-repeat;
     padding: 110px 0 50px;
     text-align: center;
     border-bottom: 4px solid var(--jaune);
@@ -324,7 +333,8 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 .page-hero--club {
     background:
         linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%),
-        url('assets/images/hero-pages.jpg') center/cover no-repeat;
+        url('../images/hero-pages.jpg') center/cover no-repeat,
+        url('../images/placeholder.png') center/cover no-repeat;
     border-bottom-color: var(--jaune);
 }
 

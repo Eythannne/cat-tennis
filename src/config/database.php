@@ -1,4 +1,10 @@
 <?php
+// ── Base URL (détectée automatiquement) ──────────────────────────────────────
+// En local Laragon : /cat-tennis/public  |  En prod (racine) : vide ''
+define('BASE_URL', strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false
+    ? '/cat-tennis/public'
+    : '');
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'cat_tennis');
 define('DB_USER', 'root');

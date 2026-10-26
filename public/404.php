@@ -18,8 +18,6 @@ $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
 
-<section class="page-hero">
-
 <section class="section-404">
     <div class="container">
         <div class="not-found">

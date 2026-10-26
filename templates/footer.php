@@ -2,17 +2,19 @@
     <div class="container">
         <div class="footer-grid">
             <div class="footer-col">
-                <span class="nav-logo">CAT</span>
+                <a href="<?= BASE_URL ?>/index.php" class="nav-logo">
+                    <img src="<?= BASE_URL ?>/favicon.png" alt="CAT" class="nav-logo-img">
+                </a>
                 <p>Club Aulnaysien de Tennis<br>Aulnay-sous-Bois</p>
             </div>
             <div class="footer-col">
                 <h4>Navigation</h4>
                 <ul>
-                    <li><a href="/cat-tennis/index.php">Accueil</a></li>
-                    <li><a href="/cat-tennis/club.php">Le club</a></li>
-                    <li><a href="/cat-tennis/actualites.php">Actualités</a></li>
-                    <li><a href="/cat-tennis/calendrier.php">Calendrier</a></li>
-                    <li><a href="/cat-tennis/contact.php">Contact</a></li>
+                    <li><a href="<?= BASE_URL ?>/index.php">Accueil</a></li>
+                    <li><a href="<?= BASE_URL ?>/club.php">Le club</a></li>
+                    <li><a href="<?= BASE_URL ?>/actualites.php">Actualités</a></li>
+                    <li><a href="<?= BASE_URL ?>/calendrier.php">Calendrier</a></li>
+                    <li><a href="<?= BASE_URL ?>/contact.php">Contact</a></li>
                 </ul>
             </div>
             <div class="footer-col">
@@ -23,7 +25,7 @@
                 <h4>Liens utiles</h4>
                 <ul>
                     <li><a href="https://tenup.fft.fr/" target="_blank">Ten'up</a></li>
-                    <li><a href="/cat-tennis/mentions-legales.php">Mentions légales</a></li>
+                    <li><a href="<?= BASE_URL ?>/mentions-legales.php">Mentions légales</a></li>
                 </ul>
             </div>
         </div>

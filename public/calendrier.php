@@ -10,7 +10,6 @@ $pageDesc = "Calendrier des événements, animations et cours du Club Aulnaysien
     <meta name="description" content="<?= $pageDesc ?>">
     <title><?= $pageTitle ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -41,7 +40,7 @@ include '../templates/navbar.php';
 
 <?php include '../templates/footer.php'; ?>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="assets/js/fullcalendar.min.js"></script>
 <script src="assets/js/main.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
             month: 'Mois',
             list: 'Liste'
         },
-        events: '/cat-tennis/api/evenements.php',
+        events: '<?= BASE_URL ?>/api/evenements.php',
         eventClick: function(info) {
             alert(info.event.title + (info.event.extendedProps.description ? '\n' + info.event.extendedProps.description : ''));
         },
