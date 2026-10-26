@@ -1,4 +1,5 @@
 <?php
+require_once '../src/config/database.php';
 $pageTitle = "Le club — CAT";
 $pageDesc = "Découvrez le Club Aulnaysien de Tennis : son histoire, ses terrains, ses entraîneurs et ses tarifs.";
 ?>

@@ -1,4 +1,5 @@
 <?php
+require_once '../src/config/database.php';
 $pageTitle = "Calendrier — CAT";
 $pageDesc = "Calendrier des événements, animations et cours du Club Aulnaysien de Tennis.";
 ?>
