@@ -87,6 +87,7 @@ if (isset($_GET['edit'])) {
     <div class="card">
         <h2><?= $edit ? 'Modifier l\'événement' : 'Nouvel événement' ?></h2>
         <form method="POST">
+            <?= csrf_field() ?>
             <input type="hidden" name="action" value="<?= $edit ? 'edit' : 'create' ?>">
             <?php if ($edit): ?><input type="hidden" name="id" value="<?= $edit['id'] ?>"><?php endif; ?>
             <div class="form-group">
@@ -141,6 +142,7 @@ if (isset($_GET['edit'])) {
                 <td class="actions">
                     <a href="evenements.php?edit=<?= $e['id'] ?>" class="btn-edit">✏️ Modifier</a>
                     <form method="POST" onsubmit="return confirm('Supprimer ?')">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="id" value="<?= $e['id'] ?>">
                         <button type="submit" class="btn btn-danger">🗑️</button>

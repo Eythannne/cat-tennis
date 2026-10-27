@@ -22,8 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $nouveau   = $_POST['mdp_nouveau']   ?? '';
     $confirm   = $_POST['mdp_confirm']   ?? '';
 
-    // Récupère le hash actuel de l'admin (on prend le 1er compte)
-    $row = $pdo->query("SELECT id, mot_de_passe FROM admins LIMIT 1")->fetch();
+    // Récupère le hash actuel de l'admin connecté
+    $stmt = $pdo->prepare("SELECT id, mot_de_passe FROM admins WHERE id=?");
+    $stmt->execute([$_SESSION['admin_id']]);
+    $row = $stmt->fetch();
 
     if (!$row || !password_verify($actuel, $row['mot_de_passe'])) {
         $pwMsg   = '❌ Mot de passe actuel incorrect.';
@@ -102,6 +104,7 @@ foreach ($pdo->query("SELECT cle, valeur FROM parametres")->fetchAll() as $row) 
     <div class="card" style="margin-bottom:24px">
         <h2>Informations du club</h2>
         <form method="POST">
+            <?= csrf_field() ?>
             <input type="hidden" name="action" value="infos">
             <div class="form-group">
                 <label>Nom du club</label>
@@ -131,6 +134,7 @@ foreach ($pdo->query("SELECT cle, valeur FROM parametres")->fetchAll() as $row) 
     <div class="card">
         <h2>🔒 Changer le mot de passe</h2>
         <form method="POST">
+            <?= csrf_field() ?>
             <input type="hidden" name="action" value="password">
             <div class="form-group">
                 <label>Mot de passe actuel</label>

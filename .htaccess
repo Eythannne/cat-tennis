@@ -1,4 +1,4 @@
 RewriteEngine On
-RewriteCond %{REQUEST_URI} !^/cat-tennis/public/
-RewriteCond %{REQUEST_URI} !^/cat-tennis/admin/
+# admin/ et public/ sont servis tels quels, tout le reste est redirigé vers public/
+RewriteRule ^(admin|public)(/|$) - [L]
 RewriteRule ^(.*)$ public/$1 [L]

@@ -9,13 +9,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'upload') {
         $titre = trim($_POST['titre']);
         $categorie = trim($_POST['categorie']);
-        if (isset($_FILES['fichier']) && $_FILES['fichier']['error'] === 0) {
-            $ext = strtolower(pathinfo($_FILES['fichier']['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, ['jpg','jpeg','png','webp'])) {
+        if (isset($_FILES['fichier']) && $_FILES['fichier']['error'] === UPLOAD_ERR_OK
+            && $_FILES['fichier']['size'] <= IMAGE_MAX_SIZE) {
+            // Extension déduite du vrai contenu du fichier, pas de son nom
+            $ext = image_extension(file_get_contents($_FILES['fichier']['tmp_name']));
+            if ($ext) {
                 $filename = uniqid() . '.' . $ext;
-                move_uploaded_file($_FILES['fichier']['tmp_name'], $upload_dir . $filename);
-                $stmt = $pdo->prepare("INSERT INTO galerie (titre, fichier, categorie) VALUES (?,?,?)");
-                $stmt->execute([$titre, $filename, $categorie]);
+                if (move_uploaded_file($_FILES['fichier']['tmp_name'], $upload_dir . $filename)) {
+                    $stmt = $pdo->prepare("INSERT INTO galerie (titre, fichier, categorie) VALUES (?,?,?)");
+                    $stmt->execute([$titre, $filename, $categorie]);
+                }
             }
         }
     }
@@ -24,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $row = $pdo->prepare("SELECT fichier FROM galerie WHERE id=?");
         $row->execute([$id]);
         $f = $row->fetchColumn();
-        if ($f && file_exists($upload_dir . $f)) unlink($upload_dir . $f);
+        if ($f && file_exists($upload_dir . basename($f))) unlink($upload_dir . basename($f));
         $pdo->prepare("DELETE FROM galerie WHERE id=?")->execute([$id]);
     }
     header('Location: galerie.php');
@@ -84,6 +87,7 @@ $photos = $pdo->query("SELECT * FROM galerie ORDER BY created_at DESC")->fetchAl
     <div class="card">
         <h2>Ajouter une photo</h2>
         <form method="POST" enctype="multipart/form-data">
+            <?= csrf_field() ?>
             <input type="hidden" name="action" value="upload">
             <div class="form-row">
                 <div class="form-group">
@@ -96,7 +100,7 @@ $photos = $pdo->query("SELECT * FROM galerie ORDER BY created_at DESC")->fetchAl
                 </div>
             </div>
             <div class="form-group">
-                <label>Photo (jpg, png, webp)</label>
+                <label>Photo (jpg, png, webp — max 5 Mo)</label>
                 <input type="file" name="fichier" accept=".jpg,.jpeg,.png,.webp" required>
             </div>
             <button type="submit" class="btn btn-primary">📤 Uploader</button>
@@ -114,6 +118,7 @@ $photos = $pdo->query("SELECT * FROM galerie ORDER BY created_at DESC")->fetchAl
                 <div class="info">
                     <span><?= htmlspecialchars($p['titre']) ?></span>
                     <form method="POST" onsubmit="return confirm('Supprimer ?')">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="id" value="<?= $p['id'] ?>">
                         <button type="submit" class="btn btn-danger">🗑️</button>

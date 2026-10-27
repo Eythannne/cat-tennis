@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
 
 // Si déjà connecté, redirige vers le dashboard
 if (isset($_SESSION['admin_id'])) {
@@ -7,7 +7,16 @@ if (isset($_SESSION['admin_id'])) {
     exit;
 }
 
+csrf_check();
+
 require_once '../src/config/database.php';
+
+// ── Anti brute-force : 5 échecs max par IP sur 15 minutes ────────────────────
+const LOGIN_MAX_ECHECS = 5;
+const LOGIN_FENETRE    = 15 * 60;
+$attemptsFile = sys_get_temp_dir() . '/cat_login_' . md5($_SERVER['REMOTE_ADDR'] ?? '') . '.json';
+$echecs = is_file($attemptsFile) ? (json_decode(file_get_contents($attemptsFile), true) ?: []) : [];
+$echecs = array_filter($echecs, fn($t) => $t > time() - LOGIN_FENETRE);
 
 $error = '';
 
@@ -15,7 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mdp = $_POST['mot_de_passe'] ?? '';
 
-    if (!$email || !$mdp) {
+    if (count($echecs) >= LOGIN_MAX_ECHECS) {
+        $error = 'Trop de tentatives. Réessayez dans 15 minutes.';
+    } elseif (!$email || !$mdp) {
         $error = 'Merci de remplir tous les champs.';
     } else {
         $stmt = $pdo->prepare('SELECT * FROM admins WHERE email = ?');
@@ -23,12 +34,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $admin = $stmt->fetch();
 
         if ($admin && password_verify($mdp, $admin['mot_de_passe'])) {
+            @unlink($attemptsFile);
             session_regenerate_id(true);
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_nom'] = $admin['nom'];
             header('Location: index.php');
             exit;
         } else {
+            $echecs[] = time();
+            file_put_contents($attemptsFile, json_encode(array_values($echecs)));
+            sleep(1);
             $error = 'Email ou mot de passe incorrect.';
         }
     }
@@ -53,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-box">
     <div class="login-logo">CAT</div>
     <div class="login-subtitle">Back-office administration</div>
-    <a href="/cat-tennis/index.php" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:24px;color:#1A5276;font-size:0.85rem;text-decoration:none;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+    <a href="<?= BASE_URL ?>/index.php" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:24px;color:#1A5276;font-size:0.85rem;text-decoration:none;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
         ← Retour au site
     </a>
 
@@ -62,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="POST" action="login.php">
+        <?= csrf_field() ?>
         <div class="form-group">
             <label for="email">Email</label>
             <input type="email" id="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required autofocus>

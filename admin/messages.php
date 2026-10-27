@@ -109,6 +109,7 @@ if (isset($_GET['voir'])) {
                 <div class="actions">
                     <a href="mailto:<?= htmlspecialchars($detail['email']) ?>" class="btn btn-secondary">↩️ Répondre</a>
                     <form method="POST">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="id" value="<?= $detail['id'] ?>">
                         <button type="submit" class="btn btn-danger" onclick="return confirm('Supprimer ce message ?')">🗑️ Supprimer</button>

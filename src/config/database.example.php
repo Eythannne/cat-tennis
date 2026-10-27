@@ -1,4 +1,7 @@
 <?php
+// Copier ce fichier en database.php et renseigner les identifiants.
+// database.php est ignoré par git : ne jamais le versionner.
+
 // ── Base URL (détectée automatiquement) ──────────────────────────────────────
 define('BASE_URL', strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false
     ? '/cat-tennis/public'
@@ -11,10 +14,10 @@ if (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) {
     define('DB_USER', 'root');
     define('DB_PASS', '');
 } else {
-    define('DB_HOST', 'sql210.infinityfree.com');
-    define('DB_NAME', 'if0_43277584_cat_tennis');
-    define('DB_USER', 'if0_43277584');
-    define('DB_PASS', 'HQzOn6rvaaahdLx');
+    define('DB_HOST', 'sqlXXX.infinityfree.com');
+    define('DB_NAME', 'if0_XXXXXXXX_cat_tennis');
+    define('DB_USER', 'if0_XXXXXXXX');
+    define('DB_PASS', 'CHANGER_MOI');
 }
 
 try {
@@ -29,5 +32,7 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    die('Erreur de connexion : ' . $e->getMessage());
+    error_log('Erreur de connexion BDD : ' . $e->getMessage());
+    http_response_code(500);
+    die('Le site est momentanément indisponible. Merci de réessayer plus tard.');
 }

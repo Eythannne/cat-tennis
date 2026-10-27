@@ -1,5 +1,8 @@
 <?php
-session_start();
+require_once __DIR__ . '/session.php';
+$_SESSION = [];
+$p = session_get_cookie_params();
+setcookie(session_name(), '', time() - 3600, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
 session_destroy();
 header('Location: login.php');
 exit;

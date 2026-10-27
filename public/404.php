@@ -9,12 +9,13 @@ http_response_code(404);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" type="image/png" href="<?= BASE_URL ?>/favicon.png">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
 </head>
 <body>
 
 <?php
-$activePage = 'actualites';
+$activePage = '';
 $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
@@ -31,6 +32,6 @@ include '../templates/navbar.php';
     </div>
 </section>
 
-<script src="assets/js/main.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
 </body>
 </html>

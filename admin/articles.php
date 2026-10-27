@@ -10,24 +10,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contenu = trim($_POST['contenu']);
         $publie = isset($_POST['publie']) ? 1 : 0;
 
+        // Image actuelle : lue en base (jamais depuis le formulaire)
+        $image = null;
+        if ($action === 'edit') {
+            $stmt = $pdo->prepare("SELECT image FROM articles WHERE id=?");
+            $stmt->execute([(int)$_POST['id']]);
+            $image = $stmt->fetchColumn() ?: null;
+        }
+
         // Gestion upload image (base64 depuis le cropper)
-        $image = $_POST['image_actuelle'] ?? null;
         if (!empty($_POST['image_cropped'])) {
             $upload_dir = __DIR__ . '/../public/assets/uploads/articles/';
             if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
-            $base64 = $_POST['image_cropped'];
             // Extrait les données brutes (data:image/jpeg;base64,XXX)
-            if (preg_match('/^data:image\/(jpeg|png|webp);base64,/', $base64, $m)) {
-                $ext      = $m[1] === 'jpeg' ? 'jpg' : $m[1];
-                $data     = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $base64));
-                $filename = uniqid('article_') . '.' . $ext;
-                if ($data && file_put_contents($upload_dir . $filename, $data)) {
-                    // Supprime l'ancienne image si elle existe
-                    if (!empty($_POST['image_actuelle'])) {
-                        $old = $upload_dir . $_POST['image_actuelle'];
-                        if (file_exists($old)) unlink($old);
+            if (preg_match('/^data:image\/(jpeg|png|webp);base64,(.+)$/s', $_POST['image_cropped'], $m)) {
+                $data = base64_decode($m[2], true);
+                $ext  = $data ? image_extension($data) : null;
+                if ($ext) {
+                    $filename = uniqid('article_') . '.' . $ext;
+                    if (file_put_contents($upload_dir . $filename, $data)) {
+                        // Supprime l'ancienne image si elle existe
+                        if ($image) {
+                            $old = $upload_dir . basename($image);
+                            if (file_exists($old)) unlink($old);
+                        }
+                        $image = $filename;
                     }
-                    $image = $filename;
                 }
             }
         }
@@ -49,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $art->execute([$id]);
         $row = $art->fetch();
         if (!empty($row['image'])) {
-            $path = __DIR__ . '/../public/assets/uploads/articles/' . $row['image'];
+            $path = __DIR__ . '/../public/assets/uploads/articles/' . basename($row['image']);
             if (file_exists($path)) unlink($path);
         }
         $pdo->prepare("DELETE FROM articles WHERE id=?")->execute([$id]);
@@ -169,8 +177,8 @@ if (isset($_GET['edit'])) {
     <div class="card">
         <h2><?= $edit ? 'Modifier l\'article' : 'Nouvel article' ?></h2>
         <form method="POST" enctype="multipart/form-data">
+            <?= csrf_field() ?>
             <input type="hidden" name="action" value="<?= $edit ? 'edit' : 'create' ?>">
-            <input type="hidden" name="image_actuelle" value="<?= htmlspecialchars($edit['image'] ?? '') ?>">
             <?php if ($edit): ?>
                 <input type="hidden" name="id" value="<?= $edit['id'] ?>">
             <?php endif; ?>
@@ -244,6 +252,7 @@ if (isset($_GET['edit'])) {
                     <td class="actions">
                         <a href="articles.php?edit=<?= $a['id'] ?>" class="btn-edit">✏️ Modifier</a>
                         <form method="POST" onsubmit="return confirm('Supprimer cet article ?')">
+                            <?= csrf_field() ?>
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="<?= $a['id'] ?>">
                             <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
