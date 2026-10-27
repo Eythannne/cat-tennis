@@ -55,5 +55,13 @@ V2
 - Espace membre (déjà annoncé "Bientôt" dans le menu)
 - Notification par email quand un message de contact arrive
 - Admin Messages : bouton "Marquer comme non lu" (en attente)
+- Admin Messages : pouvoir répondre directement depuis l'admin
+  --> aujourd'hui le bouton "Répondre" ouvre seulement le logiciel de mail de l'ordinateur (lien mailto),
+      ce qui ne marche pas si aucun logiciel de mail n'est configuré
+  --> idée : une zone de réponse sous le message, la réponse part par email à la personne
+      et reste enregistrée dans l'admin (historique de la conversation)
+  --> si la personne a un compte (espace membre), elle pourrait aussi lire la réponse sur le site
+  /!\ InfinityFree bloque l'envoi d'emails par PHP : il faudra passer par un service d'envoi externe
+      (SMTP Gmail, Brevo, etc.) — même besoin que pour la notification des nouveaux messages
 
 ---------------------------------------------------------------------------------
