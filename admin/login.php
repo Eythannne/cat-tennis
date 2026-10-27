@@ -9,7 +9,7 @@ if (isset($_SESSION['admin_id'])) {
 
 csrf_check();
 
-require_once '../src/config/database.php';
+require_once '../src/init.php';
 
 // ── Anti brute-force : 5 échecs max par IP sur 15 minutes ────────────────────
 const LOGIN_MAX_ECHECS = 5;
@@ -55,22 +55,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion — Back-office CAT</title>
+    <link rel="icon" type="image/png" href="../public/favicon.png">
     <link rel="stylesheet" href="../public/assets/css/style.css">
     <style>
-        body { background: #F2F3F4; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .login-box { background: #fff; padding: 48px 40px; border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); width: 100%; max-width: 420px; }
-        .login-logo { text-align: center; font-size: 2rem; font-weight: 800; color: #1A5276; letter-spacing: 3px; margin-bottom: 8px; }
-        .login-subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 36px; }
-        .login-box h1 { font-size: 1.4rem; color: #1C2833; margin-bottom: 28px; text-align: center; }
+        body { background: var(--vert-dark); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
+        .login-box { background: #fff; padding: 40px 36px; border-radius: 10px; border-top: 4px solid var(--jaune); box-shadow: 0 8px 32px rgba(0,0,0,0.25); width: 100%; max-width: 420px; }
+        .login-logo { display: block; width: 88px; height: auto; margin: 0 auto 10px; }
+        .login-subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 14px; }
+        .login-back { display: block; text-align: center; margin-bottom: 24px; color: var(--vert); font-size: 0.85rem; text-decoration: none; opacity: 0.75; }
+        .login-back:hover { opacity: 1; }
+        @media (max-width: 480px) { .login-box { padding: 30px 20px; } }
     </style>
 </head>
 <body>
 <div class="login-box">
-    <div class="login-logo">CAT</div>
+    <img src="../public/favicon.png" alt="CAT" class="login-logo">
     <div class="login-subtitle">Back-office administration</div>
-    <a href="<?= BASE_URL ?>/index.php" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:24px;color:#1A5276;font-size:0.85rem;text-decoration:none;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-        ← Retour au site
-    </a>
+    <a href="<?= BASE_URL ?>/index.php" class="login-back">← Retour au site</a>
 
     <?php if ($error): ?>
         <div class="form-error">⚠️ <?= htmlspecialchars($error) ?></div>

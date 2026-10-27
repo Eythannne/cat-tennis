@@ -80,6 +80,25 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 .nav-links a:hover { color: var(--jaune); }
 .nav-links a.active { color: var(--jaune); }
 
+/* Bouton burger : caché sur ordinateur */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    padding: 9px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    cursor: pointer;
+}
+.nav-toggle span { display: block; height: 2px; background: #fff; border-radius: 2px; transition: transform 0.2s, opacity 0.2s; }
+.nav-open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
 /* ── DROPDOWN ── */
 .nav-dropdown { position: relative; }
 .nav-dropdown-btn {
@@ -338,11 +357,6 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
     border-bottom-color: var(--jaune);
 }
 
-.nav-logo-img {
-    height: 42px;
-    width: auto;
-}
-
 /* ── MÉTÉO ── */
 .meteo-pill {
     position: fixed;
@@ -357,7 +371,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
     border-radius: 40px;
     padding: 8px 15px 8px 10px;
     color: #fff;
-    cursor: default;
+    cursor: pointer;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     user-select: none;
 }
@@ -506,6 +520,12 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 .galerie-item:hover .galerie-img { transform: scale(1.03); box-shadow: 0 6px 18px rgba(0,0,0,0.14); }
 .galerie-item p { text-align: center; font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
 .galerie-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.galerie-item[hidden] { display: none; }
+.galerie-cat { display: block; text-align: center; font-size: 0.7rem; color: var(--vert); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.galerie-filtres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.galerie-filtre { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; font-weight: 600; color: var(--muted); cursor: pointer; font-family: 'Outfit', sans-serif; transition: all 0.15s; }
+.galerie-filtre:hover { color: var(--vert); border-color: var(--vert); }
+.galerie-filtre.active { background: var(--vert); border-color: var(--vert); color: #fff; }
 
 /* ── CALENDRIER ── */
 .section-calendar { padding: 55px 0 80px; background: var(--white); }
@@ -567,3 +587,97 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 .article-img-wrap img { width: 100%; max-height: 400px; object-fit: cover; display: block; }
 .article-content { color: var(--text); line-height: 1.85; font-size: 1rem; }
 .article-footer { margin-top: 2.5rem; padding-top: 1.8rem; border-top: 1px solid var(--border); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablette (≤ 1024px) ── */
+@media (max-width: 1024px) {
+    .news-grid { grid-template-columns: repeat(2, 1fr); }
+    .galerie-grid { grid-template-columns: repeat(3, 1fr); }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .about-grid { gap: 40px; }
+    .contact-grid { gap: 40px; }
+}
+
+/* ── Menu burger + mise en page une colonne (≤ 860px) ── */
+@media (max-width: 860px) {
+    .container, .nav-container { padding: 0 20px; }
+
+    /* Navbar : le menu devient un panneau déroulant */
+    .nav-toggle { display: flex; }
+    .nav-links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        background: var(--vert-dark);
+        padding: 8px 20px 18px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        display: none;
+    }
+    .nav-open .nav-links { display: flex; }
+    .nav-open { background: var(--vert-dark); }
+    .nav-links > li > a { display: block; padding: 12px 0; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .nav-dropdown { margin-top: 12px; }
+    .nav-dropdown-btn { width: 100%; justify-content: center; padding: 10px 14px; }
+    .nav-dropdown-menu { position: static; transform: none; box-shadow: none; margin-top: 8px; display: none; opacity: 1; visibility: visible; }
+    .nav-dropdown-menu.open { display: block; }
+
+    /* Sections */
+    .section-about, .section-news, .section-courts, .section-coaches, .section-tarifs { padding: 60px 0; }
+    .about-grid { grid-template-columns: 1fr; }
+    .courts-grid, .coaches-grid, .tarifs-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .tarif-card.tarif-featured { transform: none; }
+    .contact-grid { grid-template-columns: 1fr; }
+
+    /* Actualités : les archives passent sous la liste */
+    .actu-layout { grid-template-columns: 1fr; }
+    .actu-sidebar { position: static; }
+
+    .hero-content { padding: 0 20px; }
+    .hero-content h1 { font-size: 2.4rem; }
+    .page-hero { padding: 100px 0 40px; }
+    .page-hero h1 { font-size: 2rem; }
+}
+
+/* ── Téléphone (≤ 600px) ── */
+@media (max-width: 600px) {
+    .container, .nav-container { padding: 0 16px; }
+    .nav-logo-img { height: 36px; }
+
+    .hero-content h1 { font-size: 1.9rem; }
+    .hero-content p { font-size: 1rem; }
+    .about-text h2, .section-center h2, .section-news h2 { font-size: 1.6rem; }
+    .stat-card { padding: 20px 12px; }
+    .stat-number { font-size: 1.9rem; }
+
+    .news-grid { grid-template-columns: 1fr; }
+    .news-grid--list .news-card { flex-direction: column; }
+    .news-grid--list .news-img { width: 100%; height: 170px; }
+
+    .galerie-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .galerie-img { height: 130px; }
+
+    .tabs { overflow-x: auto; }
+    .tab-btn { padding: 10px 14px; white-space: nowrap; }
+
+    .reservation-content { flex-direction: column; align-items: flex-start; }
+    .section-reservation .btn-primary { white-space: normal; text-align: center; width: 100%; }
+
+    .form-row { grid-template-columns: 1fr; gap: 0; }
+    .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+
+    #calendar { padding: 10px; }
+    .fc-toolbar-title { font-size: 1rem !important; }
+
+    .not-found h1 { font-size: 4rem; }
+
+    /* Météo : un peu plus compacte, panneau sur toute la largeur */
+    .meteo-pill { bottom: 16px; right: 12px; }
+    .meteo-panel { right: 12px; left: 12px; width: auto; bottom: 62px; }
+}

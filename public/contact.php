@@ -1,5 +1,5 @@
 <?php
-require_once '../src/config/database.php';
+require_once '../src/init.php';
 
 $pageTitle = "Contact — CAT";
 $pageDesc = "Contactez le Club Aulnaysien de Tennis à Aulnay-sous-Bois.";
@@ -15,6 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$nom || !$email || !$sujet || !$message) {
         $error = 'Merci de remplir tous les champs.';
+    } elseif (!isset(SUJETS_CONTACT[$sujet])) {
+        $error = 'Sujet invalide.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Adresse email invalide.';
     } else {
@@ -23,21 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success = true;
     }
 }
+
+$nomClub   = param('nom_club', 'Club Aulnaysien de Tennis');
+$adresse   = param('adresse', 'Aulnay-sous-Bois, 93600');
+$emailClub = param('email_contact', 'contact@cat-tennis.fr');
+$telephone = param('telephone');
+$horaires  = param('horaires');
+
+$extraHead = '<link rel="stylesheet" href="' . BASE_URL . '/assets/css/leaflet.css">
+    <style>
+        #map { height: 280px; border-radius: 10px; margin-top: 28px; z-index: 1; }
+    </style>';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= $pageDesc ?>">
-    <title><?= $pageTitle ?></title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/leaflet.css">
-    <style>
-        #map { height: 280px; border-radius: 10px; margin-top: 28px; z-index: 1; }
-    </style>
-</head>
+<?php include '../templates/head.php'; ?>
 <body>
 
 <?php
@@ -64,23 +66,34 @@ include '../templates/navbar.php';
                     <span class="info-icon">📍</span>
                     <div>
                         <strong>Adresse</strong>
-                        <p>Club Aulnaysien de Tennis<br>Aulnay-sous-Bois, 93600</p>
+                        <p><?= htmlspecialchars($nomClub) ?><br><?= htmlspecialchars($adresse) ?></p>
                     </div>
                 </div>
                 <div class="info-block">
                     <span class="info-icon">✉️</span>
                     <div>
                         <strong>Email</strong>
-                        <p>contact@cat-tennis.fr</p>
+                        <p><a href="mailto:<?= htmlspecialchars($emailClub) ?>"><?= htmlspecialchars($emailClub) ?></a></p>
                     </div>
                 </div>
+                <?php if ($telephone): ?>
+                <div class="info-block">
+                    <span class="info-icon">📞</span>
+                    <div>
+                        <strong>Téléphone</strong>
+                        <p><a href="tel:<?= htmlspecialchars(preg_replace('/[^\d+]/', '', $telephone)) ?>"><?= htmlspecialchars($telephone) ?></a></p>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if ($horaires): ?>
                 <div class="info-block">
                     <span class="info-icon">🕐</span>
                     <div>
                         <strong>Secrétariat</strong>
-                        <p>Lundi – Vendredi : 14h – 18h<br>Samedi : 9h – 12h</p>
+                        <p><?= nl2br(htmlspecialchars($horaires)) ?></p>
                     </div>
                 </div>
+                <?php endif; ?>
                 <div class="info-block">
                     <span class="info-icon">🎾</span>
                     <div>
@@ -116,11 +129,9 @@ include '../templates/navbar.php';
                             <label for="sujet">Sujet *</label>
                             <select id="sujet" name="sujet" required>
                                 <option value="">-- Choisir un sujet --</option>
-                                <option value="inscription" <?= ($_POST['sujet'] ?? '') === 'inscription' ? 'selected' : '' ?>>Inscription au club</option>
-                                <option value="cours" <?= ($_POST['sujet'] ?? '') === 'cours' ? 'selected' : '' ?>>Cours & entraînements</option>
-                                <option value="tournoi" <?= ($_POST['sujet'] ?? '') === 'tournoi' ? 'selected' : '' ?>>Tournois & compétitions</option>
-                                <option value="reservation" <?= ($_POST['sujet'] ?? '') === 'reservation' ? 'selected' : '' ?>>Réservation de courts</option>
-                                <option value="autre" <?= ($_POST['sujet'] ?? '') === 'autre' ? 'selected' : '' ?>>Autre</option>
+                                <?php foreach (SUJETS_CONTACT as $valeur => $label): ?>
+                                <option value="<?= $valeur ?>" <?= ($_POST['sujet'] ?? '') === $valeur ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="form-group">
@@ -156,7 +167,7 @@ include '../templates/navbar.php';
     });
     L.marker([48.9385, 2.4972], { icon })
         .addTo(map)
-        .bindPopup('<strong>Club Aulnaysien de Tennis</strong><br>Aulnay-sous-Bois, 93600')
+        .bindPopup(<?= json_encode('<strong>' . htmlspecialchars($nomClub) . '</strong><br>' . htmlspecialchars($adresse)) ?>)
         .openPopup();
 </script>
 </body>

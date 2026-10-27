@@ -1,21 +1,15 @@
 <?php
-require_once '../src/config/database.php';
+require_once '../src/init.php';
 $pageTitle = "Mentions légales — CAT";
 $pageDesc = "Mentions légales et politique de confidentialité du Club Aulnaysien de Tennis.";
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= $pageDesc ?>">
-    <title><?= $pageTitle ?></title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
+<?php include '../templates/head.php'; ?>
 <body>
 
 <?php
-$activePage = 'mention-legales';
+$activePage = 'mentions-legales';
 $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
@@ -32,10 +26,11 @@ include '../templates/navbar.php';
         <div class="legal-content">
 
             <h2>Éditeur du site</h2>
-            <p><strong>Club Aulnaysien de Tennis (CAT)</strong><br>
+            <p><strong><?= htmlspecialchars(param('nom_club', 'Club Aulnaysien de Tennis')) ?> (CAT)</strong><br>
             Association loi 1901<br>
-            Aulnay-sous-Bois, 93600<br>
-            Email : contact@cat-tennis.fr</p>
+            <?= htmlspecialchars(param('adresse', 'Aulnay-sous-Bois, 93600')) ?><br>
+            <?php if (param('telephone')): ?>Téléphone : <?= htmlspecialchars(param('telephone')) ?><br><?php endif; ?>
+            Email : <?= htmlspecialchars(param('email_contact', 'contact@cat-tennis.fr')) ?></p>
 
             <h2>Hébergement</h2>
             <p>Ce site est hébergé par :<br>
@@ -50,7 +45,7 @@ include '../templates/navbar.php';
 
             <h2>Données personnelles (RGPD)</h2>
             <p>Les données collectées via le formulaire de contact (nom, email, message) sont utilisées uniquement pour répondre à votre demande. Elles ne sont ni vendues, ni transmises à des tiers.</p>
-            <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour exercer ce droit, contactez-nous à <strong>contact@cat-tennis.fr</strong>.</p>
+            <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour exercer ce droit, contactez-nous à <strong><?= htmlspecialchars(param('email_contact', 'contact@cat-tennis.fr')) ?></strong>.</p>
 
             <h2>Cookies</h2>
             <p>Ce site n'utilise pas de cookies de traçage ou publicitaires. Seuls des cookies techniques nécessaires au bon fonctionnement du site peuvent être déposés.</p>

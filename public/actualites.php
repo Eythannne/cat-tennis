@@ -1,5 +1,5 @@
 <?php
-require_once '../src/config/database.php';
+require_once '../src/init.php';
 
 // ── Filtre par mois (ex: ?mois=2026-10) ──────────────────────────────────────
 $filtreMois = isset($_GET['mois']) && preg_match('/^\d{4}-\d{2}$/', $_GET['mois'])
@@ -8,24 +8,24 @@ $filtreMois = isset($_GET['mois']) && preg_match('/^\d{4}-\d{2}$/', $_GET['mois'
 // ── Articles à afficher ───────────────────────────────────────────────────────
 if ($filtreMois) {
     $stmt = $pdo->prepare(
-        "SELECT * FROM articles WHERE publie=1
-         AND DATE_FORMAT(created_at, '%Y-%m') = ?
-         ORDER BY created_at DESC"
+        "SELECT * FROM articles WHERE " . sql_article_visible() . "
+         AND DATE_FORMAT(published_at, '%Y-%m') = ?
+         ORDER BY published_at DESC"
     );
     $stmt->execute([$filtreMois]);
     $articles = $stmt->fetchAll();
 } else {
     // Par défaut : 5 derniers
     $articles = $pdo->query(
-        "SELECT * FROM articles WHERE publie=1 ORDER BY created_at DESC LIMIT 5"
+        "SELECT * FROM articles WHERE " . sql_article_visible() . " ORDER BY published_at DESC LIMIT 5"
     )->fetchAll();
 }
 
 // ── Archives : tous les mois ayant au moins 1 article ─────────────────────────
 $archivesRaw = $pdo->query(
-    "SELECT DATE_FORMAT(created_at, '%Y-%m') AS mois, COUNT(*) AS nb
-     FROM articles WHERE publie=1
-     GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+    "SELECT DATE_FORMAT(published_at, '%Y-%m') AS mois, COUNT(*) AS nb
+     FROM articles WHERE " . sql_article_visible() . "
+     GROUP BY DATE_FORMAT(published_at, '%Y-%m')
      ORDER BY mois DESC"
 )->fetchAll();
 
@@ -45,6 +45,8 @@ foreach ($archivesRaw as $r) {
 
 // ── Galerie ───────────────────────────────────────────────────────────────────
 $photos = $pdo->query("SELECT * FROM galerie ORDER BY ordre ASC, created_at DESC")->fetchAll();
+$categories = array_values(array_unique(array_filter(array_column($photos, 'categorie'))));
+sort($categories);
 
 $pageTitle = "Actualités — CAT";
 $pageDesc  = "Toutes les actualités et la galerie photos du Club Aulnaysien de Tennis.";
@@ -58,14 +60,7 @@ if ($filtreMois) {
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= $pageDesc ?>">
-    <title><?= $pageTitle ?></title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
+<?php include '../templates/head.php'; ?>
 <body>
 
 <?php
@@ -106,7 +101,6 @@ include '../templates/navbar.php';
                             <p class="actu-empty">Aucun article pour cette période.</p>
                         <?php else: ?>
                             <?php foreach ($articles as $a): ?>
-                            <?php $initiales = mb_strtoupper(mb_substr(strip_tags($a['titre']), 0, 2)); ?>
                             <article class="news-card">
                                 <?php if (!empty($a['image'])): ?>
                                     <div class="news-img" style="background:url('assets/uploads/articles/<?= htmlspecialchars($a['image']) ?>') center/cover no-repeat; min-height:120px;"></div>
@@ -114,7 +108,7 @@ include '../templates/navbar.php';
                                     <div class="news-img" style="background:url('assets/images/placeholder.png') center/cover no-repeat; min-height:120px;"></div>
                                 <?php endif; ?>
                                 <div class="news-body">
-                                    <span class="news-date"><?= date('d F Y', strtotime($a['created_at'])) ?></span>
+                                    <span class="news-date"><?= date('d F Y', strtotime($a['published_at'])) ?></span>
                                     <h3><?= htmlspecialchars($a['titre']) ?></h3>
                                     <p><?= htmlspecialchars(mb_substr($a['contenu'], 0, 120)) ?>...</p>
                                     <a href="article.php?id=<?= $a['id'] ?>" class="news-link">Lire la suite →</a>
@@ -160,17 +154,26 @@ include '../templates/navbar.php';
 
         <!-- ── Onglet Galerie ──────────────────────────────────────────── -->
         <div class="tab-content" id="tab-galerie">
+            <?php if (count($categories) > 0): ?>
+            <div class="galerie-filtres">
+                <button class="galerie-filtre active" data-cat="">Toutes</button>
+                <?php foreach ($categories as $c): ?>
+                <button class="galerie-filtre" data-cat="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></button>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
             <div class="galerie-grid">
                 <?php if (empty($photos)): ?>
                     <p style="color:#999;grid-column:1/-1">Aucune photo pour l'instant.</p>
                 <?php else: ?>
                     <?php foreach ($photos as $p): ?>
-                    <div class="galerie-item">
+                    <div class="galerie-item" data-cat="<?= htmlspecialchars($p['categorie'] ?? '') ?>">
                         <div class="galerie-img">
                             <img src="assets/uploads/galerie/<?= htmlspecialchars($p['fichier']) ?>"
-                                 alt="<?= htmlspecialchars($p['titre']) ?>">
+                                 alt="<?= htmlspecialchars($p['titre']) ?>" loading="lazy">
                         </div>
                         <p><?= htmlspecialchars($p['titre']) ?></p>
+                        <?php if (!empty($p['categorie'])): ?><span class="galerie-cat"><?= htmlspecialchars($p['categorie']) ?></span><?php endif; ?>
                     </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -188,13 +191,6 @@ include '../templates/navbar.php';
 document.querySelectorAll('.archive-year-btn').forEach(btn => {
     const year = btn.dataset.year;
     const ul   = document.getElementById('year-' + year);
-
-    // Ouvre l'année active par défaut
-    const hasActive = ul.querySelector('.archive-link.active');
-    if (!hasActive && ul !== document.querySelector('.archive-months')) {
-        // Ouvre uniquement la première année par défaut
-    }
-    // La première année est ouverte par défaut via CSS (pas de .collapsed)
     btn.addEventListener('click', () => {
         const collapsed = ul.classList.toggle('collapsed');
         btn.querySelector('.archive-chevron').textContent = collapsed ? '▸' : '▾';
@@ -221,6 +217,16 @@ if (activeLink) {
         }
     });
 }
+
+// Filtre de la galerie par catégorie
+document.querySelectorAll('.galerie-filtre').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.galerie-filtre').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.galerie-grid .galerie-item').forEach(item => {
+            item.hidden = btn.dataset.cat !== '' && item.dataset.cat !== btn.dataset.cat;
+        });
+    });
+});
 </script>
 </body>
 </html>

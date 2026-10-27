@@ -1,5 +1,5 @@
 <?php
-require_once '../src/config/database.php';
+require_once '../src/init.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -8,7 +8,7 @@ if (!$id) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT * FROM articles WHERE id = ? AND publie = 1");
+$stmt = $pdo->prepare("SELECT * FROM articles WHERE id = ? AND " . sql_article_visible());
 $stmt->execute([$id]);
 $article = $stmt->fetch();
 
@@ -17,19 +17,12 @@ if (!$article) {
     exit;
 }
 
-$pageTitle = htmlspecialchars($article['titre']) . " — CAT";
-$pageDesc = htmlspecialchars(mb_substr($article['contenu'], 0, 150));
+$pageTitle = $article['titre'] . " — CAT";
+$pageDesc = mb_substr($article['contenu'], 0, 150);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= $pageDesc ?>">
-    <title><?= $pageTitle ?></title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
+<?php include '../templates/head.php'; ?>
 <body>
 
 <?php
@@ -41,7 +34,7 @@ include '../templates/navbar.php';
 <section class="page-hero">
     <div class="container">
         <h1><?= htmlspecialchars($article['titre']) ?></h1>
-        <p>Publié le <?= date('d F Y', strtotime($article['created_at'])) ?></p>
+        <p>Publié le <?= date('d F Y', strtotime($article['published_at'])) ?></p>
     </div>
 </section>
 

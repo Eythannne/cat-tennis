@@ -1,12 +1,44 @@
-bouton publier pour les articles quand ils sont en brouillons
-en gros deplacer le bouton 
+[FAIT le 27/10/2026] bouton publier pour les articles quand ils sont en brouillons
+en gros deplacer le bouton
 --> action : je crée un nouvel article, je le mets en brouillon puis il y a un bouton publier mais on ne peut pas le publier quand on le crée
 
-idée, publier programmé
+[FAIT le 27/10/2026] idée, publier programmé (champ "Date de publication" dans le formulaire article)
 
 
 ---------------------------------------------------------------------------------
 
-Ajout d'une carte dynamique sur la page du club pour l'adresse
+Dates en français
+--> aujourd'hui les dates des articles s'affichent en anglais ("27 October 2026")
+--> à faire en même temps que le multilingue : la date doit suivre la langue choisie
+    (IntlDateFormatter de PHP le fait tout seul : fr → "27 octobre 2026", en → "October 27, 2026"...)
+--> penser aussi au calendrier (FullCalendar a besoin de ses fichiers de langue)
+
+---------------------------------------------------------------------------------
+
+Site multilingue (sélecteur de langue dans la navbar)
+
+Langues prévues :
+- Français (langue principale)
+- Anglais
+- Espagnol
+- Allemand
+- Ukrainien
+- Arabe  /!\ s'écrit de droite à gauche : il faudra une mise en page miroir (dir="rtl")
+
+Langues à envisager (très parlées en Île-de-France / Seine-Saint-Denis) :
+- Portugais (grosse communauté portugaise en IDF)
+- Italien
+- Turc
+- Chinois (mandarin)
+- Tamoul (communauté importante à Aulnay et dans le 93)
+- Roumain
+- Polonais
+- Russe
+
+À prévoir :
+- textes fixes du site (menus, boutons, pages club / contact...) dans des fichiers de traduction (un par langue)
+- contenu de l'admin (articles, événements) : soit traduit à la main par langue, soit seulement en français
+- mémoriser la langue choisie (cookie) + détecter la langue du navigateur au premier passage
+- garder le français si une traduction manque
 
 ---------------------------------------------------------------------------------

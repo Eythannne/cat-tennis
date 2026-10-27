@@ -4,11 +4,22 @@ require_once 'auth.php';
 // Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+    $maintenant = date('Y-m-d H:i:s');
 
     if ($action === 'create' || $action === 'edit') {
         $titre = trim($_POST['titre']);
         $contenu = trim($_POST['contenu']);
-        $publie = isset($_POST['publie']) ? 1 : 0;
+
+        // Bouton cliqué : "brouillon" ou "publier".
+        // Date de publication : celle saisie (future = programmée), sinon maintenant.
+        $dateSaisie = !empty($_POST['published_at']) ? date('Y-m-d H:i:s', strtotime($_POST['published_at'])) : null;
+        if (($_POST['statut'] ?? '') === 'publier') {
+            $publie = 1;
+            $published_at = $dateSaisie ?? $maintenant;
+        } else {
+            $publie = 0;
+            $published_at = $dateSaisie;
+        }
 
         // Image actuelle : lue en base (jamais depuis le formulaire)
         $image = null;
@@ -41,13 +52,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'create') {
-            $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, publie, image) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$titre, $contenu, $publie, $image]);
+            $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, publie, published_at, image) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$titre, $contenu, $publie, $published_at, $image]);
         } else {
             $id = (int)$_POST['id'];
-            $stmt = $pdo->prepare("UPDATE articles SET titre=?, contenu=?, publie=?, image=? WHERE id=?");
-            $stmt->execute([$titre, $contenu, $publie, $image, $id]);
+            $stmt = $pdo->prepare("UPDATE articles SET titre=?, contenu=?, publie=?, published_at=?, image=? WHERE id=?");
+            $stmt->execute([$titre, $contenu, $publie, $published_at, $image, $id]);
         }
+    }
+
+    // Boutons rapides de la liste
+    if ($action === 'publier') {
+        $pdo->prepare("UPDATE articles SET publie=1, published_at=? WHERE id=?")->execute([$maintenant, (int)$_POST['id']]);
+    }
+    if ($action === 'depublier') {
+        $pdo->prepare("UPDATE articles SET publie=0 WHERE id=?")->execute([(int)$_POST['id']]);
     }
 
     if ($action === 'delete') {
@@ -77,106 +96,32 @@ if (isset($_GET['edit'])) {
     $stmt->execute([(int)$_GET['edit']]);
     $edit = $stmt->fetch();
 }
+
+admin_header('Articles', 'articles', '<link rel="stylesheet" href="../public/assets/css/cropper.min.css">
+<style>
+    .form-group textarea[name=contenu] { height: 180px; }
+    .preview-img { max-height: 120px; max-width: 100%; border-radius: 6px; border: 1px solid #ddd; }
+    #crop_preview_wrap { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    #crop_preview_wrap[hidden] { display: none; }
+    .link-btn { background: none; border: none; color: var(--vert); cursor: pointer; font-size: 0.85rem; text-decoration: underline; }
+
+    /* ── Modal crop ── */
+    .crop-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; }
+    .crop-overlay.active { display: flex; }
+    .crop-modal { background: #fff; border-radius: 12px; padding: 24px; width: 92%; max-width: 700px; max-height: 92vh; display: flex; flex-direction: column; gap: 16px; }
+    .crop-modal h3 { font-size: 1.1rem; color: var(--vert); }
+    .crop-container { max-height: 450px; overflow: hidden; background: #111; border-radius: 8px; }
+    .crop-container img { display: block; max-width: 100%; }
+    .crop-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+    .crop-hint { font-size: 0.82rem; color: #888; }
+</style>');
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Articles — Admin CAT</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; display: flex; min-height: 100vh; }
-
-        /* Sidebar */
-        .sidebar { width: 240px; background: #1A5276; color: #fff; padding: 20px 0; flex-shrink: 0; }
-        .sidebar-logo { padding: 0 20px 30px; font-size: 1.5rem; font-weight: 700; letter-spacing: 2px; }
-        .sidebar nav a { display: block; padding: 12px 20px; color: #cce4f7; text-decoration: none; font-size: 0.95rem; transition: background 0.2s; }
-        .sidebar nav a:hover, .sidebar nav a.active { background: rgba(255,255,255,0.15); color: #fff; }
-        .sidebar-footer { padding: 20px; margin-top: auto; }
-        .sidebar-footer a { color: #cce4f7; text-decoration: none; font-size: 0.85rem; }
-
-        /* Main */
-        .main { flex: 1; padding: 30px; }
-        h1 { font-size: 1.6rem; margin-bottom: 24px; color: #1A5276; }
-
-        /* Formulaire */
-        .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 30px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: #555; }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #555; }
-        .form-group input[type="text"],
-        .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; font-family: inherit; }
-        .form-group textarea { height: 140px; resize: vertical; }
-        .form-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
-        .btn-primary { background: #1A5276; color: #fff; }
-        .btn-danger { background: #e74c3c; color: #fff; font-size: 0.8rem; padding: 6px 12px; }
-        .btn-edit { background: #f0f0f0; color: #333; font-size: 0.8rem; padding: 6px 12px; text-decoration: none; border-radius: 6px; }
-
-        /* Table */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        th { font-weight: 600; color: #555; background: #fafafa; }
-        .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
-        .badge-green { background: #d5f5e3; color: #1e8449; }
-        .badge-gray { background: #eee; color: #777; }
-        .actions { display: flex; gap: 6px; }
-
-        /* ── Modal crop ── */
-        .crop-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-        .crop-overlay.active { display: flex; }
-        .crop-modal {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .crop-modal h3 { font-size: 1.1rem; color: #1A5276; }
-        .crop-container { max-height: 450px; overflow: hidden; background: #111; border-radius: 8px; }
-        .crop-container img { display: block; max-width: 100%; }
-        .crop-actions { display: flex; gap: 10px; justify-content: flex-end; }
-        .btn-secondary { background: #f0f0f0; color: #333; }
-        .crop-hint { font-size: 0.82rem; color: #888; }
-    </style>
-</head>
-<body>
-
-<div class="sidebar">
-    <div class="sidebar-logo">CAT</div>
-    <nav>
-        <a href="index.php">📊 Dashboard</a>
-        <a href="articles.php" class="active">📰 Articles</a>
-        <a href="messages.php">✉️ Messages</a>
-        <a href="evenements.php">📅 Événements</a>
-        <a href="galerie.php">📷 Galerie</a>
-        <a href="parametres.php">⚙️ Paramètres</a>
-    </nav>
-    <div class="sidebar-footer">
-        <a href="logout.php">🚪 Déconnexion</a>
-    </div>
-</div>
-
-<div class="main">
     <h1>📰 Gestion des articles</h1>
 
     <!-- Formulaire -->
     <div class="card">
-        <h2><?= $edit ? 'Modifier l\'article' : 'Nouvel article' ?></h2>
-        <form method="POST" enctype="multipart/form-data">
+        <h2><?= $edit ? 'Modifier l\'article' : 'Nouvel article' ?> <?= $edit ? article_badge($edit) : '' ?></h2>
+        <form method="POST">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="<?= $edit ? 'edit' : 'create' ?>">
             <?php if ($edit): ?>
@@ -194,31 +139,37 @@ if (isset($_GET['edit'])) {
                 <label>Image (jpg, png, webp — max 5 Mo)</label>
                 <?php if (!empty($edit['image'])): ?>
                     <div style="margin-bottom:10px;">
-                        <img src="../public/assets/uploads/articles/<?= htmlspecialchars($edit['image']) ?>"
-                             style="max-height:120px;border-radius:6px;border:1px solid #ddd;">
-                        <div style="font-size:0.8rem;color:#999;margin-top:4px;">Image actuelle — choisir un fichier pour la remplacer</div>
+                        <img src="../public/assets/uploads/articles/<?= htmlspecialchars($edit['image']) ?>" class="preview-img" alt="">
+                        <div class="form-hint">Image actuelle — choisir un fichier pour la remplacer</div>
                     </div>
                 <?php endif; ?>
                 <!-- Input caché qui recevra le base64 cropé -->
                 <input type="hidden" name="image_cropped" id="image_cropped">
                 <!-- Input file — déclenche le modal, ne sera PAS soumis -->
-                <input type="file" id="image_picker" accept="image/jpeg,image/png,image/webp" style="font-size:0.9rem;">
-                <div id="crop_preview_wrap" style="display:none;margin-top:10px;">
-                    <img id="crop_preview_thumb" style="max-height:80px;border-radius:6px;border:1px solid #ddd;">
-                    <span style="font-size:0.8rem;color:#1e8449;margin-left:8px;">✅ Image recadrée prête</span>
-                    <button type="button" id="crop_redo" style="margin-left:8px;background:none;border:none;color:#1A5276;cursor:pointer;font-size:0.85rem;text-decoration:underline;">Recadrer à nouveau</button>
+                <input type="file" id="image_picker" accept="image/jpeg,image/png,image/webp" style="font-size:0.9rem;max-width:100%">
+                <div id="crop_preview_wrap" hidden>
+                    <img id="crop_preview_thumb" class="preview-img" style="max-height:80px" alt="">
+                    <span style="font-size:0.8rem;color:var(--vert);">✅ Image recadrée prête</span>
+                    <button type="button" id="crop_redo" class="link-btn">Recadrer à nouveau</button>
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-check">
-                    <input type="checkbox" name="publie" <?= ($edit['publie'] ?? 0) ? 'checked' : '' ?>>
-                    Publier l'article
-                </label>
+                <label>Date de publication (optionnel)</label>
+                <input type="datetime-local" name="published_at" style="max-width:260px"
+                       value="<?= !empty($edit['published_at']) ? date('Y-m-d\TH:i', strtotime($edit['published_at'])) : '' ?>">
+                <div class="form-hint">Vide = publié tout de suite. Une date future programme la publication : l'article apparaîtra automatiquement à cette date.</div>
             </div>
-            <button type="submit" class="btn btn-primary"><?= $edit ? 'Mettre à jour' : 'Créer l\'article' ?></button>
-            <?php if ($edit): ?>
-                <a href="articles.php" style="margin-left:10px;color:#777;font-size:0.9rem;">Annuler</a>
-            <?php endif; ?>
+            <div class="form-actions">
+                <button type="submit" name="statut" value="publier" class="btn btn-primary">
+                    🚀 <?= ($edit['publie'] ?? 0) ? 'Mettre à jour' : 'Publier' ?>
+                </button>
+                <button type="submit" name="statut" value="brouillon" class="btn btn-secondary">
+                    💾 <?= ($edit['publie'] ?? 0) ? 'Repasser en brouillon' : 'Enregistrer en brouillon' ?>
+                </button>
+                <?php if ($edit): ?>
+                    <a href="articles.php" class="link-cancel">Annuler</a>
+                <?php endif; ?>
+            </div>
         </form>
     </div>
 
@@ -226,14 +177,14 @@ if (isset($_GET['edit'])) {
     <div class="card">
         <h2>Tous les articles (<?= count($articles) ?>)</h2>
         <?php if (empty($articles)): ?>
-            <p style="color:#999">Aucun article pour l'instant.</p>
+            <p class="empty">Aucun article pour l'instant.</p>
         <?php else: ?>
+        <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
                     <th>Titre</th>
-                    <th>Date</th>
+                    <th>Créé le</th>
                     <th>Statut</th>
                     <th>Actions</th>
                 </tr>
@@ -241,30 +192,36 @@ if (isset($_GET['edit'])) {
             <tbody>
                 <?php foreach ($articles as $a): ?>
                 <tr>
-                    <td><?= $a['id'] ?></td>
                     <td><?= htmlspecialchars($a['titre']) ?></td>
                     <td><?= date('d/m/Y', strtotime($a['created_at'])) ?></td>
+                    <td><?= article_badge($a) ?></td>
                     <td>
-                        <span class="badge <?= $a['publie'] ? 'badge-green' : 'badge-gray' ?>">
-                            <?= $a['publie'] ? 'Publié' : 'Brouillon' ?>
-                        </span>
-                    </td>
-                    <td class="actions">
-                        <a href="articles.php?edit=<?= $a['id'] ?>" class="btn-edit">✏️ Modifier</a>
-                        <form method="POST" onsubmit="return confirm('Supprimer cet article ?')">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?= $a['id'] ?>">
-                            <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
-                        </form>
+                        <div class="actions">
+                            <a href="articles.php?edit=<?= $a['id'] ?>" class="btn btn-secondary btn-sm">✏️ Modifier</a>
+                            <form method="POST">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="id" value="<?= $a['id'] ?>">
+                                <?php if ($a['publie']): ?>
+                                    <button type="submit" name="action" value="depublier" class="btn btn-secondary btn-sm">⏸️ Dépublier</button>
+                                <?php else: ?>
+                                    <button type="submit" name="action" value="publier" class="btn btn-accent btn-sm">🚀 Publier</button>
+                                <?php endif; ?>
+                            </form>
+                            <form method="POST" onsubmit="return confirm('Supprimer cet article ?')">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?= $a['id'] ?>">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <?php endif; ?>
     </div>
-</div>
 
 <!-- ── Modal Cropper ── -->
 <div class="crop-overlay" id="crop_overlay">
@@ -280,8 +237,8 @@ if (isset($_GET['edit'])) {
         </div>
     </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<?php admin_footer(<<<'HTML'
+<script src="../public/assets/js/cropper.min.js"></script>
 <script>
 (function() {
     const picker      = document.getElementById('image_picker');
@@ -341,7 +298,7 @@ if (isset($_GET['edit'])) {
 
         hiddenInput.value = base64;
         previewThumb.src  = base64;
-        previewWrap.style.display = 'block';
+        previewWrap.hidden = false;
 
         overlay.classList.remove('active');
         cropper.destroy(); cropper = null;
@@ -353,5 +310,4 @@ if (isset($_GET['edit'])) {
     });
 })();
 </script>
-</body>
-</html>
+HTML); ?>

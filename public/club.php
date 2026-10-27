@@ -1,18 +1,11 @@
 <?php
-require_once '../src/config/database.php';
+require_once '../src/init.php';
 $pageTitle = "Le club — CAT";
 $pageDesc = "Découvrez le Club Aulnaysien de Tennis : son histoire, ses terrains, ses entraîneurs et ses tarifs.";
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= $pageDesc ?>">
-    <title><?= $pageTitle ?></title>
-    <link rel="icon" href="favicon.ico">
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
+<?php include '../templates/head.php'; ?>
 <body>
 
 <?php

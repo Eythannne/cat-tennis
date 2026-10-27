@@ -1,17 +1,11 @@
 <?php
-require_once '../src/config/database.php';
+require_once '../src/init.php';
 $pageTitle = "Calendrier — CAT";
 $pageDesc = "Calendrier des événements, animations et cours du Club Aulnaysien de Tennis.";
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= $pageDesc ?>">
-    <title><?= $pageTitle ?></title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
+<?php include '../templates/head.php'; ?>
 <body>
 
 <?php
@@ -30,10 +24,9 @@ include '../templates/navbar.php';
 <section class="section-calendar">
     <div class="container">
         <div class="cal-legend">
-            <span class="legend-item"><span class="legend-dot" style="background:#1A5276"></span>Tournoi</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#1E8449"></span>Animation</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#D4AC0D"></span>Cours / Stage</span>
-            <span class="legend-item"><span class="legend-dot" style="background:#884EA0"></span>Vacances scolaires</span>
+            <?php foreach (EVENT_TYPES as $type): ?>
+            <span class="legend-item"><span class="legend-dot" style="background:<?= $type['couleur'] ?>"></span><?= $type['label'] ?></span>
+            <?php endforeach; ?>
         </div>
         <div id="calendar"></div>
     </div>
@@ -47,13 +40,12 @@ include '../templates/navbar.php';
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
         locale: 'fr',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,listMonth'
-        },
+        headerToolbar: window.innerWidth < 700
+            ? { left: 'prev,next', center: 'title', right: 'today' }
+            : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+        // Sur téléphone, la vue liste est plus lisible que la grille du mois
+        initialView: window.innerWidth < 700 ? 'listMonth' : 'dayGridMonth',
         buttonText: {
             today: "Aujourd'hui",
             month: 'Mois',

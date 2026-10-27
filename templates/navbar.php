@@ -3,7 +3,11 @@
         <a href="<?= BASE_URL ?>/index.php" class="nav-logo">
             <img src="<?= BASE_URL ?>/favicon.png" alt="CAT" class="nav-logo-img">
         </a>
-        <ul class="nav-links">
+        <!-- Bouton burger (visible uniquement sur mobile) -->
+        <button class="nav-toggle" id="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="nav-links">
+            <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links" id="nav-links">
             <li><a href="<?= BASE_URL ?>/index.php" <?= ($activePage ?? '') === 'accueil' ? 'class="active"' : '' ?>>Accueil</a></li>
             <li><a href="<?= BASE_URL ?>/club.php" <?= ($activePage ?? '') === 'club' ? 'class="active"' : '' ?>>Le club</a></li>
             <li><a href="<?= BASE_URL ?>/actualites.php" <?= ($activePage ?? '') === 'actualites' ? 'class="active"' : '' ?>>Actualités</a></li>

@@ -1,20 +1,13 @@
 <?php
-require_once '../src/config/database.php';
-$articles = $pdo->query("SELECT * FROM articles WHERE publie=1 ORDER BY created_at DESC LIMIT 3")->fetchAll();
+require_once '../src/init.php';
+$articles = $pdo->query("SELECT * FROM articles WHERE " . sql_article_visible() . " ORDER BY published_at DESC LIMIT 3")->fetchAll();
 
-$pageTitle = "Club Aulnaysien de Tennis";
-$pageDesc = "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Aulnay-sous-Bois.";
+$pageTitle = param('nom_club', 'Club Aulnaysien de Tennis');
+$pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Aulnay-sous-Bois.");
 ?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= $pageDesc ?>">
-    <title><?= $pageTitle ?></title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
+<?php include '../templates/head.php'; ?>
 <body>
 
     <!-- NAVBAR -->
@@ -77,7 +70,6 @@ $pageDesc = "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Auln
                     <p style="color:#999;grid-column:1/-1">Aucun article publié pour l'instant.</p>
                 <?php else: ?>
                     <?php foreach ($articles as $a): ?>
-                    <?php $initiales = mb_strtoupper(mb_substr(strip_tags($a['titre']), 0, 2)); ?>
                     <article class="news-card">
                         <?php if (!empty($a['image'])): ?>
                             <div class="news-img" style="background:url('assets/uploads/articles/<?= htmlspecialchars($a['image']) ?>') center/cover no-repeat"></div>
@@ -85,7 +77,7 @@ $pageDesc = "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Auln
                             <div class="news-img" style="background:url('assets/images/placeholder.png') center/cover no-repeat"></div>
                         <?php endif; ?>
                         <div class="news-body">
-                            <span class="news-date"><?= date('d F Y', strtotime($a['created_at'])) ?></span>
+                            <span class="news-date"><?= date('d F Y', strtotime($a['published_at'])) ?></span>
                             <h3><?= htmlspecialchars($a['titre']) ?></h3>
                             <p><?= htmlspecialchars(mb_substr($a['contenu'], 0, 120)) ?>...</p>
                             <a href="article.php?id=<?= $a['id'] ?>" class="news-link">Lire la suite →</a>
@@ -193,7 +185,7 @@ $pageDesc = "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Auln
         document.getElementById('mp-desc').textContent = 'Météo indisponible';
       });
 
-    /* Hover pill → ouvre/ferme le panneau */
+    /* Survol (ordinateur) ou appui (téléphone) sur la pill → ouvre/ferme le panneau */
     (function() {
         const pill  = document.getElementById('meteo-pill');
         const panel = document.getElementById('meteo-panel');
@@ -206,6 +198,15 @@ $pageDesc = "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Auln
         pill.addEventListener('mouseleave', close);
         panel.addEventListener('mouseenter', open);
         panel.addEventListener('mouseleave', close);
+
+        pill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearTimeout(timer);
+            panel.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+            if (!panel.contains(e.target)) panel.classList.remove('open');
+        });
     })();
     </script>
 </body>

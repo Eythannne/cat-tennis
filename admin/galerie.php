@@ -16,10 +16,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($ext) {
                 $filename = uniqid() . '.' . $ext;
                 if (move_uploaded_file($_FILES['fichier']['tmp_name'], $upload_dir . $filename)) {
-                    $stmt = $pdo->prepare("INSERT INTO galerie (titre, fichier, categorie) VALUES (?,?,?)");
-                    $stmt->execute([$titre, $filename, $categorie]);
+                    // Nouvelle photo placée en dernier
+                    $ordre = (int)$pdo->query("SELECT COALESCE(MAX(ordre), 0) + 1 FROM galerie")->fetchColumn();
+                    $stmt = $pdo->prepare("INSERT INTO galerie (titre, fichier, categorie, ordre) VALUES (?,?,?,?)");
+                    $stmt->execute([$titre, $filename, $categorie, $ordre]);
                 }
             }
+        }
+    }
+    if ($action === 'update') {
+        $stmt = $pdo->prepare("UPDATE galerie SET titre=?, categorie=? WHERE id=?");
+        $stmt->execute([trim($_POST['titre']), trim($_POST['categorie']), (int)$_POST['id']]);
+    }
+    if ($action === 'move') {
+        // Échange la photo avec sa voisine puis renumérote 1..n
+        $ids = $pdo->query("SELECT id FROM galerie ORDER BY ordre ASC, created_at DESC")->fetchAll(PDO::FETCH_COLUMN);
+        $pos = array_search((int)$_POST['id'], array_map('intval', $ids));
+        $cible = $pos + ($_POST['sens'] === 'avant' ? -1 : 1);
+        if ($pos !== false && isset($ids[$cible])) {
+            [$ids[$pos], $ids[$cible]] = [$ids[$cible], $ids[$pos]];
+            $stmt = $pdo->prepare("UPDATE galerie SET ordre=? WHERE id=?");
+            foreach ($ids as $i => $id) $stmt->execute([$i + 1, $id]);
         }
     }
     if ($action === 'delete') {
@@ -34,56 +51,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$photos = $pdo->query("SELECT * FROM galerie ORDER BY created_at DESC")->fetchAll();
+$photos = $pdo->query("SELECT * FROM galerie ORDER BY ordre ASC, created_at DESC")->fetchAll();
+$categories = $pdo->query("SELECT DISTINCT categorie FROM galerie WHERE categorie <> '' ORDER BY categorie")->fetchAll(PDO::FETCH_COLUMN);
+
+admin_header('Galerie', 'galerie', '<style>
+    .galerie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .galerie-item { border-radius: 8px; overflow: hidden; border: 1px solid #eee; background: #fff; }
+    .galerie-item img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .galerie-item .info { padding: 8px 10px; }
+    .galerie-item .titre { font-size: 0.85rem; color: #333; font-weight: 600; }
+    .galerie-item .cat { font-size: 0.75rem; color: #888; }
+    .galerie-item .tools { display: flex; gap: 4px; margin-top: 8px; }
+    .galerie-item .tools form { display: inline; }
+    .galerie-item .tools .btn:disabled { opacity: 0.35; cursor: default; }
+    .galerie-item details { margin-top: 8px; font-size: 0.82rem; }
+    .galerie-item details summary { cursor: pointer; color: var(--vert); }
+    .galerie-item details .form-group { margin: 6px 0; }
+    .galerie-item details input { padding: 6px 8px !important; font-size: 0.82rem !important; }
+</style>');
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galerie — Admin CAT</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Segoe UI',sans-serif; background:#f4f6f9; color:#333; display:flex; min-height:100vh; }
-        .sidebar { width:240px; background:#1A5276; color:#fff; padding:20px 0; flex-shrink:0; display:flex; flex-direction:column; }
-        .sidebar-logo { padding:0 20px 30px; font-size:1.5rem; font-weight:700; letter-spacing:2px; }
-        .sidebar nav a { display:block; padding:12px 20px; color:#cce4f7; text-decoration:none; font-size:0.95rem; }
-        .sidebar nav a:hover, .sidebar nav a.active { background:rgba(255,255,255,0.15); color:#fff; }
-        .sidebar-footer { padding:20px; margin-top:auto; }
-        .sidebar-footer a { color:#cce4f7; text-decoration:none; font-size:0.85rem; }
-        .main { flex:1; padding:30px; }
-        h1 { font-size:1.6rem; margin-bottom:24px; color:#1A5276; }
-        .card { background:#fff; border-radius:8px; padding:24px; margin-bottom:24px; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
-        .card h2 { font-size:1rem; color:#555; margin-bottom:16px; }
-        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-        .form-group { margin-bottom:14px; }
-        .form-group label { display:block; font-size:0.85rem; font-weight:600; margin-bottom:5px; color:#555; }
-        .form-group input { width:100%; padding:9px 12px; border:1px solid #ddd; border-radius:6px; font-size:0.9rem; }
-        .btn { padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-size:0.9rem; font-weight:600; }
-        .btn-primary { background:#1A5276; color:#fff; }
-        .btn-danger { background:#e74c3c; color:#fff; font-size:0.78rem; padding:5px 10px; }
-        .galerie-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-        .galerie-item { border-radius:8px; overflow:hidden; border:1px solid #eee; }
-        .galerie-item img { width:100%; height:140px; object-fit:cover; display:block; }
-        .galerie-item .info { padding:8px 10px; display:flex; justify-content:space-between; align-items:center; }
-        .galerie-item .info span { font-size:0.82rem; color:#555; }
-    </style>
-</head>
-<body>
-<div class="sidebar">
-    <div class="sidebar-logo">CAT</div>
-    <nav>
-        <a href="index.php">📊 Dashboard</a>
-        <a href="articles.php">📰 Articles</a>
-        <a href="messages.php">✉️ Messages</a>
-        <a href="evenements.php">📅 Événements</a>
-        <a href="galerie.php" class="active">📷 Galerie</a>
-        <a href="parametres.php">⚙️ Paramètres</a>
-    </nav>
-    <div class="sidebar-footer"><a href="logout.php">🚪 Déconnexion</a></div>
-</div>
-<div class="main">
     <h1>📷 Galerie photos</h1>
+    <datalist id="categories">
+        <?php foreach ($categories as $c): ?><option value="<?= htmlspecialchars($c) ?>"><?php endforeach; ?>
+    </datalist>
     <div class="card">
         <h2>Ajouter une photo</h2>
         <form method="POST" enctype="multipart/form-data">
@@ -96,7 +86,8 @@ $photos = $pdo->query("SELECT * FROM galerie ORDER BY created_at DESC")->fetchAl
                 </div>
                 <div class="form-group">
                     <label>Catégorie</label>
-                    <input type="text" name="categorie" placeholder="ex: Tournoi, Cours...">
+                    <input type="text" name="categorie" list="categories" placeholder="ex: Tournoi, Cours...">
+                    <div class="form-hint">Les visiteurs pourront filtrer la galerie par catégorie.</div>
                 </div>
             </div>
             <div class="form-group">
@@ -107,28 +98,50 @@ $photos = $pdo->query("SELECT * FROM galerie ORDER BY created_at DESC")->fetchAl
         </form>
     </div>
     <div class="card">
-        <h2>Photos (<?= count($photos) ?>)</h2>
+        <h2>Photos (<?= count($photos) ?>) — dans l'ordre d'affichage sur le site</h2>
         <?php if (empty($photos)): ?>
-            <p style="color:#999">Aucune photo.</p>
+            <p class="empty">Aucune photo.</p>
         <?php else: ?>
         <div class="galerie-grid">
-            <?php foreach ($photos as $p): ?>
+            <?php foreach ($photos as $i => $p): ?>
             <div class="galerie-item">
                 <img src="../public/assets/uploads/galerie/<?= htmlspecialchars($p['fichier']) ?>" alt="<?= htmlspecialchars($p['titre']) ?>">
                 <div class="info">
-                    <span><?= htmlspecialchars($p['titre']) ?></span>
-                    <form method="POST" onsubmit="return confirm('Supprimer ?')">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="id" value="<?= $p['id'] ?>">
-                        <button type="submit" class="btn btn-danger">🗑️</button>
-                    </form>
+                    <div class="titre"><?= htmlspecialchars($p['titre']) ?></div>
+                    <div class="cat"><?= $p['categorie'] !== '' && $p['categorie'] !== null ? htmlspecialchars($p['categorie']) : 'Sans catégorie' ?></div>
+                    <div class="tools">
+                        <?php foreach (['avant' => '←', 'apres' => '→'] as $sens => $fleche): ?>
+                        <form method="POST">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="move">
+                            <input type="hidden" name="sens" value="<?= $sens ?>">
+                            <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                            <button type="submit" class="btn btn-secondary btn-sm" title="Déplacer <?= $sens === 'avant' ? 'avant' : 'après' ?>"
+                                <?= ($sens === 'avant' && $i === 0) || ($sens === 'apres' && $i === count($photos) - 1) ? 'disabled' : '' ?>><?= $fleche ?></button>
+                        </form>
+                        <?php endforeach; ?>
+                        <form method="POST" onsubmit="return confirm('Supprimer ?')" style="margin-left:auto">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                            <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                        </form>
+                    </div>
+                    <details>
+                        <summary>✏️ Modifier</summary>
+                        <form method="POST">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                            <div class="form-group"><input type="text" name="titre" value="<?= htmlspecialchars($p['titre']) ?>" required></div>
+                            <div class="form-group"><input type="text" name="categorie" list="categories" value="<?= htmlspecialchars($p['categorie'] ?? '') ?>" placeholder="Catégorie"></div>
+                            <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+                        </form>
+                    </details>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
     </div>
-</div>
-</body>
-</html>
+<?php admin_footer(); ?>

@@ -8,4 +8,5 @@ if (!isset($_SESSION['admin_id'])) {
 
 csrf_check();
 
-require_once '../src/config/database.php';
+require_once '../src/init.php';
+require_once __DIR__ . '/_layout.php';

@@ -9,6 +9,16 @@ window.addEventListener('scroll', () => {
     }
 });
 
+// Menu burger (mobile)
+const navToggle = document.getElementById('nav-toggle');
+if (navToggle) {
+    navToggle.addEventListener('click', () => {
+        const isOpen = navbar.classList.toggle('nav-open');
+        navToggle.setAttribute('aria-expanded', isOpen);
+        navToggle.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
+    });
+}
+
 // Dropdown "Mon compte"
 const dropdownBtn  = document.querySelector('.nav-dropdown-btn');
 const dropdownMenu = document.querySelector('.nav-dropdown-menu');
