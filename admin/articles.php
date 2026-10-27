@@ -141,6 +141,10 @@ admin_header('Articles', 'articles', CROP_HEAD . '<style>
                 <button type="submit" name="statut" value="brouillon" class="btn btn-secondary">
                     💾 <?= ($edit['publie'] ?? 0) ? 'Repasser en brouillon' : 'Enregistrer en brouillon' ?>
                 </button>
+                <!-- Ouvre le rendu final dans un nouvel onglet, sans rien enregistrer -->
+                <button type="submit" formaction="apercu.php" formtarget="_blank" formnovalidate class="btn btn-secondary">
+                    👁️ Aperçu
+                </button>
                 <?php if ($edit): ?>
                     <a href="articles.php" class="link-cancel">Annuler</a>
                 <?php endif; ?>

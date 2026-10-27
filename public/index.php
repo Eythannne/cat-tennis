@@ -30,7 +30,7 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
         <div class="hero-content">
             <h1>Club Aulnaysien de Tennis</h1>
             <p>Rejoignez-nous à Aulnay-sous-Bois</p>
-            <a href="<?= BASE_URL ?>/club.php" class="btn-primary">Nous rejoindre</a>
+            <a href="<?= BASE_URL ?>/club.php#tarifs" class="btn-primary">Nous rejoindre</a>
         </div>
     </section>
 

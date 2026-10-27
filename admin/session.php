@@ -30,11 +30,14 @@ define('UPLOAD_ARTICLES',    __DIR__ . '/../public/assets/uploads/articles/');
 define('UPLOAD_ENTRAINEURS', __DIR__ . '/../public/assets/uploads/entraineurs/');
 define('UPLOAD_DOCUMENTS',   __DIR__ . '/../public/assets/uploads/documents/');
 define('PDF_MAX_SIZE', 10 * 1024 * 1024); // 10 Mo
+define('GALERIE_MAX_SIZE', 10 * 1024 * 1024); // 10 Mo : photos de téléphone, réduites à l'envoi
+define('GALERIE_LARGEUR', 1600);   // photo affichée en plein écran
+define('MINIATURE_LARGEUR', 600);  // vignette de la grille
 const IMAGE_TYPES = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
 
 // Renvoie l'extension correspondant au vrai type de l'image, ou null si invalide
-function image_extension($data) {
-    if (strlen($data) === 0 || strlen($data) > IMAGE_MAX_SIZE) return null;
+function image_extension($data, $tailleMax = IMAGE_MAX_SIZE) {
+    if (strlen($data) === 0 || strlen($data) > $tailleMax) return null;
     $info = @getimagesizefromstring($data);
     return $info ? (IMAGE_TYPES[$info['mime']] ?? null) : null;
 }
@@ -55,6 +58,47 @@ function save_cropped_image($base64, $dir, $prefix, $ancienne = null) {
 
     if ($ancienne) delete_upload($dir, $ancienne);
     return $filename;
+}
+
+// Redresse (orientation EXIF des téléphones) et réduit une image à $largeurMax pixels de large.
+// Écrit le résultat dans $destination (par défaut : remplace le fichier). Renvoie false si GD échoue.
+function optimiser_image($source, $largeurMax, $destination = null, $qualite = 82) {
+    $destination = $destination ?? $source;
+    $info = @getimagesize($source);
+    if (!$info || !function_exists('imagecreatetruecolor')) return false;
+
+    $img = match ($info['mime']) {
+        'image/jpeg' => @imagecreatefromjpeg($source),
+        'image/png'  => @imagecreatefrompng($source),
+        'image/webp' => @imagecreatefromwebp($source),
+        default      => false,
+    };
+    if (!$img) return false;
+
+    // Photo prise de côté au téléphone : on applique la rotation indiquée dans l'EXIF
+    if ($info['mime'] === 'image/jpeg' && function_exists('exif_read_data')) {
+        $orientation = @exif_read_data($source)['Orientation'] ?? 1;
+        $angle = [3 => 180, 6 => -90, 8 => 90][$orientation] ?? 0;
+        if ($angle) $img = imagerotate($img, $angle, 0);
+    }
+
+    $largeur = imagesx($img);
+    $hauteur = imagesy($img);
+    if ($largeur > $largeurMax) {
+        $nouvelleHauteur = (int)round($hauteur * $largeurMax / $largeur);
+        $reduite = imagecreatetruecolor($largeurMax, $nouvelleHauteur);
+        imagealphablending($reduite, false);
+        imagesavealpha($reduite, true);
+        imagecopyresampled($reduite, $img, 0, 0, 0, 0, $largeurMax, $nouvelleHauteur, $largeur, $hauteur);
+        $img = $reduite;
+    }
+
+    if (!is_dir(dirname($destination))) mkdir(dirname($destination), 0755, true);
+    return match ($info['mime']) {
+        'image/jpeg' => imagejpeg($img, $destination, $qualite),
+        'image/png'  => imagepng($img, $destination, 6),
+        'image/webp' => imagewebp($img, $destination, $qualite),
+    };
 }
 
 // Supprime un fichier uploadé (basename() empêche de sortir du dossier)

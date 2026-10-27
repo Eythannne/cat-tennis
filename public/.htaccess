@@ -1,4 +1,9 @@
 RewriteEngine On
+
+# robots.txt et sitemap.xml générés par PHP (adresses du site + derniers articles)
+RewriteRule ^robots\.txt$ robots.php [L]
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
 # Toute adresse qui ne correspond à aucun fichier affiche la page 404.
 # Chemin relatif : fonctionne en local (/cat-tennis/...) comme en ligne.
 RewriteCond %{REQUEST_FILENAME} !-f

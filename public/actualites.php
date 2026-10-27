@@ -190,9 +190,10 @@ include '../templates/navbar.php';
                 <?php else: ?>
                     <?php foreach ($photos as $p): ?>
                     <div class="galerie-item" data-cat="<?= htmlspecialchars($p['categorie'] ?? '') ?>"
+                         data-full="assets/uploads/galerie/<?= htmlspecialchars($p['fichier']) ?>"
                          tabindex="0" role="button" aria-label="Agrandir : <?= htmlspecialchars($p['titre']) ?>">
                         <div class="galerie-img">
-                            <img src="assets/uploads/galerie/<?= htmlspecialchars($p['fichier']) ?>"
+                            <img src="assets/uploads/galerie/<?= htmlspecialchars(miniature_galerie($p['fichier'])) ?>"
                                  alt="<?= htmlspecialchars($p['titre']) ?>" loading="lazy">
                             <span class="galerie-zoom" aria-hidden="true">🔍</span>
                         </div>
@@ -292,7 +293,7 @@ if (location.hash === '#galerie') {
         img.classList.remove('lightbox-anim');
         void img.offsetWidth;                          // relance l'animation
         img.classList.add('lightbox-anim');
-        img.src = photo.src;
+        img.src = photos[index].dataset.full;   // grande photo (la grille n'affiche que la vignette)
         img.alt = photo.alt;
         titre.textContent = photo.alt;
         cat.textContent = photos[index].dataset.cat;
@@ -300,7 +301,7 @@ if (location.hash === '#galerie') {
         miniatures.querySelectorAll('img').forEach((m, j) => m.classList.toggle('active', j === index));
         miniatures.children[index]?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
         // Précharge les voisines pour une navigation instantanée
-        [index - 1, index + 1].forEach(j => { const p = photos[(j + photos.length) % photos.length]; if (p) new Image().src = p.querySelector('img').src; });
+        [index - 1, index + 1].forEach(j => { const p = photos[(j + photos.length) % photos.length]; if (p) new Image().src = p.dataset.full; });
     }
 
     function ouvrir(item) {

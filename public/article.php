@@ -19,6 +19,8 @@ if (!$article) {
 
 $pageTitle = $article['titre'] . " — CAT";
 $pageDesc = texte_brut($article['contenu'], 155);
+$pageType = 'article';
+if (!empty($article['image'])) $pageImage = 'assets/uploads/articles/' . $article['image'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -31,31 +33,10 @@ $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
 
-<section class="page-hero">
-    <div class="container">
-        <h1><?= htmlspecialchars($article['titre']) ?></h1>
-        <p>Publié le <?= date('d F Y', strtotime($article['published_at'])) ?></p>
-    </div>
-</section>
-
-<section class="section">
-    <div class="container article-container">
-        <a href="actualites.php" class="btn-back">← Retour aux actualités</a>
-
-        <div class="article-img-wrap">
-            <img src="<?= !empty($article['image']) ? 'assets/uploads/articles/'.htmlspecialchars($article['image']) : 'assets/images/placeholder.png' ?>"
-                 alt="<?= htmlspecialchars($article['titre']) ?>">
-        </div>
-
-        <div class="article-content">
-            <?= format_article($article['contenu']) ?>
-        </div>
-
-        <div class="article-footer">
-            <a href="actualites.php" class="btn-back">← Retour aux actualités</a>
-        </div>
-    </div>
-</section>
+<?php
+$imageSrc = BASE_URL . '/assets/' . (!empty($article['image']) ? 'uploads/articles/' . $article['image'] : 'images/placeholder.png');
+include '../templates/article-contenu.php';
+?>
 
 <?php include '../templates/footer.php'; ?>
 

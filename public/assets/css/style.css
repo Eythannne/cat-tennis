@@ -30,6 +30,8 @@ body {
 h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 
 html { scroll-behavior: smooth; }
+/* Ancres (club.php#tarifs...) : le titre ne passe pas sous la barre de navigation fixe */
+section[id] { scroll-margin-top: 70px; }
 ::selection { background: var(--jaune); color: var(--dark); }
 /* Contour visible quand on navigue au clavier (Tab) */
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {

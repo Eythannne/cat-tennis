@@ -21,6 +21,13 @@ const MOIS_FR = ['01' => 'Janvier', '02' => 'Février', '03' => 'Mars', '04' => 
                  '05' => 'Mai', '06' => 'Juin', '07' => 'Juillet', '08' => 'Août',
                  '09' => 'Septembre', '10' => 'Octobre', '11' => 'Novembre', '12' => 'Décembre'];
 
+// ── Adresses complètes (partage sur les réseaux, sitemap) ─────────────────────
+function url_site($chemin = '') {
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+          || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    return ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . BASE_URL . '/' . ltrim($chemin, '/');
+}
+
 // ── Types d'événements du calendrier (libellé + couleur) ─────────────────────
 const EVENT_TYPES = [
     'tournoi'   => ['label' => 'Tournoi',            'couleur' => '#1B6B2F'],
@@ -155,6 +162,13 @@ function texte_brut($texte, $longueur = null) {
     $texte = preg_replace('/^\s*(#{2,3}|[-*•]|\d+[.)])\s+/m', '', $texte);
     $texte = trim(preg_replace('/\s+/', ' ', str_replace(['**', '*'], '', $texte)));
     return $longueur ? mb_strimwidth($texte, 0, $longueur, '…') : $texte;
+}
+
+// Chemin (relatif à uploads/galerie/) de la vignette d'une photo, ou la photo elle-même
+// si la vignette n'existe pas (photos envoyées avant l'ajout des vignettes)
+function miniature_galerie($fichier) {
+    $fichier = basename($fichier);
+    return is_file(__DIR__ . '/../public/assets/uploads/galerie/miniatures/' . $fichier) ? 'miniatures/' . $fichier : $fichier;
 }
 
 // Initiales d'un entraîneur (affichées quand il n'a pas de photo)
