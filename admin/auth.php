@@ -20,3 +20,7 @@ if (!$stmt->fetchColumn()) {
     header('Location: login.php');
     exit;
 }
+
+// RGPD : suppression automatique des messages de contact trop anciens
+$pdo->prepare("DELETE FROM messages_contact WHERE created_at < ?")
+    ->execute([date('Y-m-d H:i:s', strtotime('-' . CONSERVATION_MESSAGES_ANS . ' years'))]);

@@ -164,6 +164,7 @@ include '../templates/navbar.php';
                             <textarea id="message" name="message" rows="6" required><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
                         </div>
                         <button type="submit" class="btn-primary">Envoyer le message</button>
+                        <p class="form-rgpd">🔒 Vos données (nom, email, message) servent uniquement à vous répondre. Elles ne sont jamais transmises à des tiers et sont supprimées automatiquement après <?= CONSERVATION_MESSAGES_ANS ?> ans. <a href="mentions-legales.php#donnees">En savoir plus</a></p>
                     </form>
                 <?php endif; ?>
             </div>

@@ -10,6 +10,17 @@ const ADRESSE_DEFAUT = 'Stade du Moulin Neuf, 4 avenue du Maréchal Juin, 93600 
 const CLUB_LAT = 48.936124;
 const CLUB_LNG = 2.503562;
 
+// ── Informations légales ─────────────────────────────────────────────────────
+// Durée de conservation des messages du formulaire de contact (RGPD)
+const CONSERVATION_MESSAGES_ANS = 3;
+// Hébergeur du site (mentions légales obligatoires)
+const HEBERGEUR = [
+    'nom'     => 'InfinityFree',
+    'adresse' => 'Kwikstaartlaan 42, Unit G1517, 3704 GS Zeist, Pays-Bas',
+    'site'    => 'https://www.infinityfree.com',
+    'serveurs'=> 'iFastNet Ltd',
+];
+
 // ── Chiffres clés par défaut (modifiables dans Admin → Paramètres) ───────────
 const CHIFFRES_DEFAUT = [
     1 => ['6',    'Courts couverts'],
@@ -169,6 +180,22 @@ function texte_brut($texte, $longueur = null) {
 function miniature_galerie($fichier) {
     $fichier = basename($fichier);
     return is_file(__DIR__ . '/../public/assets/uploads/galerie/miniatures/' . $fichier) ? 'miniatures/' . $fichier : $fichier;
+}
+
+// Texte "Notre histoire" de la page club quand rien n'est saisi dans Paramètres.
+// L'année et l'ancienneté suivent le chiffre clé "Année de création".
+function presentation_club_defaut() {
+    $annee = (int)(param_brut('stat3_valeur') ?? CHIFFRES_DEFAUT[3][0]);
+    $fondation = '';
+    if ($annee > 1800 && $annee <= (int)date('Y')) {
+        $anciennete = intdiv((int)date('Y') - $annee, 10) * 10;
+        $fondation = "Fondé en $annee, le Club Aulnaysien de Tennis accueille depuis plus de $anciennete ans";
+    } else {
+        $fondation = 'Le Club Aulnaysien de Tennis accueille';
+    }
+    return "$fondation des joueurs de tous âges et de tous niveaux, dans un esprit convivial et de progression.\n\n"
+         . "Affilié à la Fédération Française de Tennis, le CAT participe aux compétitions par équipes et propose "
+         . "tout au long de l'année des animations, tournois internes et stages pour les jeunes comme pour les adultes.";
 }
 
 // Initiales d'un entraîneur (affichées quand il n'a pas de photo)

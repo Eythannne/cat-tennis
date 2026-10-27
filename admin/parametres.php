@@ -7,7 +7,8 @@ $pwError = false;
 
 // ── Infos club ────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'infos') {
-    $champs = ['nom_club', 'adresse', 'email_contact', 'telephone', 'horaires', 'description'];
+    $champs = ['nom_club', 'adresse', 'email_contact', 'telephone', 'horaires', 'description',
+               'presentation_club', 'responsable_publication', 'rna', 'siret'];
     foreach ($champs as $cle) {
         $valeur = trim($_POST[$cle] ?? '');
         $stmt = $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES (?,?) ON DUPLICATE KEY UPDATE valeur=?");
@@ -100,6 +101,31 @@ admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</s
                 <label>Description courte</label>
                 <textarea name="description"><?= htmlspecialchars($params['description'] ?? '') ?></textarea>
                 <div class="form-hint">Utilisée pour la description de la page d'accueil dans Google.</div>
+            </div>
+            <div class="form-group">
+                <label>Présentation du club (page « Le club », section « Notre histoire »)</label>
+                <textarea name="presentation_club" style="height:150px" placeholder="<?= htmlspecialchars(presentation_club_defaut()) ?>"><?= htmlspecialchars($params['presentation_club'] ?? '') ?></textarea>
+                <div class="form-hint">Vide = texte par défaut (affiché en grisé), avec l'année de création des chiffres clés. Une ligne vide = nouveau paragraphe ; <code>**gras**</code> possible.</div>
+            </div>
+
+            <h2 style="margin-top:28px">⚖️ Informations légales <span style="font-weight:400;font-size:0.85rem;color:#888">(page Mentions légales)</span></h2>
+            <?php if (empty($params['responsable_publication']) || empty($params['rna'])): ?>
+                <div class="alert alert-error">⚠️ À compléter avant la mise en ligne : le responsable de publication et le numéro RNA sont obligatoires pour une association.</div>
+            <?php endif; ?>
+            <div class="form-group">
+                <label>Responsable de la publication</label>
+                <input type="text" name="responsable_publication" value="<?= htmlspecialchars($params['responsable_publication'] ?? '') ?>" placeholder="ex : Prénom Nom, président(e) du club">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Numéro RNA</label>
+                    <input type="text" name="rna" value="<?= htmlspecialchars($params['rna'] ?? '') ?>" placeholder="ex : W931000000">
+                    <div class="form-hint">Sur le récépissé de déclaration en préfecture ou sur le Journal officiel des associations.</div>
+                </div>
+                <div class="form-group">
+                    <label>Numéro SIRET (optionnel)</label>
+                    <input type="text" name="siret" value="<?= htmlspecialchars($params['siret'] ?? '') ?>">
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
         </form>

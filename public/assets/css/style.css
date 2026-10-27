@@ -1,5 +1,21 @@
-/* ── Google Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+/* ── Police Outfit, hébergée sur le site (aucune donnée envoyée à Google) ── */
+/* Licence SIL Open Font License — fichiers dans assets/fonts/ */
+@font-face {
+    font-family: 'Outfit';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('../fonts/outfit-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: 'Outfit';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('../fonts/outfit-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 /* ── Variables ── */
 :root {
@@ -690,6 +706,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .form-group select:focus,
 .form-group textarea:focus { outline: none; border-color: var(--vert); }
 .form-group textarea { resize: vertical; }
+.form-rgpd { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin-top: 14px; }
+.form-rgpd a { color: var(--vert); }
 .contact-form .btn-primary { width: 100%; text-align: center; padding: 13px; font-size: 0.95rem; }
 .form-success { background: #E8F5E9; color: #2E7D32; padding: 18px 22px; border-radius: 8px; font-weight: 600; }
 .form-error { background: #FADBD8; color: #C0392B; padding: 12px 16px; border-radius: 6px; margin-bottom: 18px; font-size: 0.88rem; }
@@ -701,6 +719,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .legal-content h2:first-child { margin-top: 0; }
 .legal-content p { color: var(--muted); line-height: 1.8; font-size: 0.92rem; margin-bottom: 10px; }
 .legal-content a { color: var(--vert); }
+.legal-content ul { margin: 0 0 10px 1.3em; color: var(--muted); font-size: 0.92rem; line-height: 1.8; }
+.legal-content strong { color: var(--text); }
+.legal-maj { margin-top: 30px; font-size: 0.8rem !important; font-style: italic; }
 
 /* ── 404 ── */
 .section-404 { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }

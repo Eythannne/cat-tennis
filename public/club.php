@@ -32,8 +32,7 @@ include '../templates/navbar.php';
             <div class="about-text">
                 <span class="section-tag">Notre histoire</span>
                 <h2>Un club ancré dans Aulnay-sous-Bois</h2>
-                <p>Fondé en 1975, le Club Aulnaysien de Tennis est l'un des clubs de référence de Seine-Saint-Denis. Depuis plus de 50 ans, il accueille des joueurs de tous âges et de tous niveaux, dans un esprit convivial et de progression.</p>
-                <p>Affilié à la Fédération Française de Tennis, le CAT participe aux compétitions par équipes et propose tout au long de l'année des animations, tournois internes et stages pour les jeunes comme pour les adultes.</p>
+                <?= format_article(param('presentation_club', presentation_club_defaut())) ?>
             </div>
             <?php include '../templates/stats.php'; ?>
         </div>
