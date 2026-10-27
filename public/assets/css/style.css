@@ -326,6 +326,23 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .news-link { color: var(--vert); font-weight: 600; font-size: 0.86rem; text-decoration: none; }
 .news-link:hover { text-decoration: underline; }
 
+/* ── AGENDA (prochains événements, accueil) ── */
+.section-agenda { padding: 90px 0; background: var(--white); }
+.section-agenda h2 { font-size: 2rem; color: var(--dark); }
+.agenda-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+/* --type : couleur du type d'événement, fournie par la page */
+.agenda-card { display: flex; gap: 16px; align-items: flex-start; background: var(--white); border: 1px solid var(--border); border-left: 4px solid var(--type); border-radius: 12px; box-shadow: var(--shadow-card); padding: 18px; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; }
+.agenda-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(18,74,32,0.14); }
+.agenda-date { flex-shrink: 0; width: 66px; padding: 10px 4px; border-radius: 10px; background: var(--type); color: #fff; text-align: center; }
+.agenda-jour { display: block; font-size: 1.7rem; font-weight: 800; line-height: 1; }
+.agenda-mois { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.agenda-infos { min-width: 0; }
+.agenda-type { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--type); margin-bottom: 4px; }
+.agenda-encours { display: inline-block; background: var(--jaune); color: var(--dark); border-radius: 10px; padding: 1px 7px; margin-left: 4px; letter-spacing: 0.3px; }
+.agenda-infos h3 { font-size: 1.02rem; color: var(--dark); margin-bottom: 6px; }
+.agenda-quand { display: block; font-size: 0.82rem; color: var(--vert); font-weight: 600; margin-bottom: 6px; }
+.agenda-infos p { font-size: 0.84rem; color: var(--muted); line-height: 1.5; }
+
 /* ── RÉSERVATION ── */
 .section-reservation {
     padding: 70px 0;
@@ -699,6 +716,17 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .article-img-wrap { margin-bottom: 1.8rem; border-radius: 10px; overflow: hidden; }
 .article-img-wrap img { width: 100%; max-height: 400px; object-fit: cover; display: block; }
 .article-content { color: var(--text); line-height: 1.85; font-size: 1rem; }
+/* Mise en forme des articles (format_article) */
+.article-content p { margin-bottom: 1.1em; }
+.article-content h2 { font-size: 1.35rem; color: var(--vert); margin: 1.6em 0 0.6em; padding-left: 12px; border-left: 4px solid var(--jaune); }
+.article-content h2:first-child { margin-top: 0; }
+.article-content ul, .article-content ol { margin: 0 0 1.1em 1.4em; }
+.article-content li { margin-bottom: 0.35em; padding-left: 4px; }
+.article-content ul li::marker { color: var(--vert); }
+.article-content ol li::marker { color: var(--vert); font-weight: 700; }
+.article-content strong { color: var(--dark); }
+.article-content a { color: var(--vert); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.article-content a:hover { color: var(--vert-dark); }
 .article-footer { margin-top: 2.5rem; padding-top: 1.8rem; border-top: 1px solid var(--border); }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -708,6 +736,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* ── Tablette (≤ 1024px) ── */
 @media (max-width: 1024px) {
     .news-grid { grid-template-columns: repeat(2, 1fr); }
+    .agenda-grid { grid-template-columns: 1fr 1fr; }
     .galerie-grid { grid-template-columns: repeat(3, 1fr); }
     .footer-grid { grid-template-columns: 1fr 1fr; }
     .about-grid { gap: 40px; }
@@ -769,7 +798,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     .stat-card { padding: 20px 12px; }
     .stat-number { font-size: 1.9rem; }
 
-    .news-grid { grid-template-columns: 1fr; }
+    .news-grid, .agenda-grid { grid-template-columns: 1fr; }
+    .section-agenda { padding: 60px 0; }
     .news-grid--list .news-card { flex-direction: column; }
     .news-grid--list .news-img { width: 100%; height: 170px; }
 

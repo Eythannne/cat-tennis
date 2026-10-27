@@ -9,6 +9,7 @@ foreach ($evenements as $e) {
     // La couleur vient du type, pour correspondre à la légende du calendrier
     $type = EVENT_TYPES[$e['type']] ?? EVENT_TYPES['autre'];
     $events[] = [
+        'id' => $e['id'],
         'title' => $e['titre'],
         'start' => $e['date_debut'],
         'end' => $e['date_fin'],

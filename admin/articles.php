@@ -76,7 +76,13 @@ if (isset($_GET['edit'])) {
 }
 
 admin_header('Articles', 'articles', CROP_HEAD . '<style>
-    .form-group textarea[name=contenu] { height: 180px; }
+    .form-group textarea[name=contenu] { height: 260px; border-radius: 0 0 6px 6px; line-height: 1.55; }
+    .editeur-barre { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; background: #f6f8f6; border: 1px solid #ddd; border-bottom: none; border-radius: 6px 6px 0 0; }
+    .editeur-barre button { min-width: 34px; height: 32px; padding: 0 10px; border: 1px solid transparent; border-radius: 5px; background: transparent; cursor: pointer; font-size: 0.88rem; color: #333; font-family: inherit; }
+    .editeur-barre button:hover { background: #fff; border-color: #ddd; color: var(--vert); }
+    .editeur-barre .sep { width: 1px; background: #ddd; margin: 4px 4px; }
+    .editeur-aide { font-size: 0.8rem; color: #888; margin-top: 6px; }
+    .editeur-aide code { background: #f1f1f1; padding: 1px 5px; border-radius: 3px; }
 </style>');
 ?>
     <h1>📰 Gestion des articles</h1>
@@ -95,8 +101,22 @@ admin_header('Articles', 'articles', CROP_HEAD . '<style>
                 <input type="text" name="titre" value="<?= htmlspecialchars($edit['titre'] ?? '') ?>" required>
             </div>
             <div class="form-group">
-                <label>Contenu</label>
-                <textarea name="contenu"><?= htmlspecialchars($edit['contenu'] ?? '') ?></textarea>
+                <label for="contenu">Contenu</label>
+                <div class="editeur-barre" role="toolbar" aria-label="Mise en forme">
+                    <button type="button" data-format="gras" title="Gras (Ctrl+B)"><strong>G</strong></button>
+                    <button type="button" data-format="italique" title="Italique (Ctrl+I)"><em>I</em></button>
+                    <span class="sep"></span>
+                    <button type="button" data-format="titre" title="Intertitre">Titre</button>
+                    <button type="button" data-format="liste" title="Liste à puces">• Liste</button>
+                    <button type="button" data-format="numeros" title="Liste numérotée">1. Liste</button>
+                    <span class="sep"></span>
+                    <button type="button" data-format="lien" title="Insérer un lien">🔗 Lien</button>
+                </div>
+                <textarea name="contenu" id="contenu"><?= htmlspecialchars($edit['contenu'] ?? '') ?></textarea>
+                <div class="editeur-aide">
+                    Sélectionnez du texte puis cliquez sur un bouton. Syntaxe : <code>**gras**</code> <code>*italique*</code>
+                    <code>## Titre</code> <code>- liste</code> <code>[texte](https://lien)</code>. Une ligne vide = nouveau paragraphe.
+                </div>
             </div>
             <div class="form-group">
                 <label>Image (jpg, png, webp — max 5 Mo)</label>
@@ -179,4 +199,4 @@ admin_header('Articles', 'articles', CROP_HEAD . '<style>
     </div>
 
 <?php crop_modal(); ?>
-<?php admin_footer(CROP_SCRIPTS); ?>
+<?php admin_footer(CROP_SCRIPTS . '<script src="editeur.js"></script>'); ?>

@@ -16,6 +16,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $saved = true;
 }
 
+// ── Chiffres clés (accueil + page Le club) ────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chiffres') {
+    $stmt = $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES (?,?) ON DUPLICATE KEY UPDATE valeur=?");
+    foreach (array_keys(CHIFFRES_DEFAUT) as $n) {
+        foreach (['valeur', 'label'] as $champ) {
+            $valeur = trim($_POST["stat{$n}_{$champ}"] ?? '');
+            $stmt->execute(["stat{$n}_{$champ}", $valeur, $valeur]);
+        }
+    }
+    $saved = true;
+}
+
 // ── Changement de mot de passe ────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'password') {
     $actuel    = $_POST['mdp_actuel']    ?? '';
@@ -89,6 +101,29 @@ admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</s
                 <textarea name="description"><?= htmlspecialchars($params['description'] ?? '') ?></textarea>
                 <div class="form-hint">Utilisée pour la description de la page d'accueil dans Google.</div>
             </div>
+            <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+        </form>
+    </div>
+
+    <!-- ── Card : Chiffres clés ── -->
+    <div class="card">
+        <h2>🔢 Chiffres clés</h2>
+        <p class="form-hint" style="margin:-8px 0 16px">Affichés sur l'accueil et la page « Le club ». Laisser le chiffre vide pour masquer une case. Le nombre d'entraîneurs s'ajoute tout seul.</p>
+        <form method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="chiffres">
+            <?php foreach (CHIFFRES_DEFAUT as $n => [$valeurDefaut, $labelDefaut]): ?>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Chiffre <?= $n ?></label>
+                    <input type="text" name="stat<?= $n ?>_valeur" value="<?= htmlspecialchars($params["stat{$n}_valeur"] ?? $valeurDefaut) ?>" placeholder="ex : 300+">
+                </div>
+                <div class="form-group">
+                    <label>Légende</label>
+                    <input type="text" name="stat<?= $n ?>_label" value="<?= htmlspecialchars($params["stat{$n}_label"] ?? $labelDefaut) ?>" placeholder="ex : Adhérents">
+                </div>
+            </div>
+            <?php endforeach; ?>
             <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
         </form>
     </div>

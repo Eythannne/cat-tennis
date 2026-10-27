@@ -18,7 +18,7 @@ if (!$article) {
 }
 
 $pageTitle = $article['titre'] . " — CAT";
-$pageDesc = mb_substr($article['contenu'], 0, 150);
+$pageDesc = texte_brut($article['contenu'], 155);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -48,7 +48,7 @@ include '../templates/navbar.php';
         </div>
 
         <div class="article-content">
-            <?= nl2br(htmlspecialchars($article['contenu'])) ?>
+            <?= format_article($article['contenu']) ?>
         </div>
 
         <div class="article-footer">

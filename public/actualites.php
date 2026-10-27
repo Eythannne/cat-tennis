@@ -36,14 +36,11 @@ $archivesRaw = $pdo->query(
 
 // Organisé par année → [mois => nb], découpage en PHP
 $archives = [];
-$MOIS_FR  = ['01'=>'Janvier','02'=>'Février','03'=>'Mars','04'=>'Avril',
-             '05'=>'Mai','06'=>'Juin','07'=>'Juillet','08'=>'Août',
-             '09'=>'Septembre','10'=>'Octobre','11'=>'Novembre','12'=>'Décembre'];
 foreach ($archivesRaw as $r) {
     [$annee, $numMois] = explode('-', $r['mois']);
     $archives[$annee][] = [
         'slug'  => $r['mois'],
-        'label' => $MOIS_FR[$numMois] ?? $numMois,
+        'label' => MOIS_FR[$numMois] ?? $numMois,
         'nb'    => $r['nb'],
     ];
 }
@@ -60,7 +57,7 @@ $pageDesc  = "Toutes les actualités et la galerie photos du Club Aulnaysien de 
 $titreFiltreActif = '';
 if ($filtreMois) {
     [$y, $m] = explode('-', $filtreMois);
-    $titreFiltreActif = ($MOIS_FR[$m] ?? $m) . ' ' . $y;
+    $titreFiltreActif = (MOIS_FR[$m] ?? $m) . ' ' . $y;
 }
 ?>
 <!DOCTYPE html>
@@ -115,7 +112,7 @@ include '../templates/navbar.php';
                                 <div class="news-body">
                                     <span class="news-date"><?= date('d F Y', strtotime($a['published_at'])) ?></span>
                                     <h3><?= htmlspecialchars($a['titre']) ?></h3>
-                                    <p><?= htmlspecialchars(mb_substr($a['contenu'], 0, 120)) ?>...</p>
+                                    <p><?= htmlspecialchars(texte_brut($a['contenu'], 120)) ?></p>
                                     <a href="article.php?id=<?= $a['id'] ?>" class="news-link">Lire la suite →</a>
                                 </div>
                             </article>

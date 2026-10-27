@@ -1,7 +1,15 @@
 <?php
 require_once '../src/init.php';
 $articles = $pdo->query("SELECT * FROM articles WHERE " . sql_article_visible() . " ORDER BY published_at DESC LIMIT 3")->fetchAll();
-$nbEntraineurs = $pdo->query("SELECT COUNT(*) FROM entraineurs")->fetchColumn();
+
+// 3 prochains événements : pas encore terminés (ou du jour s'ils n'ont pas de fin)
+$stmt = $pdo->prepare(
+    "SELECT * FROM evenements
+     WHERE (date_fin IS NOT NULL AND date_fin >= ?) OR (date_fin IS NULL AND date_debut >= ?)
+     ORDER BY date_debut LIMIT 3"
+);
+$stmt->execute([date('Y-m-d H:i:s'), date('Y-m-d 00:00:00')]);
+$evenements = $stmt->fetchAll();
 
 $pageTitle = param('nom_club', 'Club Aulnaysien de Tennis');
 $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Aulnay-sous-Bois.");
@@ -36,24 +44,7 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
                     <p>Fondé à Aulnay-sous-Bois, le Club Aulnaysien de Tennis accueille joueurs de tous niveaux, des débutants aux compétiteurs. Cours collectifs, tournois internes, animations jeunes — il y en a pour tout le monde.</p>
                     <a href="club.php" class="btn-secondary">En savoir plus</a>
                 </div>
-                <div class="about-stats">
-                    <div class="stat-card">
-                        <span class="stat-number">6</span>
-                        <span class="stat-label">Courts couverts</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number">300+</span>
-                        <span class="stat-label">Adhérents</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number">1975</span>
-                        <span class="stat-label">Année de création</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number"><?= $nbEntraineurs ?></span>
-                        <span class="stat-label">Entraîneurs</span>
-                    </div>
-                </div>
+                <?php include '../templates/stats.php'; ?>
             </div>
         </div>
     </section>
@@ -80,7 +71,7 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
                         <div class="news-body">
                             <span class="news-date"><?= date('d F Y', strtotime($a['published_at'])) ?></span>
                             <h3><?= htmlspecialchars($a['titre']) ?></h3>
-                            <p><?= htmlspecialchars(mb_substr($a['contenu'], 0, 120)) ?>...</p>
+                            <p><?= htmlspecialchars(texte_brut($a['contenu'], 120)) ?></p>
                             <a href="article.php?id=<?= $a['id'] ?>" class="news-link">Lire la suite →</a>
                         </div>
                     </article>
@@ -89,6 +80,41 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
             </div>
         </div>
     </section>
+
+    <!-- Section : Prochains événements (masquée s'il n'y en a aucun) -->
+    <?php if ($evenements): ?>
+    <section class="section-agenda">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Agenda</span>
+                <h2>Prochains événements</h2>
+                <a href="calendrier.php" class="btn-link">Tout le calendrier →</a>
+            </div>
+            <div class="agenda-grid">
+                <?php foreach ($evenements as $e):
+                    $type    = EVENT_TYPES[$e['type']] ?? EVENT_TYPES['autre'];
+                    $debut   = strtotime($e['date_debut']);
+                    $enCours = $debut <= time();
+                ?>
+                <a href="calendrier.php?evenement=<?= $e['id'] ?>" class="agenda-card" style="--type: <?= $type['couleur'] ?>">
+                    <div class="agenda-date">
+                        <span class="agenda-jour"><?= date('j', $debut) ?></span>
+                        <span class="agenda-mois"><?= MOIS_FR[date('m', $debut)] ?></span>
+                    </div>
+                    <div class="agenda-infos">
+                        <span class="agenda-type"><?= $type['label'] ?><?php if ($enCours): ?> <span class="agenda-encours">En cours</span><?php endif; ?></span>
+                        <h3><?= htmlspecialchars($e['titre']) ?></h3>
+                        <span class="agenda-quand">🕐 <?= quand_evenement($e) ?></span>
+                        <?php if ($e['description']): ?>
+                        <p><?= htmlspecialchars(mb_strimwidth($e['description'], 0, 90, '…')) ?></p>
+                        <?php endif; ?>
+                    </div>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <!-- Section : Réserver un court -->
     <section class="section-reservation">

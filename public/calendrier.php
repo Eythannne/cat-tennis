@@ -2,6 +2,14 @@
 require_once '../src/init.php';
 $pageTitle = "Calendrier — CAT";
 $pageDesc = "Calendrier des événements, animations et cours du Club Aulnaysien de Tennis.";
+
+// Lien direct vers un événement (ex : depuis l'accueil) : on ouvre le bon mois puis sa pop-up
+$evenementCible = null;
+if (isset($_GET['evenement'])) {
+    $stmt = $pdo->prepare("SELECT id, date_debut FROM evenements WHERE id = ?");
+    $stmt->execute([(int)$_GET['evenement']]);
+    $evenementCible = $stmt->fetch() ?: null;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -52,6 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'fr',
+        <?php if ($evenementCible): ?>
+        initialDate: '<?= date('Y-m-d', strtotime($evenementCible['date_debut'])) ?>',
+        <?php endif; ?>
         headerToolbar: window.innerWidth < 700
             ? { left: 'prev,next', center: 'title', right: 'today' }
             : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
@@ -70,6 +81,15 @@ document.addEventListener('DOMContentLoaded', function() {
         height: 'auto'
     });
     calendar.render();
+
+    <?php if ($evenementCible): ?>
+    // Ouvre la pop-up de l'événement demandé dès que les événements sont chargés
+    let dejaOuvert = false;
+    calendar.on('eventsSet', function() {
+        const ev = calendar.getEventById('<?= (int)$evenementCible['id'] ?>');
+        if (ev && !dejaOuvert) { dejaOuvert = true; ouvrirEvenement(ev); }
+    });
+    <?php endif; ?>
 });
 
 // ── Pop-up de détail ─────────────────────────────────────────────────────────
