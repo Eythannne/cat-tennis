@@ -22,7 +22,7 @@ $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
 
-<section class="page-hero">
+<section class="page-hero page-hero--calendrier">
     <div class="container">
         <h1>Calendrier</h1>
         <p>Animations, cours, tournois et événements du club</p>

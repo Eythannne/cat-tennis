@@ -1,8 +1,12 @@
 <?php
 // Corps d'une page article : utilisé par public/article.php et par l'aperçu de l'admin.
 // Attend $article (titre, contenu, published_at) et $imageSrc (adresse de l'image).
+
+// Variables fournies par la page qui inclut ce gabarit (indication pour l'éditeur) :
+/** @var array  $article */
+/** @var string $imageSrc */
 ?>
-<section class="page-hero">
+<section class="page-hero page-hero--article">
     <div class="container">
         <h1><?= htmlspecialchars($article['titre']) ?></h1>
         <p>Publié le <?= date('d F Y', strtotime($article['published_at'] ?? 'now')) ?></p>
@@ -19,10 +23,6 @@
 
         <div class="article-content">
             <?= format_article($article['contenu']) ?>
-        </div>
-
-        <div class="article-footer">
-            <a href="<?= BASE_URL ?>/actualites.php" class="btn-back">← Retour aux actualités</a>
         </div>
     </div>
 </section>

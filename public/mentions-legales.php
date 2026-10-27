@@ -16,7 +16,7 @@ $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
 
-<section class="page-hero">
+<section class="page-hero page-hero--mentions">
     <div class="container">
         <h1>Mentions légales</h1>
         <p>Informations légales et politique de confidentialité</p>

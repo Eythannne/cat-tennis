@@ -396,14 +396,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .page-hero h1 { font-size: 2.6rem; color: #fff; margin-bottom: 10px; }
 .page-hero p { font-size: 1rem; color: rgba(255,255,255,0.68); }
 
-/* Hero avec photo (ex: club.php) */
-.page-hero--club {
+/* Bannière propre à chaque page : déposer l'image dans assets/images/ avec le nom indiqué.
+   Tant que l'image n'existe pas, placeholder.png (dessous) s'affiche à la place. */
+.page-hero[class*="page-hero--"] {
     background:
         linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 100%),
-        url('../images/hero-pages.jpg') center/cover no-repeat,
+        var(--banniere) center/cover no-repeat,
+        /* teinte verte : visible seulement si la photo de la page manque */
+        linear-gradient(to bottom, rgba(27,107,47,0.55) 0%, rgba(18,74,32,0.65) 100%),
         url('../images/placeholder.png') center/cover no-repeat;
-    border-bottom-color: var(--jaune);
 }
+.page-hero--club        { --banniere: url('../images/banniere-club.jpg'); }
+.page-hero--actualites  { --banniere: url('../images/banniere-actualites.jpg'); }
+.page-hero--calendrier  { --banniere: url('../images/banniere-calendrier.jpg'); }
+.page-hero--contact     { --banniere: url('../images/banniere-contact.jpg'); }
+.page-hero--mentions    { --banniere: url('../images/banniere-mentions.jpg'); }
+.page-hero--article     { --banniere: url('../images/banniere-article.jpg'); }
 
 /* ── MÉTÉO ── */
 .meteo-pill {
@@ -750,7 +758,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .article-content strong { color: var(--dark); }
 .article-content a { color: var(--vert); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .article-content a:hover { color: var(--vert-dark); }
-.article-footer { margin-top: 2.5rem; padding-top: 1.8rem; border-top: 1px solid var(--border); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    RESPONSIVE

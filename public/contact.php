@@ -66,7 +66,7 @@ $navScrolled = 'scrolled';
 include '../templates/navbar.php';
 ?>
 
-<section class="page-hero">
+<section class="page-hero page-hero--contact">
     <div class="container">
         <h1>Contact</h1>
         <p>Une question ? Écrivez-nous</p>
