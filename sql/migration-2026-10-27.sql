@@ -1,5 +1,7 @@
--- Migration du 27/10/2026
--- À exécuter une fois sur chaque base (local + prod) via phpMyAdmin.
+-- Migration du 27/10/2026 — base LOCALE (MySQL de Laragon).
+-- Pour la base en ligne (InfinityFree), utiliser sql/migration-prod-infinityfree.sql.
+-- Relançable : seule la ligne "ADD COLUMN published_at" (étape 2) échoue si elle a déjà été
+-- exécutée ("Duplicate column name"). Dans ce cas, exécuter tout ce qui suit cette ligne.
 
 -- 1. Encodage complet (emojis dans les messages de contact, etc.)
 ALTER TABLE admins           CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -11,7 +13,7 @@ ALTER TABLE parametres       CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_un
 
 -- 2. Date de publication des articles (brouillon → publié, publication programmée)
 ALTER TABLE articles ADD COLUMN published_at DATETIME NULL DEFAULT NULL AFTER publie;
-UPDATE articles SET published_at = created_at WHERE publie = 1;
+UPDATE articles SET published_at = created_at WHERE publie = 1 AND published_at IS NULL;
 
 -- 3. Nouveau paramètre : horaires du secrétariat (affichés sur la page Contact)
 INSERT IGNORE INTO parametres (cle, valeur) VALUES ('horaires', 'Lundi – Vendredi : 14h – 18h\nSamedi : 9h – 12h');
