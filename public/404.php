@@ -10,7 +10,7 @@ http_response_code(404);
 
 <?php
 $activePage = '';
-$navScrolled = 'scrolled';
+$navScrolled = 'scrolled nav-fixe'; // fond clair : la navbar reste toujours opaque
 include '../templates/navbar.php';
 ?>
 

@@ -42,3 +42,18 @@ Langues à envisager (très parlées en Île-de-France / Seine-Saint-Denis) :
 - garder le français si une traduction manque
 
 ---------------------------------------------------------------------------------
+
+Avant l'hébergement (légal)
+- mentions légales : nom du responsable de publication, numéro RNA de l'association,
+  adresse de l'hébergeur (InfinityFree), durée de conservation des messages de contact
+- RGPD : le site utilise Google Fonts, la carte OpenStreetMap et la météo Open-Meteo
+  → héberger la police sur le site + ajouter une phrase pour la carte et la météo
+
+---------------------------------------------------------------------------------
+
+V2
+- Espace membre (déjà annoncé "Bientôt" dans le menu)
+- Notification par email quand un message de contact arrive
+- Admin Messages : bouton "Marquer comme non lu" (en attente)
+
+---------------------------------------------------------------------------------

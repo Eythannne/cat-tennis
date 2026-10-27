@@ -38,5 +38,31 @@ SELECT 'Ethan', '', 'Enfants & Pôle compétition', 'Cours collectifs enfants, s
 WHERE NOT EXISTS (SELECT 1 FROM entraineurs);
 
 -- 6. Adresse complète du club
-INSERT INTO parametres (cle, valeur) VALUES ('adresse', 'Stade du Moulin Neuf, 6 avenue du Maréchal Juin, 93600 Aulnay-sous-Bois')
+INSERT INTO parametres (cle, valeur) VALUES ('adresse', 'Stade du Moulin Neuf, 4 avenue du Maréchal Juin, 93600 Aulnay-sous-Bois')
 ON DUPLICATE KEY UPDATE valeur = VALUES(valeur);
+
+-- 7. Tarifs gérés depuis l'admin (page Le club) + fiche d'inscription PDF
+CREATE TABLE IF NOT EXISTS tarifs (
+    id           INT NOT NULL AUTO_INCREMENT,
+    nom          VARCHAR(100) NOT NULL,
+    public_cible VARCHAR(150) DEFAULT NULL,
+    prix         VARCHAR(50)  NOT NULL DEFAULT '',
+    periode      VARCHAR(30)  DEFAULT '/an',
+    avantages    TEXT,
+    mis_en_avant TINYINT(1)   DEFAULT 0,
+    ordre        INT          DEFAULT 0,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO tarifs (nom, public_cible, prix, periode, avantages, mis_en_avant, ordre)
+SELECT * FROM (
+    SELECT 'Enfant' AS nom, 'Moins de 18 ans' AS public_cible, 'À définir' AS prix, '/an' AS periode,
+           'Cotisation FFT incluse\nAccès aux cours collectifs\nTournois internes\nAnimations vacances' AS avantages, 0 AS mis_en_avant, 1 AS ordre
+    UNION ALL SELECT 'Adulte', '18 ans et plus', 'À définir', '/an',
+           'Cotisation FFT incluse\nAccès aux cours collectifs\nTournois internes\nCompétitions par équipes', 1, 2
+    UNION ALL SELECT 'Famille', '2 adultes + enfants', 'À définir', '/an',
+           'Cotisations FFT incluses\nAccès cours collectifs\nTournois internes\nTarif préférentiel', 0, 3
+) AS depart
+WHERE NOT EXISTS (SELECT 1 FROM tarifs);
+
+INSERT IGNORE INTO parametres (cle, valeur) VALUES ('saison', '2026-2027'), ('fiche_inscription', '');

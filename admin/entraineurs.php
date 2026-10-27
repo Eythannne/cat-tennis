@@ -36,15 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'move') {
-        // Échange l'entraîneur avec son voisin puis renumérote 1..n
-        $ids = array_map('intval', $pdo->query("SELECT id FROM entraineurs ORDER BY ordre, id")->fetchAll(PDO::FETCH_COLUMN));
-        $pos = array_search($id, $ids);
-        $cible = $pos + ($_POST['sens'] === 'avant' ? -1 : 1);
-        if ($pos !== false && isset($ids[$cible])) {
-            [$ids[$pos], $ids[$cible]] = [$ids[$cible], $ids[$pos]];
-            $stmt = $pdo->prepare("UPDATE entraineurs SET ordre=? WHERE id=?");
-            foreach ($ids as $i => $autreId) $stmt->execute([$i + 1, $autreId]);
-        }
+        deplacer_ordre('entraineurs', $id, $_POST['sens'] ?? '');
     }
 
     if ($action === 'delete') {
@@ -70,7 +62,6 @@ admin_header('Entraîneurs', 'entraineurs', CROP_HEAD . '<style>
     .coach-photo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; display: block; }
     .coach-initiales { width: 48px; height: 48px; border-radius: 50%; background: var(--vert); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; }
     .preview-img.rond { border-radius: 50%; }
-    .actions .btn:disabled { opacity: 0.35; cursor: default; }
 </style>');
 ?>
     <h1>🎾 Entraîneurs</h1>
@@ -138,16 +129,7 @@ admin_header('Entraîneurs', 'entraineurs', CROP_HEAD . '<style>
                 <td><?= htmlspecialchars($e['role'] ?? '') ?></td>
                 <td>
                     <div class="actions">
-                        <?php foreach (['avant' => '↑', 'apres' => '↓'] as $sens => $fleche): ?>
-                        <form method="POST">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="move">
-                            <input type="hidden" name="sens" value="<?= $sens ?>">
-                            <input type="hidden" name="id" value="<?= $e['id'] ?>">
-                            <button type="submit" class="btn btn-secondary btn-sm" title="Déplacer <?= $sens === 'avant' ? 'vers le haut' : 'vers le bas' ?>"
-                                <?= ($sens === 'avant' && $i === 0) || ($sens === 'apres' && $i === count($entraineurs) - 1) ? 'disabled' : '' ?>><?= $fleche ?></button>
-                        </form>
-                        <?php endforeach; ?>
+                        <?php boutons_ordre($e['id'], $i, count($entraineurs)); ?>
                         <a href="entraineurs.php?edit=<?= $e['id'] ?>" class="btn btn-secondary btn-sm">✏️ Modifier</a>
                         <form method="POST" onsubmit="return confirm('Supprimer cet entraîneur ?')">
                             <?= csrf_field() ?>

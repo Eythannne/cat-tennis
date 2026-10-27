@@ -55,6 +55,7 @@ h1 { font-size: 1.6rem; margin-bottom: 24px; color: var(--vert); }
 .btn-secondary:hover { background: #e2e2e2; }
 .btn-danger { background: #e74c3c; color: #fff; }
 .btn-sm { font-size: 0.8rem; padding: 6px 12px; }
+.btn:disabled { opacity: 0.35; cursor: default; }
 
 /* Tableaux */
 .table-wrap { overflow-x: auto; }

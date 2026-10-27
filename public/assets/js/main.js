@@ -2,7 +2,8 @@
 const navbar = document.getElementById('navbar');
 
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
+    // .nav-fixe : page sans bandeau sombre en haut, la navbar doit rester opaque
+    if (window.scrollY > 50 || navbar.classList.contains('nav-fixe')) {
         navbar.classList.add('scrolled');
     } else {
         navbar.classList.remove('scrolled');

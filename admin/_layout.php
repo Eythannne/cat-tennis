@@ -11,6 +11,7 @@ function admin_header($titre, $page, $head = '') {
         'evenements' => '📅 Événements',
         'galerie'    => '📷 Galerie',
         'entraineurs'=> '🎾 Entraîneurs',
+        'tarifs'     => '💶 Tarifs',
         'parametres' => '⚙️ Paramètres',
     ];
     ?>
@@ -41,6 +42,34 @@ function admin_header($titre, $page, $head = '') {
 </div>
 <div class="main">
 <?php
+}
+
+// ── Ordre d'affichage (boutons ↑ ↓ / ← →) ───────────────────────────────────
+// Échange l'élément $id avec son voisin puis renumérote 1..n.
+// $table vient toujours du code (jamais de l'utilisateur).
+function deplacer_ordre($table, $id, $sens, $tri = 'ordre, id') {
+    global $pdo;
+    $ids = array_map('intval', $pdo->query("SELECT id FROM $table ORDER BY $tri")->fetchAll(PDO::FETCH_COLUMN));
+    $pos = array_search((int)$id, $ids, true);
+    $cible = $pos + ($sens === 'avant' ? -1 : 1);
+    if ($pos === false || !isset($ids[$cible])) return;
+    [$ids[$pos], $ids[$cible]] = [$ids[$cible], $ids[$pos]];
+    $stmt = $pdo->prepare("UPDATE $table SET ordre=? WHERE id=?");
+    foreach ($ids as $i => $autreId) $stmt->execute([$i + 1, $autreId]);
+}
+
+// Les deux petits formulaires ↑ ↓ d'une ligne ($i = position, $total = nombre d'éléments)
+function boutons_ordre($id, $i, $total, $fleches = ['avant' => '↑', 'apres' => '↓']) {
+    foreach ($fleches as $sens => $fleche): ?>
+    <form method="POST">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="move">
+        <input type="hidden" name="sens" value="<?= $sens ?>">
+        <input type="hidden" name="id" value="<?= $id ?>">
+        <button type="submit" class="btn btn-secondary btn-sm" title="Déplacer"
+            <?= ($sens === 'avant' && $i === 0) || ($sens === 'apres' && $i === $total - 1) ? 'disabled' : '' ?>><?= $fleche ?></button>
+    </form>
+    <?php endforeach;
 }
 
 // ── Recadrage d'image (voir crop.js) ─────────────────────────────────────────

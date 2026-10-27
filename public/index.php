@@ -68,7 +68,7 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
             </div>
             <div class="news-grid">
                 <?php if (empty($articles)): ?>
-                    <p style="color:#999;grid-column:1/-1">Aucun article publié pour l'instant.</p>
+                    <p class="etat-vide" data-icone="📰">Aucun article publié pour l'instant.</p>
                 <?php else: ?>
                     <?php foreach ($articles as $a): ?>
                     <article class="news-card">

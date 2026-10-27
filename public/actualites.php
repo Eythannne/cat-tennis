@@ -15,9 +15,14 @@ if ($filtreMois) {
     $stmt->execute([$filtreMois]);
     $articles = $stmt->fetchAll();
 } else {
-    // Par défaut : 5 derniers
-    $articles = $pdo->query(
-        "SELECT * FROM articles WHERE " . sql_article_visible() . " ORDER BY published_at DESC LIMIT 5"
+    // Par défaut : liste paginée, du plus récent au plus ancien
+    $parPage   = 5;
+    $total     = (int)$pdo->query("SELECT COUNT(*) FROM articles WHERE " . sql_article_visible())->fetchColumn();
+    $nbPages   = max(1, (int)ceil($total / $parPage));
+    $page      = min(max(1, (int)($_GET['page'] ?? 1)), $nbPages);
+    $articles  = $pdo->query(
+        "SELECT * FROM articles WHERE " . sql_article_visible() . " ORDER BY published_at DESC
+         LIMIT $parPage OFFSET " . (($page - 1) * $parPage)
     )->fetchAll();
 }
 
@@ -92,13 +97,13 @@ include '../templates/navbar.php';
                     <?php if ($filtreMois): ?>
                     <div class="actu-filter-bar">
                         <span>📅 <?= htmlspecialchars($titreFiltreActif) ?> — <?= count($articles) ?> article<?= count($articles) > 1 ? 's' : '' ?></span>
-                        <a href="actualites.php" class="actu-filter-reset">✕ Voir les derniers</a>
+                        <a href="actualites.php" class="actu-filter-reset">✕ Voir tous les articles</a>
                     </div>
                     <?php endif; ?>
 
                     <div class="news-grid news-grid--list">
                         <?php if (empty($articles)): ?>
-                            <p class="actu-empty">Aucun article pour cette période.</p>
+                            <p class="etat-vide" data-icone="📰">Aucun article pour cette période.</p>
                         <?php else: ?>
                             <?php foreach ($articles as $a): ?>
                             <article class="news-card">
@@ -117,6 +122,26 @@ include '../templates/navbar.php';
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
+
+                    <?php if (!$filtreMois && $nbPages > 1): ?>
+                    <nav class="pagination" aria-label="Pages d'articles">
+                        <?php if ($page > 1): ?>
+                            <a href="actualites.php?page=<?= $page - 1 ?>" class="pagination-btn">← Plus récents</a>
+                        <?php endif; ?>
+                        <span class="pagination-pages">
+                            <?php for ($p = 1; $p <= $nbPages; $p++): ?>
+                                <?php if ($p === $page): ?>
+                                    <span class="pagination-num active" aria-current="page"><?= $p ?></span>
+                                <?php else: ?>
+                                    <a href="actualites.php?page=<?= $p ?>" class="pagination-num"><?= $p ?></a>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+                        </span>
+                        <?php if ($page < $nbPages): ?>
+                            <a href="actualites.php?page=<?= $page + 1 ?>" class="pagination-btn">Plus anciens →</a>
+                        <?php endif; ?>
+                    </nav>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Sidebar archives -->
@@ -124,7 +149,7 @@ include '../templates/navbar.php';
                     <div class="sidebar-card">
                         <h3 class="sidebar-title">📁 Archives</h3>
                         <?php if (empty($archives)): ?>
-                            <p style="color:#999;font-size:0.85rem">Aucun article.</p>
+                            <p class="etat-vide" data-icone="📁">Aucun article.</p>
                         <?php else: ?>
                             <?php foreach ($archives as $annee => $moisList): ?>
                             <div class="archive-year">
@@ -164,13 +189,15 @@ include '../templates/navbar.php';
             <?php endif; ?>
             <div class="galerie-grid">
                 <?php if (empty($photos)): ?>
-                    <p style="color:#999;grid-column:1/-1">Aucune photo pour l'instant.</p>
+                    <p class="etat-vide" data-icone="📷">Aucune photo pour l'instant.</p>
                 <?php else: ?>
                     <?php foreach ($photos as $p): ?>
-                    <div class="galerie-item" data-cat="<?= htmlspecialchars($p['categorie'] ?? '') ?>">
+                    <div class="galerie-item" data-cat="<?= htmlspecialchars($p['categorie'] ?? '') ?>"
+                         tabindex="0" role="button" aria-label="Agrandir : <?= htmlspecialchars($p['titre']) ?>">
                         <div class="galerie-img">
                             <img src="assets/uploads/galerie/<?= htmlspecialchars($p['fichier']) ?>"
                                  alt="<?= htmlspecialchars($p['titre']) ?>" loading="lazy">
+                            <span class="galerie-zoom" aria-hidden="true">🔍</span>
                         </div>
                         <p><?= htmlspecialchars($p['titre']) ?></p>
                         <?php if (!empty($p['categorie'])): ?><span class="galerie-cat"><?= htmlspecialchars($p['categorie']) ?></span><?php endif; ?>
@@ -182,6 +209,24 @@ include '../templates/navbar.php';
 
     </div>
 </section>
+
+<!-- Visionneuse plein écran de la galerie -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Visionneuse de photos">
+    <div class="lightbox-top">
+        <span class="lightbox-compteur" id="lb-compteur"></span>
+        <button type="button" class="lightbox-btn lightbox-fermer" id="lb-fermer" aria-label="Fermer">✕</button>
+    </div>
+    <button type="button" class="lightbox-btn lightbox-nav lightbox-prev" id="lb-prev" aria-label="Photo précédente">‹</button>
+    <figure class="lightbox-figure">
+        <img id="lb-img" src="" alt="">
+        <figcaption>
+            <span class="lightbox-cat" id="lb-cat"></span>
+            <span class="lightbox-titre" id="lb-titre"></span>
+        </figcaption>
+    </figure>
+    <button type="button" class="lightbox-btn lightbox-nav lightbox-next" id="lb-next" aria-label="Photo suivante">›</button>
+    <div class="lightbox-miniatures" id="lb-miniatures"></div>
+</div>
 
 <?php include '../templates/footer.php'; ?>
 
@@ -227,6 +272,89 @@ document.querySelectorAll('.galerie-filtre').forEach(btn => {
         });
     });
 });
+
+// Lien direct vers l'onglet galerie (actualites.php#galerie)
+if (location.hash === '#galerie') {
+    document.querySelector('.tab-btn[data-tab="galerie"]')?.click();
+}
+
+// ── Visionneuse plein écran ─────────────────────────────────────────────────
+(function() {
+    const lb        = document.getElementById('lightbox');
+    const img       = document.getElementById('lb-img');
+    const titre     = document.getElementById('lb-titre');
+    const cat       = document.getElementById('lb-cat');
+    const compteur  = document.getElementById('lb-compteur');
+    const miniatures= document.getElementById('lb-miniatures');
+    let photos = [];   // photos visibles (respecte le filtre de catégorie)
+    let index  = 0;
+
+    function afficher(i) {
+        index = (i + photos.length) % photos.length;   // boucle au début / à la fin
+        const photo = photos[index].querySelector('img');
+        img.classList.remove('lightbox-anim');
+        void img.offsetWidth;                          // relance l'animation
+        img.classList.add('lightbox-anim');
+        img.src = photo.src;
+        img.alt = photo.alt;
+        titre.textContent = photo.alt;
+        cat.textContent = photos[index].dataset.cat;
+        compteur.textContent = (index + 1) + ' / ' + photos.length;
+        miniatures.querySelectorAll('img').forEach((m, j) => m.classList.toggle('active', j === index));
+        miniatures.children[index]?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+        // Précharge les voisines pour une navigation instantanée
+        [index - 1, index + 1].forEach(j => { const p = photos[(j + photos.length) % photos.length]; if (p) new Image().src = p.querySelector('img').src; });
+    }
+
+    function ouvrir(item) {
+        photos = [...document.querySelectorAll('.galerie-grid .galerie-item:not([hidden])')];
+        miniatures.innerHTML = '';
+        photos.forEach((p, j) => {
+            const m = document.createElement('img');
+            m.src = p.querySelector('img').src;
+            m.alt = '';
+            m.addEventListener('click', () => afficher(j));
+            miniatures.appendChild(m);
+        });
+        lb.classList.toggle('lightbox-seule', photos.length < 2);
+        lb.hidden = false;
+        document.body.style.overflow = 'hidden';
+        afficher(photos.indexOf(item));
+        document.getElementById('lb-fermer').focus();
+    }
+
+    function fermer() {
+        lb.hidden = true;
+        document.body.style.overflow = '';
+        photos[index]?.focus();
+    }
+
+    document.querySelectorAll('.galerie-grid .galerie-item').forEach(item => {
+        item.addEventListener('click', () => ouvrir(item));
+        item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(item); } });
+    });
+    document.getElementById('lb-prev').addEventListener('click', () => afficher(index - 1));
+    document.getElementById('lb-next').addEventListener('click', () => afficher(index + 1));
+    document.getElementById('lb-fermer').addEventListener('click', fermer);
+    lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('lightbox-figure')) fermer(); });
+
+    document.addEventListener('keydown', e => {
+        if (lb.hidden) return;
+        if (e.key === 'Escape')     fermer();
+        if (e.key === 'ArrowLeft')  afficher(index - 1);
+        if (e.key === 'ArrowRight') afficher(index + 1);
+    });
+
+    // Glisser le doigt sur téléphone
+    let departX = null;
+    lb.addEventListener('touchstart', e => { departX = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+        if (departX === null) return;
+        const dx = e.changedTouches[0].clientX - departX;
+        if (Math.abs(dx) > 50) afficher(index + (dx < 0 ? 1 : -1));
+        departX = null;
+    });
+})();
 </script>
 </body>
 </html>

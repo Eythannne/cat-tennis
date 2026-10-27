@@ -29,15 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([trim($_POST['titre']), trim($_POST['categorie']), (int)$_POST['id']]);
     }
     if ($action === 'move') {
-        // Échange la photo avec sa voisine puis renumérote 1..n
-        $ids = $pdo->query("SELECT id FROM galerie ORDER BY ordre ASC, created_at DESC")->fetchAll(PDO::FETCH_COLUMN);
-        $pos = array_search((int)$_POST['id'], array_map('intval', $ids));
-        $cible = $pos + ($_POST['sens'] === 'avant' ? -1 : 1);
-        if ($pos !== false && isset($ids[$cible])) {
-            [$ids[$pos], $ids[$cible]] = [$ids[$cible], $ids[$pos]];
-            $stmt = $pdo->prepare("UPDATE galerie SET ordre=? WHERE id=?");
-            foreach ($ids as $i => $id) $stmt->execute([$i + 1, $id]);
-        }
+        deplacer_ordre('galerie', $_POST['id'] ?? 0, $_POST['sens'] ?? '', 'ordre ASC, created_at DESC');
     }
     if ($action === 'delete') {
         $id = (int)$_POST['id'];
@@ -63,7 +55,6 @@ admin_header('Galerie', 'galerie', '<style>
     .galerie-item .cat { font-size: 0.75rem; color: #888; }
     .galerie-item .tools { display: flex; gap: 4px; margin-top: 8px; }
     .galerie-item .tools form { display: inline; }
-    .galerie-item .tools .btn:disabled { opacity: 0.35; cursor: default; }
     .galerie-item details { margin-top: 8px; font-size: 0.82rem; }
     .galerie-item details summary { cursor: pointer; color: var(--vert); }
     .galerie-item details .form-group { margin: 6px 0; }
@@ -110,16 +101,7 @@ admin_header('Galerie', 'galerie', '<style>
                     <div class="titre"><?= htmlspecialchars($p['titre']) ?></div>
                     <div class="cat"><?= $p['categorie'] !== '' && $p['categorie'] !== null ? htmlspecialchars($p['categorie']) : 'Sans catégorie' ?></div>
                     <div class="tools">
-                        <?php foreach (['avant' => '←', 'apres' => '→'] as $sens => $fleche): ?>
-                        <form method="POST">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="move">
-                            <input type="hidden" name="sens" value="<?= $sens ?>">
-                            <input type="hidden" name="id" value="<?= $p['id'] ?>">
-                            <button type="submit" class="btn btn-secondary btn-sm" title="Déplacer <?= $sens === 'avant' ? 'avant' : 'après' ?>"
-                                <?= ($sens === 'avant' && $i === 0) || ($sens === 'apres' && $i === count($photos) - 1) ? 'disabled' : '' ?>><?= $fleche ?></button>
-                        </form>
-                        <?php endforeach; ?>
+                        <?php boutons_ordre($p['id'], $i, count($photos), ['avant' => '←', 'apres' => '→']); ?>
                         <form method="POST" onsubmit="return confirm('Supprimer ?')" style="margin-left:auto">
                             <?= csrf_field() ?>
                             <input type="hidden" name="action" value="delete">

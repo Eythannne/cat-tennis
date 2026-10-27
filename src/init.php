@@ -6,9 +6,9 @@ require_once __DIR__ . '/config/database.php';
 date_default_timezone_set('Europe/Paris');
 
 // ── Localisation du club (carte de la page Contact) ──────────────────────────
-const ADRESSE_DEFAUT = 'Stade du Moulin Neuf, 6 avenue du Maréchal Juin, 93600 Aulnay-sous-Bois';
-const CLUB_LAT = 48.937439;
-const CLUB_LNG = 2.505437;
+const ADRESSE_DEFAUT = 'Stade du Moulin Neuf, 4 avenue du Maréchal Juin, 93600 Aulnay-sous-Bois';
+const CLUB_LAT = 48.936124;
+const CLUB_LNG = 2.503562;
 
 // ── Types d'événements du calendrier (libellé + couleur) ─────────────────────
 const EVENT_TYPES = [
