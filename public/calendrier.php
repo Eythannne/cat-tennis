@@ -32,6 +32,17 @@ include '../templates/navbar.php';
     </div>
 </section>
 
+<!-- Pop-up de détail d'un événement -->
+<div class="event-modal" id="event-modal" hidden>
+    <div class="event-modal-box" role="dialog" aria-modal="true" aria-labelledby="em-titre">
+        <button type="button" class="event-modal-close" id="em-close" aria-label="Fermer">✕</button>
+        <span class="event-modal-type" id="em-type"></span>
+        <h3 id="em-titre"></h3>
+        <p class="event-modal-date" id="em-date"></p>
+        <p class="event-modal-desc" id="em-desc"></p>
+    </div>
+</div>
+
 <?php include '../templates/footer.php'; ?>
 
 <script src="assets/js/fullcalendar.min.js"></script>
@@ -53,12 +64,49 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         events: '<?= BASE_URL ?>/api/evenements.php',
         eventClick: function(info) {
-            alert(info.event.title + (info.event.extendedProps.description ? '\n' + info.event.extendedProps.description : ''));
+            info.jsEvent.preventDefault();
+            ouvrirEvenement(info.event);
         },
         height: 'auto'
     });
     calendar.render();
 });
+
+// ── Pop-up de détail ─────────────────────────────────────────────────────────
+const modal = document.getElementById('event-modal');
+
+function jour(d)  { return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
+function heure(d) { return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h'); }
+function aUneHeure(d) { return d.getHours() !== 0 || d.getMinutes() !== 0; }
+
+// "samedi 14 novembre 2026 · 14h00 – 18h00" ou "Du ... au ..." sur plusieurs jours
+function texteDate(debut, fin) {
+    if (!fin || debut.toDateString() === fin.toDateString()) {
+        let texte = jour(debut);
+        if (aUneHeure(debut)) texte += ' · ' + heure(debut) + (fin && aUneHeure(fin) ? ' – ' + heure(fin) : '');
+        return texte.charAt(0).toUpperCase() + texte.slice(1);
+    }
+    return 'Du ' + jour(debut) + (aUneHeure(debut) ? ' (' + heure(debut) + ')' : '')
+         + ' au ' + jour(fin) + (aUneHeure(fin) ? ' (' + heure(fin) + ')' : '');
+}
+
+function ouvrirEvenement(ev) {
+    const type = document.getElementById('em-type');
+    type.textContent = ev.extendedProps.type || '';
+    type.style.background = ev.backgroundColor;
+    document.getElementById('em-titre').textContent = ev.title;
+    document.getElementById('em-date').textContent = texteDate(ev.start, ev.end);
+    const desc = document.getElementById('em-desc');
+    desc.textContent = ev.extendedProps.description || '';
+    desc.hidden = !ev.extendedProps.description;
+    modal.hidden = false;
+    document.getElementById('em-close').focus();
+}
+
+function fermerEvenement() { modal.hidden = true; }
+document.getElementById('em-close').addEventListener('click', fermerEvenement);
+modal.addEventListener('click', (e) => { if (e.target === modal) fermerEvenement(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) fermerEvenement(); });
 </script>
 </body>
 </html>

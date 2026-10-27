@@ -19,3 +19,24 @@ INSERT IGNORE INTO parametres (cle, valeur) VALUES ('horaires', 'Lundi – Vendr
 -- 4. Nouveau type d'événement "vacances" (la couleur dépend maintenant du type)
 ALTER TABLE evenements MODIFY type ENUM('tournoi','cours','evenement','vacances','autre')
     COLLATE utf8mb4_unicode_ci DEFAULT 'autre';
+
+-- 5. Entraîneurs gérés depuis l'admin (page Le club)
+CREATE TABLE IF NOT EXISTS entraineurs (
+    id          INT NOT NULL AUTO_INCREMENT,
+    prenom      VARCHAR(100) NOT NULL,
+    nom         VARCHAR(100) NOT NULL DEFAULT '',
+    role        VARCHAR(150) DEFAULT NULL,
+    description TEXT,
+    photo       VARCHAR(255) DEFAULT NULL,
+    ordre       INT DEFAULT 0,
+    created_at  TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO entraineurs (prenom, nom, role, description, ordre)
+SELECT 'Ethan', '', 'Enfants & Pôle compétition', 'Cours collectifs enfants, stages vacances et suivi des jeunes compétiteurs.', 1
+WHERE NOT EXISTS (SELECT 1 FROM entraineurs);
+
+-- 6. Adresse complète du club
+INSERT INTO parametres (cle, valeur) VALUES ('adresse', 'Stade du Moulin Neuf, 6 avenue du Maréchal Juin, 93600 Aulnay-sous-Bois')
+ON DUPLICATE KEY UPDATE valeur = VALUES(valeur);

@@ -1,2 +1,6 @@
-ErrorDocument 404 /cat-tennis/404.php
 RewriteEngine On
+# Toute adresse qui ne correspond à aucun fichier affiche la page 404.
+# Chemin relatif : fonctionne en local (/cat-tennis/...) comme en ligne.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ 404.php [L]

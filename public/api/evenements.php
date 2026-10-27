@@ -13,6 +13,7 @@ foreach ($evenements as $e) {
         'start' => $e['date_debut'],
         'end' => $e['date_fin'],
         'color' => $type['couleur'],
+        'type' => $type['label'],
         'description' => $e['description'],
     ];
 }

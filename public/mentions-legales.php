@@ -28,7 +28,7 @@ include '../templates/navbar.php';
             <h2>Éditeur du site</h2>
             <p><strong><?= htmlspecialchars(param('nom_club', 'Club Aulnaysien de Tennis')) ?> (CAT)</strong><br>
             Association loi 1901<br>
-            <?= htmlspecialchars(param('adresse', 'Aulnay-sous-Bois, 93600')) ?><br>
+            <?= htmlspecialchars(param('adresse', ADRESSE_DEFAUT)) ?><br>
             <?php if (param('telephone')): ?>Téléphone : <?= htmlspecialchars(param('telephone')) ?><br><?php endif; ?>
             Email : <?= htmlspecialchars(param('email_contact', 'contact@cat-tennis.fr')) ?></p>
 

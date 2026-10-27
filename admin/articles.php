@@ -29,27 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $image = $stmt->fetchColumn() ?: null;
         }
 
-        // Gestion upload image (base64 depuis le cropper)
-        if (!empty($_POST['image_cropped'])) {
-            $upload_dir = __DIR__ . '/../public/assets/uploads/articles/';
-            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
-            // Extrait les données brutes (data:image/jpeg;base64,XXX)
-            if (preg_match('/^data:image\/(jpeg|png|webp);base64,(.+)$/s', $_POST['image_cropped'], $m)) {
-                $data = base64_decode($m[2], true);
-                $ext  = $data ? image_extension($data) : null;
-                if ($ext) {
-                    $filename = uniqid('article_') . '.' . $ext;
-                    if (file_put_contents($upload_dir . $filename, $data)) {
-                        // Supprime l'ancienne image si elle existe
-                        if ($image) {
-                            $old = $upload_dir . basename($image);
-                            if (file_exists($old)) unlink($old);
-                        }
-                        $image = $filename;
-                    }
-                }
-            }
-        }
+        // Image recadrée envoyée par le cropper (remplace l'ancienne)
+        $image = save_cropped_image($_POST['image_cropped'] ?? '', UPLOAD_ARTICLES, 'article_', $image);
 
         if ($action === 'create') {
             $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, publie, published_at, image) VALUES (?, ?, ?, ?, ?)");
@@ -75,10 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $art = $pdo->prepare("SELECT image FROM articles WHERE id=?");
         $art->execute([$id]);
         $row = $art->fetch();
-        if (!empty($row['image'])) {
-            $path = __DIR__ . '/../public/assets/uploads/articles/' . basename($row['image']);
-            if (file_exists($path)) unlink($path);
-        }
+        if (!empty($row['image'])) delete_upload(UPLOAD_ARTICLES, $row['image']);
         $pdo->prepare("DELETE FROM articles WHERE id=?")->execute([$id]);
     }
 
@@ -97,23 +75,8 @@ if (isset($_GET['edit'])) {
     $edit = $stmt->fetch();
 }
 
-admin_header('Articles', 'articles', '<link rel="stylesheet" href="../public/assets/css/cropper.min.css">
-<style>
+admin_header('Articles', 'articles', CROP_HEAD . '<style>
     .form-group textarea[name=contenu] { height: 180px; }
-    .preview-img { max-height: 120px; max-width: 100%; border-radius: 6px; border: 1px solid #ddd; }
-    #crop_preview_wrap { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    #crop_preview_wrap[hidden] { display: none; }
-    .link-btn { background: none; border: none; color: var(--vert); cursor: pointer; font-size: 0.85rem; text-decoration: underline; }
-
-    /* ── Modal crop ── */
-    .crop-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; }
-    .crop-overlay.active { display: flex; }
-    .crop-modal { background: #fff; border-radius: 12px; padding: 24px; width: 92%; max-width: 700px; max-height: 92vh; display: flex; flex-direction: column; gap: 16px; }
-    .crop-modal h3 { font-size: 1.1rem; color: var(--vert); }
-    .crop-container { max-height: 450px; overflow: hidden; background: #111; border-radius: 8px; }
-    .crop-container img { display: block; max-width: 100%; }
-    .crop-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
-    .crop-hint { font-size: 0.82rem; color: #888; }
 </style>');
 ?>
     <h1>📰 Gestion des articles</h1>
@@ -143,15 +106,7 @@ admin_header('Articles', 'articles', '<link rel="stylesheet" href="../public/ass
                         <div class="form-hint">Image actuelle — choisir un fichier pour la remplacer</div>
                     </div>
                 <?php endif; ?>
-                <!-- Input caché qui recevra le base64 cropé -->
-                <input type="hidden" name="image_cropped" id="image_cropped">
-                <!-- Input file — déclenche le modal, ne sera PAS soumis -->
-                <input type="file" id="image_picker" accept="image/jpeg,image/png,image/webp" style="font-size:0.9rem;max-width:100%">
-                <div id="crop_preview_wrap" hidden>
-                    <img id="crop_preview_thumb" class="preview-img" style="max-height:80px" alt="">
-                    <span style="font-size:0.8rem;color:var(--vert);">✅ Image recadrée prête</span>
-                    <button type="button" id="crop_redo" class="link-btn">Recadrer à nouveau</button>
-                </div>
+                <?php crop_field(16 / 9, 800, 450); ?>
             </div>
             <div class="form-group">
                 <label>Date de publication (optionnel)</label>
@@ -223,91 +178,5 @@ admin_header('Articles', 'articles', '<link rel="stylesheet" href="../public/ass
         <?php endif; ?>
     </div>
 
-<!-- ── Modal Cropper ── -->
-<div class="crop-overlay" id="crop_overlay">
-    <div class="crop-modal">
-        <h3>✂️ Recadrer l'image</h3>
-        <p class="crop-hint">Déplacez et zoomez pour choisir la zone à afficher (ratio 16:9 fixe).</p>
-        <div class="crop-container">
-            <img id="crop_img" src="" alt="Crop">
-        </div>
-        <div class="crop-actions">
-            <button type="button" class="btn btn-secondary" id="crop_cancel">Annuler</button>
-            <button type="button" class="btn btn-primary" id="crop_confirm">✅ Valider le recadrage</button>
-        </div>
-    </div>
-</div>
-<?php admin_footer(<<<'HTML'
-<script src="../public/assets/js/cropper.min.js"></script>
-<script>
-(function() {
-    const picker      = document.getElementById('image_picker');
-    const overlay     = document.getElementById('crop_overlay');
-    const cropImg     = document.getElementById('crop_img');
-    const btnCancel   = document.getElementById('crop_cancel');
-    const btnConfirm  = document.getElementById('crop_confirm');
-    const hiddenInput = document.getElementById('image_cropped');
-    const previewWrap = document.getElementById('crop_preview_wrap');
-    const previewThumb= document.getElementById('crop_preview_thumb');
-    const btnRedo     = document.getElementById('crop_redo');
-
-    let cropper = null;
-    let originalFile = null;
-
-    function openCropper(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            cropImg.src = e.target.result;
-            overlay.classList.add('active');
-            // Init cropper après que l'image soit chargée
-            cropImg.onload = () => {
-                if (cropper) { cropper.destroy(); cropper = null; }
-                cropper = new Cropper(cropImg, {
-                    aspectRatio: 16 / 9,
-                    viewMode: 1,
-                    autoCropArea: 0.9,
-                    movable: true,
-                    zoomable: true,
-                    scalable: false,
-                    rotatable: false,
-                });
-            };
-        };
-        reader.readAsDataURL(file);
-    }
-
-    picker.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        originalFile = file;
-        openCropper(file);
-    });
-
-    btnCancel.addEventListener('click', () => {
-        overlay.classList.remove('active');
-        if (cropper) { cropper.destroy(); cropper = null; }
-        picker.value = '';
-        originalFile = null;
-    });
-
-    btnConfirm.addEventListener('click', () => {
-        if (!cropper) return;
-        // Génère un canvas 800×450 (16:9)
-        const canvas = cropper.getCroppedCanvas({ width: 800, height: 450 });
-        const base64 = canvas.toDataURL('image/jpeg', 0.88);
-
-        hiddenInput.value = base64;
-        previewThumb.src  = base64;
-        previewWrap.hidden = false;
-
-        overlay.classList.remove('active');
-        cropper.destroy(); cropper = null;
-    });
-
-    btnRedo.addEventListener('click', () => {
-        if (originalFile) openCropper(originalFile);
-        else picker.click();
-    });
-})();
-</script>
-HTML); ?>
+<?php crop_modal(); ?>
+<?php admin_footer(CROP_SCRIPTS); ?>

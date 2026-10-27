@@ -14,9 +14,6 @@ require_once '../src/init.php';
 // ── Anti brute-force : 5 échecs max par IP sur 15 minutes ────────────────────
 const LOGIN_MAX_ECHECS = 5;
 const LOGIN_FENETRE    = 15 * 60;
-$attemptsFile = sys_get_temp_dir() . '/cat_login_' . md5($_SERVER['REMOTE_ADDR'] ?? '') . '.json';
-$echecs = is_file($attemptsFile) ? (json_decode(file_get_contents($attemptsFile), true) ?: []) : [];
-$echecs = array_filter($echecs, fn($t) => $t > time() - LOGIN_FENETRE);
 
 $error = '';
 
@@ -24,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mdp = $_POST['mot_de_passe'] ?? '';
 
-    if (count($echecs) >= LOGIN_MAX_ECHECS) {
+    if (limite_atteinte('login', LOGIN_MAX_ECHECS, LOGIN_FENETRE)) {
         $error = 'Trop de tentatives. Réessayez dans 15 minutes.';
     } elseif (!$email || !$mdp) {
         $error = 'Merci de remplir tous les champs.';
@@ -34,15 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $admin = $stmt->fetch();
 
         if ($admin && password_verify($mdp, $admin['mot_de_passe'])) {
-            @unlink($attemptsFile);
+            limite_reinitialiser('login');
             session_regenerate_id(true);
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_nom'] = $admin['nom'];
             header('Location: index.php');
             exit;
         } else {
-            $echecs[] = time();
-            file_put_contents($attemptsFile, json_encode(array_values($echecs)));
+            limite_enregistrer('login', LOGIN_FENETRE);
             sleep(1);
             $error = 'Email ou mot de passe incorrect.';
         }

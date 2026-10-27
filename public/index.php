@@ -1,6 +1,7 @@
 <?php
 require_once '../src/init.php';
 $articles = $pdo->query("SELECT * FROM articles WHERE " . sql_article_visible() . " ORDER BY published_at DESC LIMIT 3")->fetchAll();
+$nbEntraineurs = $pdo->query("SELECT COUNT(*) FROM entraineurs")->fetchColumn();
 
 $pageTitle = param('nom_club', 'Club Aulnaysien de Tennis');
 $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnaysien de Tennis à Aulnay-sous-Bois.");
@@ -49,7 +50,7 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
                         <span class="stat-label">Année de création</span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number">5</span>
+                        <span class="stat-number"><?= $nbEntraineurs ?></span>
                         <span class="stat-label">Entraîneurs</span>
                     </div>
                 </div>

@@ -7,13 +7,28 @@ $pageDesc = "Contactez le Club Aulnaysien de Tennis à Aulnay-sous-Bois.";
 $success = false;
 $error = '';
 
+// ── Anti-spam ────────────────────────────────────────────────────────────────
+const CONTACT_MAX_MESSAGES = 5;        // par adresse IP...
+const CONTACT_FENETRE      = 60 * 60;  // ...sur 1 heure
+const CONTACT_DELAI_MIN    = 3;        // secondes minimum pour remplir le formulaire
+const CONTACT_LIENS_MAX    = 2;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nom = trim($_POST['nom'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $sujet = trim($_POST['sujet'] ?? '');
     $message = trim($_POST['message'] ?? '');
 
-    if (!$nom || !$email || !$sujet || !$message) {
+    // Robot probable : champ piège rempli, ou formulaire envoyé trop vite.
+    // On affiche un faux succès pour ne pas lui indiquer qu'il a été repéré.
+    $envoiTropRapide = time() - (int)($_POST['form_t'] ?? 0) < CONTACT_DELAI_MIN;
+    if (!empty($_POST['site_web']) || $envoiTropRapide) {
+        $success = true;
+    } elseif (limite_atteinte('contact', CONTACT_MAX_MESSAGES, CONTACT_FENETRE)) {
+        $error = 'Vous avez envoyé plusieurs messages récemment. Merci de réessayer dans une heure.';
+    } elseif (preg_match_all('#https?://|www\.#i', $message) > CONTACT_LIENS_MAX) {
+        $error = 'Votre message contient trop de liens.';
+    } elseif (!$nom || !$email || !$sujet || !$message) {
         $error = 'Merci de remplir tous les champs.';
     } elseif (!isset(SUJETS_CONTACT[$sujet])) {
         $error = 'Sujet invalide.';
@@ -22,12 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $stmt = $pdo->prepare("INSERT INTO messages_contact (nom, email, sujet, message) VALUES (?, ?, ?, ?)");
         $stmt->execute([$nom, $email, $sujet, $message]);
+        limite_enregistrer('contact', CONTACT_FENETRE);
         $success = true;
     }
 }
 
 $nomClub   = param('nom_club', 'Club Aulnaysien de Tennis');
-$adresse   = param('adresse', 'Aulnay-sous-Bois, 93600');
+$adresse   = param('adresse', ADRESSE_DEFAUT);
 $emailClub = param('email_contact', 'contact@cat-tennis.fr');
 $telephone = param('telephone');
 $horaires  = param('horaires');
@@ -35,6 +51,8 @@ $horaires  = param('horaires');
 $extraHead = '<link rel="stylesheet" href="' . BASE_URL . '/assets/css/leaflet.css">
     <style>
         #map { height: 280px; border-radius: 10px; margin-top: 28px; z-index: 1; }
+        /* Champ piège anti-spam : invisible pour les humains */
+        .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
     </style>';
 ?>
 <!DOCTYPE html>
@@ -67,6 +85,7 @@ include '../templates/navbar.php';
                     <div>
                         <strong>Adresse</strong>
                         <p><?= htmlspecialchars($nomClub) ?><br><?= htmlspecialchars($adresse) ?></p>
+                        <p><a href="https://www.google.com/maps/dir/?api=1&amp;destination=<?= CLUB_LAT ?>,<?= CLUB_LNG ?>" target="_blank" rel="noopener">Itinéraire →</a></p>
                     </div>
                 </div>
                 <div class="info-block">
@@ -115,6 +134,12 @@ include '../templates/navbar.php';
                         <div class="form-error">⚠️ <?= htmlspecialchars($error) ?></div>
                     <?php endif; ?>
                     <form method="POST" action="contact.php" class="contact-form">
+                        <!-- Anti-spam : heure d'affichage + champ piège que seuls les robots remplissent -->
+                        <input type="hidden" name="form_t" value="<?= time() ?>">
+                        <div class="hp-field" aria-hidden="true">
+                            <label for="site_web">Ne pas remplir ce champ</label>
+                            <input type="text" id="site_web" name="site_web" tabindex="-1" autocomplete="off">
+                        </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="nom">Nom complet *</label>
@@ -154,7 +179,7 @@ include '../templates/navbar.php';
 <script>
     // Fix chemin des images markers (servis localement)
     L.Icon.Default.imagePath = 'assets/images/';
-    const map = L.map('map').setView([48.9385, 2.4972], 15);
+    const map = L.map('map').setView([<?= CLUB_LAT ?>, <?= CLUB_LNG ?>], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
         maxZoom: 19
@@ -165,7 +190,7 @@ include '../templates/navbar.php';
         iconAnchor: [7, 7],
         className: ''
     });
-    L.marker([48.9385, 2.4972], { icon })
+    L.marker([<?= CLUB_LAT ?>, <?= CLUB_LNG ?>], { icon })
         .addTo(map)
         .bindPopup(<?= json_encode('<strong>' . htmlspecialchars($nomClub) . '</strong><br>' . htmlspecialchars($adresse)) ?>)
         .openPopup();

@@ -430,19 +430,22 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 
 /* ── ENTRAÎNEURS ── */
 .section-coaches { padding: 90px 0; background: var(--white); }
-.coaches-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 16px; }
-.coach-card { background: var(--bg); border-radius: 10px; padding: 32px 22px; text-align: center; }
+/* Flex centré : 1, 2, 3... entraîneurs restent alignés au milieu */
+.coaches-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; }
+.coach-card { background: var(--bg); border-radius: 10px; padding: 32px 22px; text-align: center; flex: 0 1 320px; }
 .coach-avatar {
-    width: 64px; height: 64px; border-radius: 50%;
+    width: 96px; height: 96px; border-radius: 50%;
     background: var(--vert); color: #fff;
-    font-size: 1.3rem; font-weight: 700;
+    font-size: 1.6rem; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 14px;
+    overflow: hidden;
+    border: 3px solid var(--jaune);
 }
+.coach-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .coach-card h3 { font-size: 1.05rem; color: var(--dark); margin-bottom: 4px; }
 .coach-role { display: block; font-size: 0.78rem; color: var(--vert); font-weight: 700; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
 .coach-card p { font-size: 0.86rem; color: var(--muted); line-height: 1.65; }
-.coaches-note { text-align: center; font-size: 0.82rem; color: #bbb; font-style: italic; }
 
 /* ── TARIFS ── */
 .section-tarifs { padding: 90px 0; background: var(--bg); }
@@ -537,6 +540,21 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 .fc-button-primary { background: var(--vert) !important; border-color: var(--vert) !important; }
 .fc-button-primary:hover { background: var(--vert-dark) !important; }
 .fc-day-today { background: var(--vert-light) !important; }
+.fc-event { cursor: pointer; }
+
+/* Pop-up de détail d'un événement */
+.event-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 16px; animation: fadeIn 0.15s ease; }
+.event-modal[hidden] { display: none; }
+.event-modal-box { position: relative; background: var(--white); border-radius: 12px; border-top: 5px solid var(--jaune); box-shadow: 0 16px 40px rgba(0,0,0,0.3); width: 100%; max-width: 440px; max-height: 85vh; overflow-y: auto; padding: 28px 26px 24px; animation: popIn 0.18s ease; }
+.event-modal-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border: none; border-radius: 50%; background: var(--bg); color: var(--muted); font-size: 0.95rem; cursor: pointer; }
+.event-modal-close:hover { background: var(--border); color: var(--dark); }
+.event-modal-type { display: inline-block; color: #fff; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 3px 10px; border-radius: 4px; margin-bottom: 10px; }
+.event-modal-type:empty { display: none; }
+.event-modal-box h3 { font-size: 1.3rem; color: var(--dark); margin-bottom: 8px; padding-right: 30px; }
+.event-modal-date { color: var(--vert); font-weight: 600; font-size: 0.92rem; margin-bottom: 14px; }
+.event-modal-desc { color: var(--text); font-size: 0.92rem; line-height: 1.7; white-space: pre-line; border-top: 1px solid var(--border); padding-top: 14px; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn  { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
 
 /* ── CONTACT ── */
 .section-contact { padding: 70px 0 80px; background: var(--white); }
@@ -631,7 +649,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
     /* Sections */
     .section-about, .section-news, .section-courts, .section-coaches, .section-tarifs { padding: 60px 0; }
     .about-grid { grid-template-columns: 1fr; }
-    .courts-grid, .coaches-grid, .tarifs-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .courts-grid, .tarifs-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
     .tarif-card.tarif-featured { transform: none; }
     .contact-grid { grid-template-columns: 1fr; }
 

@@ -5,7 +5,7 @@
                 <a href="<?= BASE_URL ?>/index.php" class="nav-logo">
                     <img src="<?= BASE_URL ?>/favicon.png" alt="CAT" class="nav-logo-img">
                 </a>
-                <p><?= htmlspecialchars(param('nom_club', 'Club Aulnaysien de Tennis')) ?><br><?= htmlspecialchars(param('adresse', 'Aulnay-sous-Bois, 93600')) ?></p>
+                <p><?= htmlspecialchars(param('nom_club', 'Club Aulnaysien de Tennis')) ?><br><?= htmlspecialchars(param('adresse', ADRESSE_DEFAUT)) ?></p>
             </div>
             <div class="footer-col">
                 <h4>Navigation</h4>

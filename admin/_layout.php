@@ -10,6 +10,7 @@ function admin_header($titre, $page, $head = '') {
         'messages'   => '✉️ Messages',
         'evenements' => '📅 Événements',
         'galerie'    => '📷 Galerie',
+        'entraineurs'=> '🎾 Entraîneurs',
         'parametres' => '⚙️ Paramètres',
     ];
     ?>
@@ -40,6 +41,45 @@ function admin_header($titre, $page, $head = '') {
 </div>
 <div class="main">
 <?php
+}
+
+// ── Recadrage d'image (voir crop.js) ─────────────────────────────────────────
+// À mettre dans le <head> de la page
+const CROP_HEAD = '<link rel="stylesheet" href="../public/assets/css/cropper.min.css">';
+// À passer à admin_footer()
+const CROP_SCRIPTS = '<script src="../public/assets/js/cropper.min.js"></script><script src="crop.js"></script>';
+
+// Champ "choisir une image" + aperçu, à placer dans le formulaire
+function crop_field($ratio, $width, $height) {
+    ?>
+    <input type="hidden" name="image_cropped" id="image_cropped">
+    <input type="file" id="image_picker" accept="image/jpeg,image/png,image/webp" style="font-size:0.9rem;max-width:100%"
+           data-ratio="<?= $ratio ?>" data-width="<?= $width ?>" data-height="<?= $height ?>">
+    <div id="crop_preview_wrap" hidden>
+        <img id="crop_preview_thumb" class="preview-img" style="max-height:80px" alt="">
+        <span style="font-size:0.8rem;color:var(--vert);">✅ Image recadrée prête</span>
+        <button type="button" id="crop_redo" class="link-btn">Recadrer à nouveau</button>
+    </div>
+    <?php
+}
+
+// Fenêtre de recadrage, à placer une fois en bas de la page (hors du formulaire)
+function crop_modal() {
+    ?>
+<div class="crop-overlay" id="crop_overlay">
+    <div class="crop-modal">
+        <h3>✂️ Recadrer l'image</h3>
+        <p class="crop-hint">Déplacez et zoomez pour choisir la zone à afficher (la forme du cadre est fixe).</p>
+        <div class="crop-container">
+            <img id="crop_img" src="" alt="Crop">
+        </div>
+        <div class="crop-actions">
+            <button type="button" class="btn btn-secondary" id="crop_cancel">Annuler</button>
+            <button type="button" class="btn btn-primary" id="crop_confirm">✅ Valider le recadrage</button>
+        </div>
+    </div>
+</div>
+    <?php
 }
 
 // Badge de statut d'un article : brouillon, programmé ou publié

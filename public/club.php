@@ -2,6 +2,7 @@
 require_once '../src/init.php';
 $pageTitle = "Le club — CAT";
 $pageDesc = "Découvrez le Club Aulnaysien de Tennis : son histoire, ses terrains, ses entraîneurs et ses tarifs.";
+$entraineurs = $pdo->query("SELECT * FROM entraineurs ORDER BY ordre, id")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -46,7 +47,7 @@ include '../templates/navbar.php';
                     <span class="stat-label">Année de création</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">5</span>
+                    <span class="stat-number"><?= count($entraineurs) ?></span>
                     <span class="stat-label">Entraîneurs</span>
                 </div>
             </div>
@@ -81,7 +82,8 @@ include '../templates/navbar.php';
     </div>
 </section>
 
-<!-- Entraîneurs -->
+<!-- Entraîneurs (gérés dans l'admin) -->
+<?php if ($entraineurs): ?>
 <section class="section-coaches">
     <div class="container">
         <div class="section-center">
@@ -89,28 +91,24 @@ include '../templates/navbar.php';
             <h2>Nos entraîneurs</h2>
         </div>
         <div class="coaches-grid">
+            <?php foreach ($entraineurs as $e): ?>
             <div class="coach-card">
-                <div class="coach-avatar">ET</div>
-                <h3>Ethan</h3>
-                <span class="coach-role">Entraîneur — Enfants & Pôle compétition</span>
-                <p>Cours collectifs enfants, stages vacances et suivi des jeunes compétiteurs.</p>
+                <div class="coach-avatar">
+                    <?php if ($e['photo']): ?>
+                        <img src="assets/uploads/entraineurs/<?= htmlspecialchars($e['photo']) ?>" alt="<?= htmlspecialchars($e['prenom']) ?>" loading="lazy">
+                    <?php else: ?>
+                        <?= htmlspecialchars(initiales($e)) ?>
+                    <?php endif; ?>
+                </div>
+                <h3><?= htmlspecialchars(trim($e['prenom'] . ' ' . $e['nom'])) ?></h3>
+                <?php if ($e['role']): ?><span class="coach-role"><?= htmlspecialchars($e['role']) ?></span><?php endif; ?>
+                <?php if ($e['description']): ?><p><?= nl2br(htmlspecialchars($e['description'])) ?></p><?php endif; ?>
             </div>
-            <div class="coach-card">
-                <div class="coach-avatar">EN</div>
-                <h3>Entraîneur 2</h3>
-                <span class="coach-role">Entraîneur — Adultes</span>
-                <p>Cours collectifs et individuels adultes, tous niveaux.</p>
-            </div>
-            <div class="coach-card">
-                <div class="coach-avatar">EN</div>
-                <h3>Entraîneur 3</h3>
-                <span class="coach-role">Entraîneur — Compétition</span>
-                <p>Suivi des équipes en compétition par équipes FFT.</p>
-            </div>
+            <?php endforeach; ?>
         </div>
-        <p class="coaches-note">Les fiches entraîneurs seront mises à jour depuis le back-office.</p>
     </div>
 </section>
+<?php endif; ?>
 
 <!-- Tarifs -->
 <section class="section-tarifs">
