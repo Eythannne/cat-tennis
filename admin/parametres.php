@@ -1,9 +1,8 @@
 <?php
 require_once 'auth.php';
+$lectureSeule = lecture_seule_pour_moderateur();
 
-$saved   = false;
-$pwMsg   = '';
-$pwError = false;
+$saved = false;
 
 // ── Infos club ────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'infos') {
@@ -29,50 +28,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chiff
     $saved = true;
 }
 
-// ── Changement de mot de passe ────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'password') {
-    $actuel    = $_POST['mdp_actuel']    ?? '';
-    $nouveau   = $_POST['mdp_nouveau']   ?? '';
-    $confirm   = $_POST['mdp_confirm']   ?? '';
-
-    // Récupère le hash actuel de l'admin connecté
-    $stmt = $pdo->prepare("SELECT id, mot_de_passe FROM admins WHERE id=?");
-    $stmt->execute([$_SESSION['admin_id']]);
-    $row = $stmt->fetch();
-
-    if (!$row || !password_verify($actuel, $row['mot_de_passe'])) {
-        $pwMsg   = '❌ Mot de passe actuel incorrect.';
-        $pwError = true;
-    } elseif (strlen($nouveau) < 8) {
-        $pwMsg   = '❌ Le nouveau mot de passe doit faire au moins 8 caractères.';
-        $pwError = true;
-    } elseif ($nouveau !== $confirm) {
-        $pwMsg   = '❌ Les deux nouveaux mots de passe ne correspondent pas.';
-        $pwError = true;
-    } else {
-        $hash = password_hash($nouveau, PASSWORD_DEFAULT);
-        $pdo->prepare("UPDATE admins SET mot_de_passe=? WHERE id=?")->execute([$hash, $row['id']]);
-        $pwMsg = '✅ Mot de passe mis à jour avec succès.';
-    }
-}
-
 $params = $pdo->query("SELECT cle, valeur FROM parametres")->fetchAll(PDO::FETCH_KEY_PAIR);
 
 admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</style>');
 ?>
     <h1>⚙️ Paramètres du site</h1>
+    <?php if ($lectureSeule) bandeau_lecture_seule(); ?>
     <?php if ($saved): ?>
         <div class="alert alert-success">✅ Paramètres enregistrés.</div>
-    <?php endif; ?>
-    <?php if ($pwMsg): ?>
-        <div class="alert <?= $pwError ? 'alert-error' : 'alert-success' ?>"><?= htmlspecialchars($pwMsg) ?></div>
     <?php endif; ?>
 
     <!-- ── Card : Infos club ── -->
     <div class="card">
         <h2>Informations du club</h2>
         <p class="form-hint" style="margin:-8px 0 16px">Ces informations s'affichent sur le site public (pied de page, page Contact, mentions légales). Un champ vide n'est pas affiché.</p>
-        <form method="POST">
+        <form method="POST"><fieldset class="champs" <?= $lectureSeule ? 'disabled' : '' ?>>
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="infos">
             <div class="form-group">
@@ -128,14 +98,14 @@ admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</s
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
-        </form>
+        </fieldset></form>
     </div>
 
     <!-- ── Card : Chiffres clés ── -->
     <div class="card">
         <h2>🔢 Chiffres clés</h2>
         <p class="form-hint" style="margin:-8px 0 16px">Affichés sur l'accueil et la page « Le club ». Laisser le chiffre vide pour masquer une case. Le nombre d'entraîneurs s'ajoute tout seul.</p>
-        <form method="POST">
+        <form method="POST"><fieldset class="champs" <?= $lectureSeule ? 'disabled' : '' ?>>
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="chiffres">
             <?php foreach (CHIFFRES_DEFAUT as $n => [$valeurDefaut, $labelDefaut]): ?>
@@ -151,28 +121,8 @@ admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</s
             </div>
             <?php endforeach; ?>
             <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
-        </form>
+        </fieldset></form>
     </div>
 
-    <!-- ── Card : Changer le mot de passe ── -->
-    <div class="card">
-        <h2>🔒 Changer le mot de passe</h2>
-        <form method="POST">
-            <?= csrf_field() ?>
-            <input type="hidden" name="action" value="password">
-            <div class="form-group">
-                <label>Mot de passe actuel</label>
-                <input type="password" name="mdp_actuel" autocomplete="current-password" required>
-            </div>
-            <div class="form-group">
-                <label>Nouveau mot de passe <span style="color:#999;font-weight:400">(8 caractères min.)</span></label>
-                <input type="password" name="mdp_nouveau" autocomplete="new-password" minlength="8" required>
-            </div>
-            <div class="form-group">
-                <label>Confirmer le nouveau mot de passe</label>
-                <input type="password" name="mdp_confirm" autocomplete="new-password" minlength="8" required>
-            </div>
-            <button type="submit" class="btn btn-primary">🔑 Mettre à jour</button>
-        </form>
-    </div>
+    <p class="form-hint">🔒 Pour changer votre mot de passe, allez dans <a href="compte.php">👤 Mon compte</a>.</p>
 <?php admin_footer(); ?>

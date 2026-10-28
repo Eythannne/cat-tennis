@@ -1,6 +1,74 @@
 <?php
 // Gabarit commun du back-office : <head>, sidebar et fermeture de page.
 
+// ── Rôles ────────────────────────────────────────────────────────────────────
+// Fondateur : compte unique, accès complet, ni modifiable ni supprimable par les administrateurs.
+//             Désigné en base de données (sql/migration-*-fondateur.sql), jamais depuis l'admin.
+// Administrateur : accès complet (sauf toucher au compte fondateur).
+// Modérateur : tout le contenu, Paramètres en lecture seule, pas d'accès aux Administrateurs.
+const ROLES = [
+    'fondateur'      => 'Fondateur',
+    'administrateur' => 'Administrateur',
+    'moderateur'     => 'Modérateur',
+];
+// Rôles proposés dans le formulaire des comptes (le fondateur n'est jamais attribuable)
+const ROLES_ATTRIBUABLES = ['administrateur', 'moderateur'];
+const PAGES_LECTURE_SEULE   = ['parametres'];  // visibles par les modérateurs, sans modification
+const PAGES_ADMINISTRATEURS = ['admins'];      // masquées et interdites aux modérateurs
+
+function est_fondateur() {
+    return ($_SESSION['admin_role'] ?? '') === 'fondateur';
+}
+
+// Fondateur ou administrateur : accès complet au back-office
+function est_administrateur() {
+    return in_array($_SESSION['admin_role'] ?? '', ['fondateur', 'administrateur'], true);
+}
+
+// Badge coloré d'un rôle
+function badge_role($role) {
+    $classes = ['fondateur' => 'badge-fondateur', 'administrateur' => 'badge-yellow', 'moderateur' => 'badge-green'];
+    return '<span class="badge ' . ($classes[$role] ?? 'badge-gray') . '">'
+         . ($role === 'fondateur' ? '★ ' : '') . (ROLES[$role] ?? htmlspecialchars($role)) . '</span>';
+}
+
+// À appeler en haut d'une page de PAGES_ADMINISTRATEURS : un modérateur est refusé,
+// même s'il tape l'adresse à la main.
+function exiger_administrateur() {
+    if (est_administrateur()) return;
+    http_response_code(403);
+    admin_header('Accès refusé', '');
+    echo '<h1>🔒 Accès refusé</h1>
+          <div class="card"><p>Vous n\'avez pas accès à cette page.</p>
+          <p style="margin-top:16px"><a href="index.php" class="btn btn-primary">← Retour au dashboard</a></p></div>';
+    admin_footer();
+    exit;
+}
+
+// À appeler en haut des pages de PAGES_LECTURE_SEULE.
+// Modérateur : la page s'affiche (renvoie true = lecture seule) mais tout envoi de formulaire
+// est refusé, même s'il contourne l'affichage.
+function lecture_seule_pour_moderateur() {
+    if (est_administrateur()) return false;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        http_response_code(403);
+        admin_header('Lecture seule', '');
+        echo '<h1>👁️ Lecture seule</h1>
+              <div class="card"><p>Votre compte est <strong>modérateur</strong> : vous pouvez consulter cette page,
+              mais seuls les <strong>administrateurs</strong> peuvent la modifier.</p>
+              <p style="margin-top:16px"><a href="index.php" class="btn btn-primary">← Retour au dashboard</a></p></div>';
+        admin_footer();
+        exit;
+    }
+    return true;
+}
+
+// Bandeau affiché en haut d'une page en lecture seule
+function bandeau_lecture_seule() {
+    echo '<div class="alert alert-info">👁️ <strong>Lecture seule</strong> — votre compte est modérateur :
+          vous pouvez consulter cette page, mais seuls les administrateurs peuvent la modifier.</div>';
+}
+
 function admin_header($titre, $page, $head = '') {
     global $pdo;
     $nonLus = $pdo->query("SELECT COUNT(*) FROM messages_contact WHERE lu=0")->fetchColumn();
@@ -14,7 +82,11 @@ function admin_header($titre, $page, $head = '') {
         'tarifs'     => '💶 Tarifs',
         'parametres' => '⚙️ Paramètres',
         'admins'     => '👥 Administrateurs',
+        'compte'     => '👤 Mon compte',
     ];
+    if (!est_administrateur()) {
+        $liens = array_diff_key($liens, array_flip(PAGES_ADMINISTRATEURS));
+    }
     ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -30,10 +102,15 @@ function admin_header($titre, $page, $head = '') {
 <body>
 <div class="sidebar">
     <a href="index.php" class="sidebar-logo"><img src="../public/favicon.png" alt="">CAT</a>
+    <div class="sidebar-user">
+        <?= htmlspecialchars($_SESSION['admin_nom'] ?? '') ?>
+        <span class="sidebar-role"><?= ROLES[$_SESSION['admin_role'] ?? ''] ?? '' ?></span>
+    </div>
     <nav>
         <?php foreach ($liens as $fichier => $label): ?>
         <a href="<?= $fichier ?>.php" <?= $page === $fichier ? 'class="active"' : '' ?>>
             <?= $label ?><?php if ($fichier === 'messages' && $nonLus > 0): ?> <span class="sidebar-badge"><?= $nonLus ?></span><?php endif; ?>
+            <?php if (!est_administrateur() && in_array($fichier, PAGES_LECTURE_SEULE, true)): ?><span class="sidebar-lecture" title="Lecture seule">👁️</span><?php endif; ?>
         </a>
         <?php endforeach; ?>
     </nav>

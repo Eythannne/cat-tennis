@@ -12,6 +12,7 @@ SET NAMES utf8mb4;
 CREATE TABLE `admins` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('fondateur','administrateur','moderateur') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'moderateur',
   `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `mot_de_passe` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -113,4 +114,5 @@ INSERT INTO parametres (cle, valeur) VALUES
 -- Le mot de passe est stocké chiffré. Pour obtenir le hash d'un mot de passe,
 -- dans un terminal Laragon :  php -r "echo password_hash('MonMotDePasse', PASSWORD_DEFAULT);"
 -- puis remplacer COLLER_LE_HASH_ICI ci-dessous et décommenter la ligne.
--- INSERT INTO admins (nom, email, mot_de_passe) VALUES ('Admin', 'admin@exemple.fr', 'COLLER_LE_HASH_ICI');
+-- (le premier compte est le fondateur : accès à tout, ni modifiable ni supprimable par les admins)
+-- INSERT INTO admins (nom, role, email, mot_de_passe) VALUES ('Admin', 'fondateur', 'admin@exemple.fr', 'COLLER_LE_HASH_ICI');
