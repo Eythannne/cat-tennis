@@ -488,7 +488,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .court-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
 
 /* ── ENTRAÎNEURS ── */
-.section-coaches { padding: 90px 0; background: var(--white); }
+.section-coaches { padding: 90px 0; background: var(--bg); }
+/* Ordre de la page club : terrains (teinté), bureau (blanc), entraîneurs (teinté), tarifs (vert) */
+.section-bureau { padding: 90px 0; background: var(--white); }
 /* Flex centré : 1, 2, 3... entraîneurs restent alignés au milieu */
 .coaches-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; }
 /* Bandeau vert clair derrière la photo, puis carte blanche bordée */
@@ -801,7 +803,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     .nav-dropdown-menu.open { display: block; }
 
     /* Sections */
-    .section-about, .section-news, .section-courts, .section-coaches, .section-tarifs { padding: 60px 0; }
+    .section-about, .section-news, .section-courts, .section-coaches, .section-bureau, .section-tarifs { padding: 60px 0; }
     .about-grid { grid-template-columns: 1fr; }
     .courts-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
     .tarif-card.tarif-featured, .tarif-card.tarif-featured:hover { transform: none; }

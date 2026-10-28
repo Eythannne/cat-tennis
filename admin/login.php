@@ -17,6 +17,12 @@ const LOGIN_FENETRE    = 15 * 60;
 
 $error = '';
 
+// Message après une déconnexion automatique (voir auth.php)
+$infoDeconnexion = [
+    'sortie'     => 'Vous avez été déconnecté automatiquement car vous avez quitté l\'administration.',
+    'inactivite' => 'Vous avez été déconnecté automatiquement après 30 minutes d\'inactivité.',
+][$_GET['raison'] ?? ''] ?? '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $mdp = $_POST['mot_de_passe'] ?? '';
@@ -64,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .login-subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 14px; }
         .login-back { display: block; text-align: center; margin-bottom: 24px; color: var(--vert); font-size: 0.85rem; text-decoration: none; opacity: 0.75; }
         .login-back:hover { opacity: 1; }
+        .form-info { background: #eaf2fb; color: #1f4e79; padding: 12px 16px; border-radius: 6px; margin-bottom: 18px; font-size: 0.88rem; }
         @media (max-width: 480px) { .login-box { padding: 30px 20px; } }
     </style>
 </head>
@@ -73,6 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-subtitle">Back-office administration</div>
     <a href="<?= BASE_URL ?>/index.php" class="login-back">← Retour au site</a>
 
+    <?php if ($infoDeconnexion && !$error): ?>
+        <div class="form-info">🔒 <?= htmlspecialchars($infoDeconnexion) ?></div>
+    <?php endif; ?>
     <?php if ($error): ?>
         <div class="form-error">⚠️ <?= htmlspecialchars($error) ?></div>
     <?php endif; ?>

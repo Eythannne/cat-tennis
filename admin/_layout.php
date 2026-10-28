@@ -80,6 +80,8 @@ function bandeau_lecture_seule() {
 
 function admin_header($titre, $page, $head = '') {
     global $pdo;
+    // Identifiant de cette page affichée (voir quitter.php et le script de admin_footer)
+    $_SESSION['page_id'] = bin2hex(random_bytes(8));
     $nonLus = $pdo->query("SELECT COUNT(*) FROM messages_contact WHERE lu=0")->fetchColumn();
     $liens = [
         'index'      => '📊 Dashboard',
@@ -88,6 +90,7 @@ function admin_header($titre, $page, $head = '') {
         'evenements' => '📅 Événements',
         'galerie'    => '📷 Galerie',
         'entraineurs'=> '🎾 Entraîneurs',
+        'bureau'     => '🏛️ Bureau',
         'tarifs'     => '💶 Tarifs',
         'parametres' => '⚙️ Paramètres',
         'admins'     => '👥 Administrateurs',
@@ -219,6 +222,31 @@ function admin_footer($scripts = '') {
     ?>
 </div>
 <?= $scripts ?>
+<script>
+// Déconnexion automatique quand on quitte l'admin (onglet fermé, autre site, retour au site public).
+// Les liens vers d'autres pages de l'admin et les formulaires ne comptent pas comme une sortie.
+(function () {
+    const dossierAdmin = location.pathname.replace(/[^/]*$/, '');
+    let navigationInterne = false;
+    const interne = () => { navigationInterne = true; setTimeout(() => navigationInterne = false, 3000); };
+
+    document.addEventListener('click', (e) => {
+        const lien = e.target.closest('a[href]');
+        if (!lien || lien.target === '_blank') return;
+        const url = new URL(lien.href, location.href);
+        if (url.origin === location.origin && url.pathname.startsWith(dossierAdmin)) interne();
+    });
+    document.addEventListener('submit', (e) => { if (e.target.target !== '_blank') interne(); });
+
+    window.addEventListener('pagehide', () => {
+        if (navigationInterne) return;
+        const donnees = new FormData();
+        donnees.append('csrf_token', <?= json_encode($_SESSION['csrf_token']) ?>);
+        donnees.append('page', <?= json_encode($_SESSION['page_id'] ?? '') ?>);
+        navigator.sendBeacon('quitter.php', donnees);
+    });
+})();
+</script>
 </body>
 </html>
 <?php

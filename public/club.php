@@ -1,8 +1,9 @@
 <?php
 require_once '../src/init.php';
 $pageTitle = "Le club — CAT";
-$pageDesc = "Découvrez le Club Aulnaysien de Tennis : son histoire, ses terrains, ses entraîneurs et ses tarifs.";
+$pageDesc = "Découvrez le Club Aulnaysien de Tennis : son histoire, ses terrains, ses entraîneurs, son équipe et ses tarifs.";
 $entraineurs = $pdo->query("SELECT * FROM entraineurs ORDER BY ordre, id")->fetchAll();
+$bureau      = $pdo->query("SELECT * FROM bureau ORDER BY ordre, id")->fetchAll();
 $tarifs      = $pdo->query("SELECT * FROM tarifs ORDER BY ordre, id")->fetchAll();
 $fiche       = param('fiche_inscription');
 ?>
@@ -66,6 +67,19 @@ include '../templates/navbar.php';
     </div>
 </section>
 
+<!-- Équipe administrative (gérée dans l'admin, page Bureau) -->
+<?php if ($bureau): ?>
+<section class="section-bureau" id="bureau">
+    <div class="container">
+        <div class="section-center">
+            <span class="section-tag">Le bureau</span>
+            <h2>L'équipe administrative</h2>
+        </div>
+        <?php $personnes = $bureau; $dossierPhotos = 'bureau'; include '../templates/cartes-personnes.php'; ?>
+    </div>
+</section>
+<?php endif; ?>
+
 <!-- Entraîneurs (gérés dans l'admin) -->
 <?php if ($entraineurs): ?>
 <section class="section-coaches">
@@ -74,22 +88,7 @@ include '../templates/navbar.php';
             <span class="section-tag">L'équipe</span>
             <h2>Nos entraîneurs</h2>
         </div>
-        <div class="coaches-grid">
-            <?php foreach ($entraineurs as $e): ?>
-            <div class="coach-card">
-                <div class="coach-avatar">
-                    <?php if ($e['photo']): ?>
-                        <img src="assets/uploads/entraineurs/<?= htmlspecialchars($e['photo']) ?>" alt="<?= htmlspecialchars($e['prenom']) ?>" loading="lazy">
-                    <?php else: ?>
-                        <?= htmlspecialchars(initiales($e)) ?>
-                    <?php endif; ?>
-                </div>
-                <h3><?= htmlspecialchars(trim($e['prenom'] . ' ' . $e['nom'])) ?></h3>
-                <?php if ($e['role']): ?><span class="coach-role"><?= htmlspecialchars($e['role']) ?></span><?php endif; ?>
-                <?php if ($e['description']): ?><p><?= nl2br(htmlspecialchars($e['description'])) ?></p><?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
+        <?php $personnes = $entraineurs; $dossierPhotos = 'entraineurs'; include '../templates/cartes-personnes.php'; ?>
     </div>
 </section>
 <?php endif; ?>

@@ -89,6 +89,7 @@ const JOURNAL_CATEGORIES = [
     'evenement'  => ['📅', 'Événements'],
     'galerie'    => ['📷', 'Galerie'],
     'entraineur' => ['🎾', 'Entraîneurs'],
+    'bureau'     => ['🏛️', 'Bureau'],
     'tarif'      => ['💶', 'Tarifs'],
     'message'    => ['✉️', 'Messages'],
 ];

@@ -28,6 +28,7 @@ function csrf_check() {
 define('IMAGE_MAX_SIZE', 5 * 1024 * 1024); // 5 Mo
 define('UPLOAD_ARTICLES',    __DIR__ . '/../public/assets/uploads/articles/');
 define('UPLOAD_ENTRAINEURS', __DIR__ . '/../public/assets/uploads/entraineurs/');
+define('UPLOAD_BUREAU',      __DIR__ . '/../public/assets/uploads/bureau/');
 define('UPLOAD_DOCUMENTS',   __DIR__ . '/../public/assets/uploads/documents/');
 define('PDF_MAX_SIZE', 10 * 1024 * 1024); // 10 Mo
 define('GALERIE_MAX_SIZE', 10 * 1024 * 1024); // 10 Mo : photos de téléphone, réduites à l'envoi

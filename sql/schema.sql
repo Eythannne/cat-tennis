@@ -99,6 +99,18 @@ CREATE TABLE `tarifs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+CREATE TABLE `bureau` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `prenom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `role` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `photo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ordre` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `journal` (
   `id` int NOT NULL AUTO_INCREMENT,
   `admin_id` int DEFAULT NULL,
