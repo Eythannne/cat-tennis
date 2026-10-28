@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (limite_atteinte('login', LOGIN_MAX_ECHECS, LOGIN_FENETRE)) {
         $error = 'Trop de tentatives. Réessayez dans 15 minutes.';
+        journaliser('connexion', 'Connexion bloquée : trop de tentatives depuis cette adresse IP', $email);
     } elseif (!$email || !$mdp) {
         $error = 'Merci de remplir tous les champs.';
     } else {
@@ -35,9 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_regenerate_id(true);
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_nom'] = $admin['nom'];
+            journaliser('connexion', 'Connexion à l\'admin');
             header('Location: index.php');
             exit;
         } else {
+            journaliser('connexion', 'Échec de connexion (mot de passe incorrect ou compte inconnu)', $email);
             limite_enregistrer('login', LOGIN_FENETRE);
             sleep(1);
             $error = 'Email ou mot de passe incorrect.';

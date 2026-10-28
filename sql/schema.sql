@@ -99,6 +99,20 @@ CREATE TABLE `tarifs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+CREATE TABLE `journal` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `admin_id` int DEFAULT NULL,
+  `admin_nom` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `categorie` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_created` (`created_at`),
+  KEY `idx_categorie` (`categorie`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 -- ── Données de départ ───────────────────────────────────────────────────────
 INSERT INTO parametres (cle, valeur) VALUES
     ('nom_club',      'Club Aulnaysien de Tennis'),

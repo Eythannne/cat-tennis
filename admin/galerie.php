@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ordre = (int)$pdo->query("SELECT COALESCE(MAX(ordre), 0) + 1 FROM galerie")->fetchColumn();
                 $stmt = $pdo->prepare("INSERT INTO galerie (titre, fichier, categorie, ordre) VALUES (?,?,?,?)");
                 $stmt->execute([$titre, $filename, $categorie, $ordre]);
+                journaliser('galerie', "Ajout de la photo « $titre »" . ($categorie !== '' ? " (catégorie $categorie)" : ''));
             } else {
                 $erreur = 'Impossible d\'enregistrer la photo.';
             }
@@ -43,13 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'delete') {
         $id = (int)$_POST['id'];
-        $row = $pdo->prepare("SELECT fichier FROM galerie WHERE id=?");
+        $row = $pdo->prepare("SELECT titre, fichier FROM galerie WHERE id=?");
         $row->execute([$id]);
-        if ($f = $row->fetchColumn()) {
-            delete_upload($upload_dir, $f);
-            delete_upload($miniatures_dir, $f);
+        if ($photo = $row->fetch()) {
+            delete_upload($upload_dir, $photo['fichier']);
+            delete_upload($miniatures_dir, $photo['fichier']);
         }
         $pdo->prepare("DELETE FROM galerie WHERE id=?")->execute([$id]);
+        if ($photo) journaliser('galerie', "Suppression de la photo « {$photo['titre']} »");
     }
     if (!$erreur) {
         header('Location: galerie.php');

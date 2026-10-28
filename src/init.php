@@ -4,6 +4,10 @@
 require_once __DIR__ . '/config/database.php';
 
 date_default_timezone_set('Europe/Paris');
+// La base de données travaille dans le même fuseau que le site : sans ça, l'hébergeur
+// (serveur hors de France) enregistre ses propres heures et les dates s'affichent décalées.
+// date('P') = décalage actuel de Paris (+01:00 l'hiver, +02:00 l'été).
+$pdo->exec("SET time_zone = '" . date('P') . "'");
 
 // ── Localisation du club (carte de la page Contact) ──────────────────────────
 const ADRESSE_DEFAUT = 'Stade du Moulin Neuf, 4 avenue du Maréchal Juin, 93600 Aulnay-sous-Bois';
@@ -72,6 +76,40 @@ function param_brut($cle) {
 function param($cle, $defaut = '') {
     $valeur = param_brut($cle);
     return $valeur !== null && $valeur !== '' ? $valeur : $defaut;
+}
+
+// ── Journal des actions importantes (page admin "Journal", fondateur uniquement) ─
+// Volontairement limité aux actions importantes pour ménager l'hébergement gratuit.
+const JOURNAL_CONSERVATION_MOIS = 12;   // entrées supprimées automatiquement au-delà
+const JOURNAL_CATEGORIES = [
+    'connexion'  => ['🔑', 'Connexion'],
+    'compte'     => ['👥', 'Comptes'],
+    'parametres' => ['⚙️', 'Paramètres'],
+    'article'    => ['📰', 'Articles'],
+    'evenement'  => ['📅', 'Événements'],
+    'galerie'    => ['📷', 'Galerie'],
+    'entraineur' => ['🎾', 'Entraîneurs'],
+    'tarif'      => ['💶', 'Tarifs'],
+    'message'    => ['✉️', 'Messages'],
+];
+
+// Enregistre une action. Par défaut, l'auteur est le compte connecté ;
+// $auteur permet de nommer quelqu'un d'autre (ex : l'email saisi lors d'un échec de connexion).
+// N'interrompt jamais la page en cas de problème (le journal ne doit pas bloquer le site).
+function journaliser($categorie, $description, $auteur = null) {
+    global $pdo;
+    try {
+        $pdo->prepare("INSERT INTO journal (admin_id, admin_nom, categorie, description, ip) VALUES (?,?,?,?,?)")
+            ->execute([
+                $auteur === null ? ($_SESSION['admin_id'] ?? null) : null,
+                mb_substr($auteur ?? ($_SESSION['admin_nom'] ?? ''), 0, 150),
+                $categorie,
+                mb_substr($description, 0, 255),
+                $_SERVER['REMOTE_ADDR'] ?? '',
+            ]);
+    } catch (Throwable $e) {
+        error_log('Journal : ' . $e->getMessage());
+    }
 }
 
 // ── Limite d'actions par adresse IP (anti brute-force / anti spam) ───────────

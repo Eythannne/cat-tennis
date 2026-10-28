@@ -29,9 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ordre = (int)$pdo->query("SELECT COALESCE(MAX(ordre), 0) + 1 FROM entraineurs")->fetchColumn();
             $stmt = $pdo->prepare("INSERT INTO entraineurs (prenom, nom, role, description, photo, ordre) VALUES (?,?,?,?,?,?)");
             $stmt->execute([$prenom, $nom, $role, $description, $photo, $ordre]);
+            journaliser('entraineur', "Ajout de l'entraîneur « " . trim("$prenom $nom") . " »");
         } else {
             $stmt = $pdo->prepare("UPDATE entraineurs SET prenom=?, nom=?, role=?, description=?, photo=? WHERE id=?");
             $stmt->execute([$prenom, $nom, $role, $description, $photo, $id]);
+            journaliser('entraineur', "Modification de l'entraîneur « " . trim("$prenom $nom") . " »");
         }
     }
 
@@ -40,10 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'delete') {
-        $stmt = $pdo->prepare("SELECT photo FROM entraineurs WHERE id=?");
+        $stmt = $pdo->prepare("SELECT prenom, nom, photo FROM entraineurs WHERE id=?");
         $stmt->execute([$id]);
-        if ($photo = $stmt->fetchColumn()) delete_upload(UPLOAD_ENTRAINEURS, $photo);
+        $coach = $stmt->fetch();
+        if (!empty($coach['photo'])) delete_upload(UPLOAD_ENTRAINEURS, $coach['photo']);
         $pdo->prepare("DELETE FROM entraineurs WHERE id=?")->execute([$id]);
+        if ($coach) journaliser('entraineur', "Suppression de l'entraîneur « " . trim("{$coach['prenom']} {$coach['nom']}") . " »");
     }
 
     header('Location: entraineurs.php');

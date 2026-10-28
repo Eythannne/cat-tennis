@@ -12,17 +12,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $type = isset(EVENT_TYPES[$_POST['type'] ?? '']) ? $_POST['type'] : 'autre';
         $couleur = EVENT_TYPES[$type]['couleur'];
         $description = trim($_POST['description']);
+        $quand = date('d/m/Y', strtotime($date_debut));
         if ($action === 'create') {
             $stmt = $pdo->prepare("INSERT INTO evenements (titre, date_debut, date_fin, type, couleur, description) VALUES (?,?,?,?,?,?)");
             $stmt->execute([$titre, $date_debut, $date_fin, $type, $couleur, $description]);
+            journaliser('evenement', "Création de l'événement « $titre » (" . EVENT_TYPES[$type]['label'] . ", $quand)");
         } else {
             $id = (int)$_POST['id'];
             $stmt = $pdo->prepare("UPDATE evenements SET titre=?, date_debut=?, date_fin=?, type=?, couleur=?, description=? WHERE id=?");
             $stmt->execute([$titre, $date_debut, $date_fin, $type, $couleur, $description, $id]);
+            journaliser('evenement', "Modification de l'événement « $titre » (" . EVENT_TYPES[$type]['label'] . ", $quand)");
         }
     }
     if ($action === 'delete') {
+        $stmt = $pdo->prepare("SELECT titre, date_debut FROM evenements WHERE id=?");
+        $stmt->execute([(int)$_POST['id']]);
+        $ev = $stmt->fetch();
         $pdo->prepare("DELETE FROM evenements WHERE id=?")->execute([(int)$_POST['id']]);
+        if ($ev) journaliser('evenement', "Suppression de l'événement « {$ev['titre']} » (" . date('d/m/Y', strtotime($ev['date_debut'])) . ')');
     }
     header('Location: evenements.php');
     exit;

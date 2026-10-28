@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erreur = 'Compte introuvable.';
     } elseif ($cible && !peut_gerer($cible)) {
         $erreur = ERREUR_FONDATEUR;
+        journaliser('compte', "Tentative refusée de " . ($action === 'delete' ? 'supprimer' : 'modifier') . " le compte fondateur « {$cible['nom']} »");
     } elseif ($action === 'create' || $action === 'edit') {
         // Mot de passe obligatoire à la création, optionnel en modification (vide = inchangé)
         $mdpDemande = $action === 'create' || $mdp !== '';
@@ -51,17 +52,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("INSERT INTO admins (nom, role, email, mot_de_passe) VALUES (?,?,?,?)")
                 ->execute([$nom, $role, $email, password_hash($mdp, PASSWORD_DEFAULT)]);
             $message = "Compte " . mb_strtolower(ROLES[$role]) . " créé pour $nom. Transmettez-lui son mot de passe, qui pourra ensuite être changé dans « Mon compte ».";
+            journaliser('compte', "Création du compte « $nom » ($email) avec le rôle " . ROLES[$role]);
         } else {
             $pdo->prepare("UPDATE admins SET nom=?, email=? WHERE id=?")->execute([$nom, $email, $id]);
             // Rôle inchangeable pour soi-même et pour le fondateur
+            $changements = [];
+            if ($nom !== $cible['nom'])     $changements[] = "nom : « {$cible['nom']} » → « $nom »";
+            if ($email !== $cible['email']) $changements[] = "email : {$cible['email']} → $email";
             if ($id !== $moi && $cible['role'] !== 'fondateur') {
                 $pdo->prepare("UPDATE admins SET role=? WHERE id=?")->execute([$role, $id]);
+                if ($role !== $cible['role']) $changements[] = 'rôle : ' . ROLES[$cible['role']] . ' → ' . ROLES[$role];
             }
             if ($mdp !== '') {
                 $pdo->prepare("UPDATE admins SET mot_de_passe=? WHERE id=?")->execute([password_hash($mdp, PASSWORD_DEFAULT), $id]);
+                $changements[] = 'mot de passe redéfini';
             }
             if ($id === $moi) $_SESSION['admin_nom'] = $nom;
             $message = 'Compte mis à jour.';
+            if ($changements) journaliser('compte', "Modification du compte « {$cible['nom']} » (" . implode(', ', $changements) . ')');
         }
     } elseif ($action === 'delete') {
         if ($id === $moi) {
@@ -69,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $pdo->prepare("DELETE FROM admins WHERE id=?")->execute([$id]);
             $message = 'Compte supprimé.';
+            journaliser('compte', "Suppression du compte « {$cible['nom']} » ({$cible['email']}, " . ROLES[$cible['role']] . ')');
         }
     }
 

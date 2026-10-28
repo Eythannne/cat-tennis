@@ -5,7 +5,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $id = (int)($_POST['id'] ?? 0);
     if ($action === 'delete') {
+        $stmt = $pdo->prepare("SELECT nom, sujet, created_at FROM messages_contact WHERE id=?");
+        $stmt->execute([$id]);
+        $msg = $stmt->fetch();
         $pdo->prepare("DELETE FROM messages_contact WHERE id=?")->execute([$id]);
+        // Seulement l'expéditeur et le sujet, jamais le contenu du message
+        if ($msg) journaliser('message', "Suppression du message de « {$msg['nom']} » (" . sujet_label($msg['sujet']) . ', reçu le ' . date('d/m/Y', strtotime($msg['created_at'])) . ')');
     }
     header('Location: messages.php');
     exit;

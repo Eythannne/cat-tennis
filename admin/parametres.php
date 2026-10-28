@@ -4,26 +4,48 @@ $lectureSeule = lecture_seule_pour_moderateur();
 
 $saved = false;
 
+// Libellés des champs, pour le journal
+const LIBELLES_PARAMETRES = [
+    'nom_club' => 'nom du club', 'adresse' => 'adresse', 'email_contact' => 'email', 'telephone' => 'téléphone',
+    'horaires' => 'horaires', 'description' => 'description', 'presentation_club' => 'présentation du club',
+    'responsable_publication' => 'responsable de publication', 'rna' => 'numéro RNA', 'siret' => 'SIRET',
+];
+
+// Enregistre des paramètres et renvoie la liste des clés réellement modifiées
+function enregistrer_parametres($valeurs) {
+    global $pdo;
+    $avant = $pdo->query("SELECT cle, valeur FROM parametres")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stmt  = $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES (?,?) ON DUPLICATE KEY UPDATE valeur=?");
+    $modifies = [];
+    foreach ($valeurs as $cle => $valeur) {
+        $stmt->execute([$cle, $valeur, $valeur]);
+        if (($avant[$cle] ?? '') !== $valeur) $modifies[] = $cle;
+    }
+    return $modifies;
+}
+
 // ── Infos club ────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'infos') {
-    $champs = ['nom_club', 'adresse', 'email_contact', 'telephone', 'horaires', 'description',
-               'presentation_club', 'responsable_publication', 'rna', 'siret'];
-    foreach ($champs as $cle) {
-        $valeur = trim($_POST[$cle] ?? '');
-        $stmt = $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES (?,?) ON DUPLICATE KEY UPDATE valeur=?");
-        $stmt->execute([$cle, $valeur, $valeur]);
+    $valeurs = [];
+    foreach (array_keys(LIBELLES_PARAMETRES) as $cle) $valeurs[$cle] = trim($_POST[$cle] ?? '');
+    $modifies = enregistrer_parametres($valeurs);
+    if ($modifies) {
+        journaliser('parametres', 'Modification des informations du club : ' . implode(', ', array_map(fn($c) => LIBELLES_PARAMETRES[$c], $modifies)));
     }
     $saved = true;
 }
 
 // ── Chiffres clés (accueil + page Le club) ────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chiffres') {
-    $stmt = $pdo->prepare("INSERT INTO parametres (cle, valeur) VALUES (?,?) ON DUPLICATE KEY UPDATE valeur=?");
+    $valeurs = [];
     foreach (array_keys(CHIFFRES_DEFAUT) as $n) {
         foreach (['valeur', 'label'] as $champ) {
-            $valeur = trim($_POST["stat{$n}_{$champ}"] ?? '');
-            $stmt->execute(["stat{$n}_{$champ}", $valeur, $valeur]);
+            $valeurs["stat{$n}_{$champ}"] = trim($_POST["stat{$n}_{$champ}"] ?? '');
         }
+    }
+    if (enregistrer_parametres($valeurs)) {
+        journaliser('parametres', 'Modification des chiffres clés : ' . implode(' · ', array_map(
+            fn($n) => $valeurs["stat{$n}_valeur"] . ' ' . $valeurs["stat{$n}_label"], array_keys(CHIFFRES_DEFAUT))));
     }
     $saved = true;
 }

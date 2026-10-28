@@ -32,32 +32,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Image recadrée envoyée par le cropper (remplace l'ancienne)
         $image = save_cropped_image($_POST['image_cropped'] ?? '', UPLOAD_ARTICLES, 'article_', $image);
 
+        // Statut pour le journal : brouillon, publié ou programmé
+        $statut = !$publie ? 'brouillon' : ($published_at > $maintenant ? 'programmé le ' . date('d/m/Y H:i', strtotime($published_at)) : 'publié');
         if ($action === 'create') {
             $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, publie, published_at, image) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$titre, $contenu, $publie, $published_at, $image]);
+            journaliser('article', "Création de l'article « $titre » ($statut)");
         } else {
             $id = (int)$_POST['id'];
             $stmt = $pdo->prepare("UPDATE articles SET titre=?, contenu=?, publie=?, published_at=?, image=? WHERE id=?");
             $stmt->execute([$titre, $contenu, $publie, $published_at, $image, $id]);
+            journaliser('article', "Modification de l'article « $titre » ($statut)");
         }
     }
+
+    // Titre d'un article (pour le journal)
+    $titreArticle = function ($id) use ($pdo) {
+        $stmt = $pdo->prepare("SELECT titre FROM articles WHERE id=?");
+        $stmt->execute([(int)$id]);
+        return $stmt->fetchColumn() ?: "n°$id";
+    };
 
     // Boutons rapides de la liste
     if ($action === 'publier') {
         $pdo->prepare("UPDATE articles SET publie=1, published_at=? WHERE id=?")->execute([$maintenant, (int)$_POST['id']]);
+        journaliser('article', "Publication de l'article « " . $titreArticle($_POST['id']) . " »");
     }
     if ($action === 'depublier') {
         $pdo->prepare("UPDATE articles SET publie=0 WHERE id=?")->execute([(int)$_POST['id']]);
+        journaliser('article', "Dépublication de l'article « " . $titreArticle($_POST['id']) . " » (repassé en brouillon)");
     }
 
     if ($action === 'delete') {
         $id = (int)$_POST['id'];
         // Supprime l'image associée
-        $art = $pdo->prepare("SELECT image FROM articles WHERE id=?");
+        $art = $pdo->prepare("SELECT titre, image FROM articles WHERE id=?");
         $art->execute([$id]);
         $row = $art->fetch();
         if (!empty($row['image'])) delete_upload(UPLOAD_ARTICLES, $row['image']);
         $pdo->prepare("DELETE FROM articles WHERE id=?")->execute([$id]);
+        if ($row) journaliser('article', "Suppression de l'article « {$row['titre']} »");
     }
 
     header('Location: articles.php');

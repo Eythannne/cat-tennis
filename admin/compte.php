@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'passw
         $hash = password_hash($nouveau, PASSWORD_DEFAULT);
         $pdo->prepare("UPDATE admins SET mot_de_passe=? WHERE id=?")->execute([$hash, $row['id']]);
         $pwMsg = '✅ Mot de passe mis à jour avec succès.';
+        journaliser('compte', 'Changement de son propre mot de passe');
     }
 }
 

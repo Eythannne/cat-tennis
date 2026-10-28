@@ -23,13 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             trim($_POST['avantages']),
             isset($_POST['mis_en_avant']) ? 1 : 0,
         ];
+        $resume = "« {$champs[0]} » ({$champs[2]} {$champs[3]})";
         if ($action === 'create') {
             $ordre = (int)$pdo->query("SELECT COALESCE(MAX(ordre), 0) + 1 FROM tarifs")->fetchColumn();
             $pdo->prepare("INSERT INTO tarifs (nom, public_cible, prix, periode, avantages, mis_en_avant, ordre) VALUES (?,?,?,?,?,?,?)")
                 ->execute([...$champs, $ordre]);
+            journaliser('tarif', "Ajout de la formule $resume");
         } else {
             $pdo->prepare("UPDATE tarifs SET nom=?, public_cible=?, prix=?, periode=?, avantages=?, mis_en_avant=? WHERE id=?")
                 ->execute([...$champs, $id]);
+            journaliser('tarif', "Modification de la formule $resume");
         }
     }
 
@@ -38,11 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'delete') {
+        $stmt = $pdo->prepare("SELECT nom, prix, periode FROM tarifs WHERE id=?");
+        $stmt->execute([$id]);
+        $formule = $stmt->fetch();
         $pdo->prepare("DELETE FROM tarifs WHERE id=?")->execute([$id]);
+        if ($formule) journaliser('tarif', "Suppression de la formule « {$formule['nom']} » ({$formule['prix']} {$formule['periode']})");
     }
 
     if ($action === 'saison') {
         enregistrer_param('saison', trim($_POST['saison']));
+        journaliser('tarif', 'Saison affichée : ' . trim($_POST['saison']));
     }
 
     // Fiche d'inscription PDF
@@ -61,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (move_uploaded_file($f['tmp_name'], UPLOAD_DOCUMENTS . $filename)) {
                 delete_upload(UPLOAD_DOCUMENTS, param('fiche_inscription'));
                 enregistrer_param('fiche_inscription', $filename);
+                journaliser('tarif', 'Nouvelle fiche d\'inscription PDF envoyée (« ' . mb_substr($f['name'], 0, 80) . ' »)');
             } else {
                 $erreur = 'Impossible d\'enregistrer le fichier.';
             }
@@ -69,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'fiche_supprimer') {
         delete_upload(UPLOAD_DOCUMENTS, param('fiche_inscription'));
         enregistrer_param('fiche_inscription', '');
+        journaliser('tarif', 'Fiche d\'inscription PDF retirée du site');
     }
 
     if (!$erreur) {

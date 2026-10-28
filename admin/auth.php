@@ -27,3 +27,6 @@ $_SESSION['admin_role'] = $role;
 // RGPD : suppression automatique des messages de contact trop anciens
 $pdo->prepare("DELETE FROM messages_contact WHERE created_at < ?")
     ->execute([date('Y-m-d H:i:s', strtotime('-' . CONSERVATION_MESSAGES_ANS . ' years'))]);
+// Journal : on ne garde que les derniers mois (ménage l'hébergement, limite la conservation des IP)
+$pdo->prepare("DELETE FROM journal WHERE created_at < ?")
+    ->execute([date('Y-m-d H:i:s', strtotime('-' . JOURNAL_CONSERVATION_MOIS . ' months'))]);

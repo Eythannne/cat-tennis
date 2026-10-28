@@ -15,6 +15,7 @@ const ROLES = [
 const ROLES_ATTRIBUABLES = ['administrateur', 'moderateur'];
 const PAGES_LECTURE_SEULE   = ['parametres'];  // visibles par les modérateurs, sans modification
 const PAGES_ADMINISTRATEURS = ['admins'];      // masquées et interdites aux modérateurs
+const PAGES_FONDATEUR       = ['journal'];     // masquées et interdites à tous sauf au fondateur
 
 function est_fondateur() {
     return ($_SESSION['admin_role'] ?? '') === 'fondateur';
@@ -32,10 +33,18 @@ function badge_role($role) {
          . ($role === 'fondateur' ? '★ ' : '') . (ROLES[$role] ?? htmlspecialchars($role)) . '</span>';
 }
 
+// À appeler en haut d'une page de PAGES_FONDATEUR : tout autre compte est refusé.
+function exiger_fondateur() {
+    if (!est_fondateur()) acces_refuse();
+}
+
 // À appeler en haut d'une page de PAGES_ADMINISTRATEURS : un modérateur est refusé,
 // même s'il tape l'adresse à la main.
 function exiger_administrateur() {
-    if (est_administrateur()) return;
+    if (!est_administrateur()) acces_refuse();
+}
+
+function acces_refuse() {
     http_response_code(403);
     admin_header('Accès refusé', '');
     echo '<h1>🔒 Accès refusé</h1>
@@ -82,10 +91,14 @@ function admin_header($titre, $page, $head = '') {
         'tarifs'     => '💶 Tarifs',
         'parametres' => '⚙️ Paramètres',
         'admins'     => '👥 Administrateurs',
+        'journal'    => '📜 Journal',
         'compte'     => '👤 Mon compte',
     ];
     if (!est_administrateur()) {
         $liens = array_diff_key($liens, array_flip(PAGES_ADMINISTRATEURS));
+    }
+    if (!est_fondateur()) {
+        $liens = array_diff_key($liens, array_flip(PAGES_FONDATEUR));
     }
     ?>
 <!DOCTYPE html>
