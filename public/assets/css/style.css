@@ -681,7 +681,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .fc-button-primary:hover { background: var(--vert-dark) !important; }
 .fc-day-today { background: var(--vert-light) !important; }
 .fc-event { cursor: pointer; }
-
+/* Jours fériés : case teintée de rouge clair + étiquette discrète */
+.fc .fc-bg-event.fc-ferie-fond { background: #FDECEA; opacity: 1; }
+.fc-daygrid-event.fc-ferie { background: transparent !important; border: none !important; }
+.fc-daygrid-event.fc-ferie .fc-event-title { color: #A93226; font-weight: 600; font-size: 0.78rem; }
 /* Pop-up de détail d'un événement */
 .event-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 16px; animation: fadeIn 0.15s ease; }
 .event-modal[hidden] { display: none; }

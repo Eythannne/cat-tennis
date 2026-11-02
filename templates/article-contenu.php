@@ -9,7 +9,7 @@
 <section class="page-hero page-hero--article">
     <div class="container">
         <h1><?= htmlspecialchars($article['titre']) ?></h1>
-        <p>Publié le <?= date('d F Y', strtotime($article['published_at'] ?? 'now')) ?></p>
+        <p>Publié le <?= date_fr(strtotime($article['published_at'] ?? 'now')) ?></p>
     </div>
 </section>
 

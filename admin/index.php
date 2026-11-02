@@ -1,172 +1,303 @@
 <?php
 require_once 'auth.php';
 
+$aujourdhui = date('Y-m-d');
+$compter = fn($sql) => (int)$pdo->query($sql)->fetchColumn();
+
+$nonLus     = $compter("SELECT COUNT(*) FROM messages_contact WHERE lu = 0");
+$brouillons = $compter("SELECT COUNT(*) FROM articles WHERE publie = 0");
+
 $stats = [
-    'articles' => $pdo->query("SELECT COUNT(*) FROM articles")->fetchColumn(),
-    'articles_publies' => $pdo->query("SELECT COUNT(*) FROM articles WHERE " . sql_article_visible())->fetchColumn(),
-    'messages' => $pdo->query("SELECT COUNT(*) FROM messages_contact")->fetchColumn(),
-    'messages_non_lus' => $pdo->query("SELECT COUNT(*) FROM messages_contact WHERE lu=0")->fetchColumn(),
-    'evenements_a_venir' => $pdo->query("SELECT COUNT(*) FROM evenements WHERE COALESCE(date_fin, date_debut) >= '" . date('Y-m-d') . "'")->fetchColumn(),
-    'galerie' => $pdo->query("SELECT COUNT(*) FROM galerie")->fetchColumn(),
+    ['📰', $compter("SELECT COUNT(*) FROM articles WHERE " . sql_article_visible()), 'articles en ligne', 'articles.php'],
+    ['📅', $compter("SELECT COUNT(*) FROM evenements WHERE COALESCE(date_fin, date_debut) >= '$aujourdhui'"), 'événements à venir', 'evenements.php'],
+    ['📷', $compter("SELECT COUNT(*) FROM galerie"), 'photos dans la galerie', 'galerie.php'],
+    ['✉️', $compter("SELECT COUNT(*) FROM messages_contact"), 'messages reçus', 'messages.php'],
 ];
 
-// ── « À compléter » : ce qui manque encore sur le site (lien vers la bonne page) ──
-$aFaire = [];
-if ($stats['messages_non_lus'] > 0) {
-    $aFaire[] = ['✉️', "{$stats['messages_non_lus']} message(s) non lu(s)", 'messages.php'];
+// ── Mini-calendrier du mois (?mois=AAAA-MM pour naviguer) ──
+$mois = preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $_GET['mois'] ?? '') ? $_GET['mois'] : date('Y-m');
+$premier  = strtotime("$mois-01");
+$nbJours  = (int)date('t', $premier);
+$dernier  = date('Y-m-d', strtotime("$mois-$nbJours"));
+$stmt = $pdo->prepare("SELECT * FROM evenements WHERE DATE(date_debut) <= ? AND DATE(COALESCE(date_fin, date_debut)) >= ? ORDER BY date_debut");
+$stmt->execute([$dernier, "$mois-01"]);
+$evenementsMois = $stmt->fetchAll();
+// Pour chaque jour : vacances (fond coloré) et autres événements (pastilles)
+$joursCalendrier = [];
+foreach ($evenementsMois as $e) {
+    $d   = max(strtotime(date('Y-m-d', strtotime($e['date_debut']))), $premier);
+    $fin = min(strtotime(date('Y-m-d', strtotime($e['date_fin'] ?: $e['date_debut']))), strtotime($dernier));
+    for (; $d <= $fin; $d = strtotime('+1 day', $d)) {
+        $joursCalendrier[(int)date('j', $d)][] = $e;
+    }
 }
-if (est_administrateur() && (param('responsable_publication') === '' || param('rna') === '')) {
-    $aFaire[] = ['⚖️', 'Informations légales incomplètes (responsable de publication, numéro RNA)', 'parametres.php?onglet=infos'];
+// Jours fériés du mois, mêlés aux événements dans la liste sous la grille (triée par date)
+$feriesMois = array_filter(jours_feries((int)date('Y', $premier)), fn($d) => str_starts_with($d, $mois), ARRAY_FILTER_USE_KEY);
+$lignesMois = [];
+foreach ($evenementsMois as $e) {
+    $type = EVENT_TYPES[$e['type']] ?? EVENT_TYPES['autre'];
+    $lignesMois[] = ['date' => $e['date_debut'], 'html' => '<em style="background:' . $type['couleur'] . '"></em><a href="evenements.php?edit=' . $e['id'] . '">' . htmlspecialchars($e['titre']) . '</a><small>' . quand_evenement($e) . '</small>'];
 }
-$sansPdf = $pdo->query("SELECT COUNT(*) FROM tarifs WHERE pdf IS NULL OR pdf = ''")->fetchColumn();
-if ($sansPdf > 0) $aFaire[] = ['📄', "$sansPdf formule(s) de tarif sans fiche d'inscription PDF", 'tarifs.php'];
-$prixADefinir = $pdo->query("SELECT COUNT(*) FROM tarifs WHERE prix LIKE '%définir%'")->fetchColumn();
-if ($prixADefinir > 0) $aFaire[] = ['💶', "$prixADefinir formule(s) avec un prix « À définir »", 'tarifs.php'];
-if (!$pdo->query("SELECT COUNT(*) FROM bureau")->fetchColumn()) {
-    $aFaire[] = ['🏛️', "Aucun membre du bureau : la section « L'équipe administrative » est masquée", 'bureau.php'];
+foreach ($feriesMois as $date => $nom) {
+    $lignesMois[] = ['date' => $date, 'html' => '<em style="background:' . FERIE_COULEUR . '"></em><span class="ferie-nom">' . $nom . '</span><small>Férié · ' . jour_mois(strtotime($date)) . '</small>'];
 }
-$brouillons = $pdo->query("SELECT COUNT(*) FROM articles WHERE publie = 0")->fetchColumn();
-if ($brouillons > 0) $aFaire[] = ['📝', "$brouillons article(s) en brouillon", 'articles.php'];
+usort($lignesMois, fn($a, $b) => strcmp($a['date'], $b['date']));
 
-// ── Raccourcis : les pages du menu (selon le rôle), avec une courte description ──
-const DESCRIPTIONS_PAGES = [
-    'articles'    => 'Écrire, publier, programmer',
-    'evenements'  => 'Tournois, stages, vacances',
-    'galerie'     => 'Photos et catégories',
-    'entraineurs' => 'Fiches et photo de groupe',
-    'bureau'      => 'Équipe administrative',
-    'tarifs'      => 'Formules et fiches PDF',
-    'messages'    => 'Formulaire de contact',
-    'parametres'  => 'Infos, chiffres clés, textes',
-    'admins'      => 'Comptes et rôles',
-    'journal'     => 'Historique des actions',
-];
+$moisPrecedent =date('Y-m', strtotime('-1 month', $premier));
+$moisSuivant   = date('Y-m', strtotime('+1 month', $premier));
 
-$derniers_articles = $pdo->query("SELECT * FROM articles ORDER BY created_at DESC LIMIT 5")->fetchAll();
-$derniers_messages = $pdo->query("SELECT * FROM messages_contact ORDER BY created_at DESC LIMIT 5")->fetchAll();
+$evenements = $pdo->query("SELECT * FROM evenements WHERE COALESCE(date_fin, date_debut) >= '$aujourdhui' ORDER BY date_debut LIMIT 4")->fetchAll();
+$messages   = $pdo->query("SELECT * FROM messages_contact ORDER BY created_at DESC LIMIT 4")->fetchAll();
+$articles   = $pdo->query("SELECT * FROM articles ORDER BY created_at DESC LIMIT 4")->fetchAll();
+$activite   = est_fondateur() ? $pdo->query("SELECT * FROM journal ORDER BY created_at DESC LIMIT 5")->fetchAll() : [];
+
+const JOURS_FR    = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const MOIS_COURTS = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'];
+
+// « il y a 5 min », « il y a 3 h », « hier », « 12 oct. »
+function il_y_a($date) {
+    $ecart = time() - strtotime($date);
+    if ($ecart < 60)    return "à l'instant";
+    if ($ecart < 3600)  return 'il y a ' . floor($ecart / 60) . ' min';
+    if ($ecart < 86400 && date('Y-m-d', strtotime($date)) === date('Y-m-d')) return 'il y a ' . floor($ecart / 3600) . ' h';
+    if (date('Y-m-d', strtotime($date)) === date('Y-m-d', strtotime('-1 day'))) return 'hier';
+    return jour_mois(strtotime($date));
+}
+
+// Phrase de résumé sous le bonjour
+$resume = [];
+if ($nonLus)     $resume[] = "<strong>$nonLus message" . ($nonLus > 1 ? 's' : '') . " non lu" . ($nonLus > 1 ? 's' : '') . "</strong>";
+if ($brouillons) $resume[] = "<strong>$brouillons brouillon" . ($brouillons > 1 ? 's' : '') . "</strong> en attente";
+if ($evenements) {
+    $prochain = $evenements[0];
+    $jours = (int)((strtotime(date('Y-m-d', strtotime($prochain['date_debut']))) - strtotime($aujourdhui)) / 86400);
+    $quand = $jours <= 0 ? "aujourd'hui" : ($jours === 1 ? 'demain' : "dans $jours jours");
+    $resume[] = 'prochain événement <strong>' . $quand . '</strong>';
+}
+$phrase = $resume ? 'Au programme : ' . implode(', ', $resume) . '.' : 'Tout est à jour, rien ne vous attend. 🎾';
+
+$prenom = explode(' ', trim($_SESSION['admin_nom']))[0];
 
 admin_header('Dashboard', 'index', '<style>
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border-radius: 8px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid var(--jaune); text-decoration: none; color: inherit; transition: transform 0.15s; }
-    .stat-card:hover { transform: translateY(-2px); }
-    .stat-card .number { font-size: 1.9rem; font-weight: 700; color: var(--vert); }
-    .stat-card .label { font-size: 0.85rem; color: #888; margin-top: 2px; }
-    .stat-card .sub { font-size: 0.8rem; color: var(--vert); margin-top: 2px; }
-    .a-faire { border-left: 4px solid var(--jaune); }
-    .a-faire ul { list-style: none; }
-    .a-faire li a { display: flex; gap: 10px; align-items: center; padding: 9px 4px; border-bottom: 1px solid #f0f0f0; color: #333; text-decoration: none; font-size: 0.9rem; }
-    .a-faire li:last-child a { border-bottom: none; }
-    .a-faire li a:hover { color: var(--vert); }
-    .a-faire li a::after { content: "→"; margin-left: auto; color: var(--vert); }
-    .raccourcis-groupe { margin-bottom: 18px; }
-    .raccourcis-groupe h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.2px; color: #999; margin-bottom: 8px; }
-    .raccourcis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-    .raccourci { display: block; padding: 14px; border: 1px solid #e3e8e4; border-radius: 8px; text-decoration: none; color: #333; background: #fafcfa; transition: border-color 0.15s, background 0.15s; }
-    .raccourci:hover { border-color: var(--vert); background: var(--vert-light); }
-    .raccourci strong { display: block; font-size: 0.95rem; margin-bottom: 2px; }
-    .raccourci span { font-size: 0.8rem; color: #888; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .grid-2 .card { margin-bottom: 0; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .card-header h2 { margin-bottom: 0; }
-    .card-header a { font-size: 0.82rem; color: var(--vert); text-decoration: none; }
-    .list-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.88rem; }
-    .list-item:last-child { border-bottom: none; }
-    @media (max-width: 1000px) { .stats-grid { grid-template-columns: 1fr 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+    /* Contraste renforcé, sur cette page uniquement */
+    body { background: #e9eeea; }
+    .main .card { border: 1px solid #d9e0db; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+    .main .card h2 { color: #1f2a22; }
+    .main .empty { color: #6b746e; }
+
+    .accueil { background: linear-gradient(120deg, var(--vert-dark), var(--vert)); color: #fff; border-radius: 12px; padding: 26px 28px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 18px; }
+    .accueil h1 { color: #fff; margin: 0 0 4px; }
+    .accueil .date { opacity: 0.85; font-size: 0.85rem; text-transform: capitalize; }
+    .accueil p { margin-top: 10px; font-size: 0.95rem; opacity: 0.95; }
+    .accueil strong { color: var(--jaune); }
+    .accueil-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .accueil-actions .btn-ghost { background: rgba(255,255,255,0.12); color: #fff; }
+    .accueil-actions .btn-ghost:hover { background: rgba(255,255,255,0.22); }
+
+    .chiffres { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .chiffre { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 10px; padding: 14px 16px; border: 1px solid #d9e0db; box-shadow: 0 2px 6px rgba(0,0,0,0.06); text-decoration: none; color: #1f2a22; transition: transform 0.15s; }
+    .chiffre:hover { transform: translateY(-2px); }
+    .chiffre .icone { font-size: 1.3rem; width: 42px; height: 42px; border-radius: 10px; background: var(--vert-light); display: grid; place-items: center; flex-shrink: 0; }
+    .chiffre b { display: block; font-size: 1.35rem; color: var(--vert); line-height: 1.1; }
+    .chiffre span { font-size: 0.78rem; color: #5c6660; }
+
+    .colonnes { display: grid; grid-template-columns: 1.6fr 1fr; gap: 0 20px; align-items: start; }
+    .colonnes .card { margin-bottom: 20px; }
+    .titre-carte { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+    .titre-carte h2 { margin: 0; }
+    .titre-carte a { font-size: 0.8rem; color: var(--vert); text-decoration: none; }
+
+    .evt { display: flex; gap: 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e3e8e4; text-decoration: none; color: #1f2a22; }
+    .evt:last-child { border-bottom: none; }
+    .evt-date { width: 50px; flex-shrink: 0; text-align: center; border-radius: 8px; padding: 6px 0; color: #fff; }
+    .evt-date b { display: block; font-size: 1.25rem; line-height: 1; }
+    .evt-date small { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .evt-info strong { display: block; font-size: 0.92rem; }
+    .evt-info span { font-size: 0.78rem; color: #5c6660; }
+
+    .msg { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e3e8e4; text-decoration: none; color: #1f2a22; }
+    .msg:last-child { border-bottom: none; }
+    .msg-avatar { width: 36px; height: 36px; border-radius: 50%; background: #eef1ee; color: var(--vert); font-weight: 700; font-size: 0.8rem; display: grid; place-items: center; flex-shrink: 0; }
+    .msg.non-lu .msg-avatar { background: var(--jaune); color: #111; }
+    .msg-corps { min-width: 0; flex: 1; }
+    .msg-ligne { display: flex; justify-content: space-between; gap: 8px; font-size: 0.88rem; }
+    .msg.non-lu .msg-ligne strong::after { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); margin-left: 6px; vertical-align: middle; }
+    .msg-ligne time { font-size: 0.75rem; color: #6b746e; white-space: nowrap; }
+    .msg-extrait { font-size: 0.8rem; color: #5c6660; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .calendrier-tete { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .calendrier-tete h2 { margin: 0; }
+    .calendrier-tete a { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; text-decoration: none; color: var(--vert-dark); font-size: 1.3rem; background: #eef2ef; }
+    .calendrier-tete a:hover { background: var(--vert-light); }
+    .calendrier { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+    .calendrier b { font-size: 0.72rem; color: #4d5750; padding-bottom: 4px; }
+    .calendrier a { position: relative; height: 40px; display: grid; place-items: center; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #1f2a22; text-decoration: none; }
+    .calendrier a:hover { background: #eef2ef; }
+    .calendrier a.passe { color: #a3aba5; font-weight: 400; }
+    .calendrier a.vacances { background: #EFE3F5; }
+    .calendrier a.ferie { color: #A93226; box-shadow: inset 0 0 0 2px #F1B5AE; }
+    .calendrier a.auj { background: var(--vert); color: #fff; }
+    .calendrier-liste .ferie-nom { color: #A93226; font-weight: 600; }
+    .calendrier i { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
+    .calendrier em, .calendrier-liste em { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+    .calendrier a.auj em { outline: 1px solid #fff; }
+    .calendrier-liste { list-style: none; margin-top: 14px; border-top: 1px solid #e3e8e4; padding-top: 8px; }
+    .calendrier-liste li { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 0.84rem; }
+    .calendrier-liste em { width: 8px; height: 8px; flex-shrink: 0; }
+    .calendrier-liste a { color: #1f2a22; text-decoration: none; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .calendrier-liste a:hover { color: var(--vert); }
+    .calendrier-liste small { margin-left: auto; color: #5c6660; white-space: nowrap; font-size: 0.76rem; }
+    .calendrier-vide { margin-top: 12px; text-align: center; font-size: 0.84rem; color: #5c6660; }
+
+    .ligne { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #e3e8e4; font-size: 0.86rem; color: #1f2a22; text-decoration: none; }
+    .ligne:last-child { border-bottom: none; }
+    .ligne span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    a.ligne:hover { color: var(--vert); }
+    .action-journal { font-size: 0.82rem; padding: 7px 0; border-bottom: 1px solid #e3e8e4; }
+    .action-journal:last-child { border-bottom: none; }
+    .action-journal small { display: block; color: #6b746e; font-size: 0.74rem; }
+
+    @media (max-width: 1100px) { .chiffres { grid-template-columns: 1fr 1fr; } .colonnes { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .accueil { padding: 20px; } .chiffre { padding: 12px; } .chiffre .icone { width: 36px; height: 36px; font-size: 1.1rem; } }
 </style>');
 ?>
-    <h1>Dashboard</h1>
-    <p class="subtitle">Bienvenue, <?= htmlspecialchars($_SESSION['admin_nom']) ?> — <?= date('d/m/Y') ?></p>
+    <section class="accueil">
+        <div>
+            <h1><?= date('G') < 18 ? 'Bonjour' : 'Bonsoir' ?> <?= htmlspecialchars($prenom) ?> 👋</h1>
+            <div class="date"><?= JOURS_FR[date('w')] ?> <?= date_fr(time()) ?></div>
+            <p><?= $phrase ?></p>
+        </div>
+        <div class="accueil-actions">
+            <a href="articles.php" class="btn btn-accent">＋ Article</a>
+            <a href="evenements.php" class="btn btn-ghost">＋ Événement</a>
+            <a href="<?= BASE_URL ?>/index.php" target="_blank" class="btn btn-ghost">Voir le site ↗</a>
+        </div>
+    </section>
 
-    <div class="stats-grid">
-        <a href="articles.php" class="stat-card">
-            <div class="number"><?= $stats['articles'] ?></div>
-            <div class="label">Articles</div>
-            <div class="sub"><?= $stats['articles_publies'] ?> en ligne</div>
+    <div class="chiffres">
+        <?php foreach ($stats as [$icone, $nombre, $label, $lien]): ?>
+        <a href="<?= $lien ?>" class="chiffre">
+            <span class="icone"><?= $icone ?></span>
+            <div><b><?= $nombre ?></b><span><?= $label ?></span></div>
         </a>
-        <a href="messages.php" class="stat-card">
-            <div class="number"><?= $stats['messages'] ?></div>
-            <div class="label">Messages reçus</div>
-            <?php if ($stats['messages_non_lus'] > 0): ?>
-            <div class="sub" style="color:var(--danger)"><?= $stats['messages_non_lus'] ?> non lus</div>
-            <?php endif; ?>
-        </a>
-        <a href="evenements.php" class="stat-card">
-            <div class="number"><?= $stats['evenements_a_venir'] ?></div>
-            <div class="label">Événements à venir</div>
-        </a>
-        <a href="galerie.php" class="stat-card">
-            <div class="number"><?= $stats['galerie'] ?></div>
-            <div class="label">Photos galerie</div>
-        </a>
+        <?php endforeach; ?>
     </div>
 
-    <?php if ($aFaire): ?>
-    <div class="card a-faire">
-        <h2>📌 À compléter</h2>
-        <ul>
-            <?php foreach ($aFaire as [$icone, $texte, $lien]): ?>
-            <li><a href="<?= $lien ?>"><span><?= $icone ?></span> <?= htmlspecialchars($texte) ?></a></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-    <?php endif; ?>
+    <div class="colonnes">
+        <div>
+            <div class="card">
+                <div class="titre-carte">
+                    <h2>📅 Prochainement au club</h2>
+                    <a href="evenements.php">Calendrier →</a>
+                </div>
+                <?php if (!$evenements): ?>
+                    <p class="empty">Aucun événement à venir — <a href="evenements.php">en ajouter un</a></p>
+                <?php endif; ?>
+                <?php foreach ($evenements as $e):
+                    $ts = strtotime($e['date_debut']);
+                    $type = EVENT_TYPES[$e['type']] ?? EVENT_TYPES['autre']; ?>
+                <a href="evenements.php?edit=<?= $e['id'] ?>" class="evt">
+                    <div class="evt-date" style="background:<?= $type['couleur'] ?>">
+                        <b><?= date('j', $ts) ?></b>
+                        <small><?= MOIS_COURTS[date('n', $ts) - 1] ?></small>
+                    </div>
+                    <div class="evt-info">
+                        <strong><?= htmlspecialchars($e['titre']) ?></strong>
+                        <span><?= $type['label'] ?> · <?= quand_evenement($e) ?></span>
+                    </div>
+                </a>
+                <?php endforeach; ?>
+            </div>
 
-    <div class="card">
-        <h2>🧭 Accès rapide</h2>
-        <?php foreach (MENU_ADMIN as [$groupe, $liens]):
-            if (!est_administrateur()) $liens = array_diff_key($liens, array_flip(PAGES_ADMINISTRATEURS));
-            if (!est_fondateur())      $liens = array_diff_key($liens, array_flip(PAGES_FONDATEUR));
-            unset($liens['index']);
-            if (!$liens) continue; ?>
-        <div class="raccourcis-groupe">
-            <h3><?= $groupe ?></h3>
-            <div class="raccourcis">
-                <?php foreach ($liens as $fichier => $label): ?>
-                <a href="<?= $fichier ?>.php" class="raccourci">
-                    <strong><?= $label ?></strong>
-                    <span><?= DESCRIPTIONS_PAGES[$fichier] ?? '' ?></span>
+            <div class="card">
+                <div class="titre-carte">
+                    <h2>✉️ Derniers messages</h2>
+                    <a href="messages.php">Tous les messages →</a>
+                </div>
+                <?php if (!$messages): ?>
+                    <p class="empty">Aucun message pour l'instant</p>
+                <?php endif; ?>
+                <?php foreach ($messages as $m): ?>
+                <a href="messages.php?voir=<?= $m['id'] ?>" class="msg <?= $m['lu'] ? '' : 'non-lu' ?>">
+                    <span class="msg-avatar"><?= htmlspecialchars(mb_strtoupper(mb_substr($m['nom'], 0, 1))) ?></span>
+                    <div class="msg-corps">
+                        <div class="msg-ligne">
+                            <strong><?= htmlspecialchars($m['nom']) ?></strong>
+                            <time><?= il_y_a($m['created_at']) ?></time>
+                        </div>
+                        <div class="msg-extrait"><?= htmlspecialchars(sujet_label($m['sujet'])) ?> — <?= htmlspecialchars(mb_substr($m['message'], 0, 120)) ?></div>
+                    </div>
+                </a>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="card">
+                <div class="titre-carte">
+                    <h2>📰 Articles</h2>
+                    <a href="articles.php">Gérer →</a>
+                </div>
+                <?php if (!$articles): ?>
+                    <p class="empty">Aucun article</p>
+                <?php endif; ?>
+                <?php foreach ($articles as $a): ?>
+                <a href="articles.php?edit=<?= $a['id'] ?>" class="ligne">
+                    <span><?= htmlspecialchars($a['titre']) ?></span>
+                    <?= article_badge($a) ?>
                 </a>
                 <?php endforeach; ?>
             </div>
         </div>
-        <?php endforeach; ?>
-    </div>
 
-    <div class="grid-2">
-        <div class="card">
-            <div class="card-header">
-                <h2>📰 Derniers articles</h2>
-                <a href="articles.php">Voir tout →</a>
+        <div>
+            <div class="card" id="calendrier">
+                <div class="calendrier-tete">
+                    <a href="?mois=<?= $moisPrecedent ?>#calendrier" aria-label="Mois précédent">‹</a>
+                    <h2>📆 <?= MOIS_FR[date('m', $premier)] ?> <?= date('Y', $premier) ?></h2>
+                    <a href="?mois=<?= $moisSuivant ?>#calendrier" aria-label="Mois suivant">›</a>
+                </div>
+                <div class="calendrier">
+                    <?php foreach (['L', 'M', 'M', 'J', 'V', 'S', 'D'] as $j): ?><b><?= $j ?></b><?php endforeach; ?>
+                    <?php for ($i = 1; $i < (int)date('N', $premier); $i++): ?><span></span><?php endfor; ?>
+                    <?php for ($j = 1; $j <= $nbJours; $j++):
+                        $date = sprintf('%s-%02d', $mois, $j);
+                        $evts = $joursCalendrier[$j] ?? [];
+                        $vacances = array_filter($evts, fn($e) => $e['type'] === 'vacances');
+                        $autres   = array_filter($evts, fn($e) => $e['type'] !== 'vacances');
+                        $ferie    = $feriesMois[$date] ?? null;
+                        $classes  = trim(($date === $aujourdhui ? 'auj ' : '') . ($date < $aujourdhui ? 'passe ' : '') . ($vacances ? 'vacances ' : '') . ($ferie ? 'ferie' : ''));
+                        $titre    = implode("\n", array_merge($ferie ? ["Férié : $ferie"] : [], array_map(fn($e) => $e['titre'], $evts))); ?>
+                    <a href="evenements.php" class="<?= $classes ?>" <?= $titre !== '' ? 'title="' . htmlspecialchars($titre) . '"' : '' ?>>
+                        <?= $j ?>
+                        <?php if ($autres): ?>
+                        <i><?php foreach (array_slice($autres, 0, 3) as $e): ?><em style="background:<?= (EVENT_TYPES[$e['type']] ?? EVENT_TYPES['autre'])['couleur'] ?>"></em><?php endforeach; ?></i>
+                        <?php endif; ?>
+                    </a>
+                    <?php endfor; ?>
+                </div>
+                <?php if ($lignesMois): ?>
+                <ul class="calendrier-liste">
+                    <?php foreach ($lignesMois as $ligne): ?>
+                    <li><?= $ligne['html'] ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php else: ?>
+                <p class="calendrier-vide">Aucun événement ce mois-ci</p>
+                <?php endif; ?>
             </div>
-            <?php if (empty($derniers_articles)): ?>
-                <p class="empty">Aucun article</p>
-            <?php else: ?>
-                <?php foreach ($derniers_articles as $a): ?>
-                <div class="list-item">
-                    <span><?= htmlspecialchars($a['titre']) ?></span>
-                    <?= article_badge($a) ?>
+
+            <?php if ($activite): ?>
+            <div class="card">
+                <div class="titre-carte">
+                    <h2>📜 Dernières actions</h2>
+                    <a href="journal.php">Journal →</a>
+                </div>
+                <?php foreach ($activite as $j): ?>
+                <div class="action-journal">
+                    <?= htmlspecialchars($j['description']) ?>
+                    <small><?= htmlspecialchars($j['admin_nom']) ?> · <?= il_y_a($j['created_at']) ?></small>
                 </div>
                 <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h2>✉️ Derniers messages</h2>
-                <a href="messages.php">Voir tout →</a>
             </div>
-            <?php if (empty($derniers_messages)): ?>
-                <p class="empty">Aucun message</p>
-            <?php else: ?>
-                <?php foreach ($derniers_messages as $m): ?>
-                <div class="list-item">
-                    <span><?= htmlspecialchars($m['nom']) ?> — <?= htmlspecialchars(sujet_label($m['sujet'])) ?></span>
-                    <?php if (!$m['lu']): ?>
-                        <span class="badge badge-red">Non lu</span>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; ?>
             <?php endif; ?>
         </div>
     </div>

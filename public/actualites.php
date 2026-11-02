@@ -110,7 +110,7 @@ include '../templates/navbar.php';
                                     <div class="news-img" style="background:url('assets/images/placeholder.png') center/cover no-repeat; min-height:120px;"></div>
                                 <?php endif; ?>
                                 <div class="news-body">
-                                    <span class="news-date"><?= date('d F Y', strtotime($a['published_at'])) ?></span>
+                                    <span class="news-date"><?= date_fr(strtotime($a['published_at'])) ?></span>
                                     <h3><?= htmlspecialchars($a['titre']) ?></h3>
                                     <p><?= htmlspecialchars(texte_brut($a['contenu'], 120)) ?></p>
                                     <a href="article.php?id=<?= $a['id'] ?>" class="news-link">Lire la suite →</a>

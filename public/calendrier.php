@@ -35,6 +35,7 @@ include '../templates/navbar.php';
             <?php foreach (EVENT_TYPES as $type): ?>
             <span class="legend-item"><span class="legend-dot" style="background:<?= $type['couleur'] ?>"></span><?= $type['label'] ?></span>
             <?php endforeach; ?>
+            <span class="legend-item"><span class="legend-dot" style="background:<?= FERIE_COULEUR ?>"></span>Jour férié</span>
         </div>
         <div id="calendar"></div>
     </div>
@@ -60,6 +61,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'fr',
+        firstDay: 1,                    // semaine du lundi au dimanche
+        allDayText: 'Toute la journée',
         <?php if ($evenementCible): ?>
         initialDate: '<?= date('Y-m-d', strtotime($evenementCible['date_debut'])) ?>',
         <?php endif; ?>
