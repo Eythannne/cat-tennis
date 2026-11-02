@@ -2,6 +2,14 @@
 require_once 'auth.php';
 $lectureSeule = lecture_seule_pour_moderateur();
 
+// La page est découpée en onglets (?onglet=...) pour rester lisible
+const ONGLETS_PARAMETRES = [
+    'infos'    => '🏛️ Informations du club',
+    'chiffres' => '🔢 Chiffres clés',
+    'textes'   => '✏️ Textes du site',
+];
+$onglet = isset(ONGLETS_PARAMETRES[$_GET['onglet'] ?? '']) ? $_GET['onglet'] : 'infos';
+
 $saved = false;
 
 // Libellés des champs, pour le journal
@@ -50,9 +58,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chiff
     $saved = true;
 }
 
+// ── Textes du site (voir src/textes.php) ──────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'textes') {
+    $valeurs = [];
+    foreach (TEXTES_SITE as [, $champs]) {
+        foreach ($champs as $cle => [$libelle, $defaut]) {
+            $valeur = trim(str_replace("\r\n", "\n", $_POST['texte'][$cle] ?? ''));
+            // L'adresse de réservation doit être un vrai lien web
+            if ($cle === 'lien_reservation' && !preg_match('#^https?://#i', $valeur)) $valeur = '';
+            // Identique au texte d'origine = on ne stocke rien : le texte par défaut s'applique
+            $valeurs["texte_$cle"] = $valeur === $defaut ? '' : $valeur;
+        }
+    }
+    $modifies = enregistrer_parametres($valeurs);
+    if ($modifies) {
+        journaliser('parametres', 'Modification des textes du site : ' . implode(', ', array_map(
+            fn($c) => texte_definition(substr($c, 6))[0], $modifies)));
+    }
+    $saved = true;
+}
+
 $params = $pdo->query("SELECT cle, valeur FROM parametres")->fetchAll(PDO::FETCH_KEY_PAIR);
 
-admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</style>');
+admin_header('Paramètres', 'parametres', '<style>
+    .main { max-width: 760px; }
+    .textes-groupe { border: 1px solid #e3e8e4; border-radius: 8px; margin-bottom: 10px; background: #fafcfa; }
+    .textes-groupe summary { cursor: pointer; padding: 12px 14px; font-weight: 600; color: var(--vert); list-style: none; display: flex; justify-content: space-between; }
+    .textes-groupe summary::after { content: "▸"; color: #999; }
+    .textes-groupe[open] summary::after { content: "▾"; }
+    .textes-groupe[open] summary { border-bottom: 1px solid #e3e8e4; }
+    .textes-champs { padding: 14px; }
+    .texte-label { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .texte-reset { background: none; border: none; color: var(--vert); font-size: 0.78rem; cursor: pointer; text-decoration: underline; white-space: nowrap; }
+    .texte-modifie { font-size: 0.7rem; font-weight: 700; color: #8a6d00; background: #FFF4C2; border-radius: 10px; padding: 1px 7px; margin-left: 6px; }
+    fieldset.champs[disabled] .texte-reset { display: none; }
+    .onglets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e3e8e4; }
+    .onglets a { padding: 10px 16px; text-decoration: none; color: #666; font-weight: 600; font-size: 0.92rem; border-bottom: 3px solid transparent; margin-bottom: -2px; border-radius: 6px 6px 0 0; }
+    .onglets a:hover { color: var(--vert); background: #fff; }
+    .onglets a.actif { color: var(--vert); border-bottom-color: var(--jaune); background: #fff; }
+    .onglet[hidden] { display: none; }
+</style>');
 ?>
     <h1>⚙️ Paramètres du site</h1>
     <?php if ($lectureSeule) bandeau_lecture_seule(); ?>
@@ -60,11 +105,18 @@ admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</s
         <div class="alert alert-success">✅ Paramètres enregistrés.</div>
     <?php endif; ?>
 
-    <!-- ── Card : Infos club ── -->
-    <div class="card">
+    <!-- Onglets : une seule partie affichée à la fois -->
+    <nav class="onglets">
+        <?php foreach (ONGLETS_PARAMETRES as $cle => $libelle): ?>
+        <a href="parametres.php?onglet=<?= $cle ?>" class="<?= $onglet === $cle ? 'actif' : '' ?>"><?= $libelle ?></a>
+        <?php endforeach; ?>
+    </nav>
+
+    <!-- ── Onglet : Infos club ── -->
+    <div class="card onglet" <?= $onglet !== 'infos' ? 'hidden' : '' ?>>
         <h2>Informations du club</h2>
         <p class="form-hint" style="margin:-8px 0 16px">Ces informations s'affichent sur le site public (pied de page, page Contact, mentions légales). Un champ vide n'est pas affiché.</p>
-        <form method="POST"><fieldset class="champs" <?= $lectureSeule ? 'disabled' : '' ?>>
+        <form method="POST" action="parametres.php?onglet=<?= $onglet ?>"><fieldset class="champs" <?= $lectureSeule ? 'disabled' : '' ?>>
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="infos">
             <div class="form-group">
@@ -123,11 +175,11 @@ admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</s
         </fieldset></form>
     </div>
 
-    <!-- ── Card : Chiffres clés ── -->
-    <div class="card">
+    <!-- ── Onglet : Chiffres clés ── -->
+    <div class="card onglet" <?= $onglet !== 'chiffres' ? 'hidden' : '' ?>>
         <h2>🔢 Chiffres clés</h2>
         <p class="form-hint" style="margin:-8px 0 16px">Affichés sur l'accueil et la page « Le club ». Laisser le chiffre vide pour masquer une case. Le nombre d'entraîneurs s'ajoute tout seul.</p>
-        <form method="POST"><fieldset class="champs" <?= $lectureSeule ? 'disabled' : '' ?>>
+        <form method="POST" action="parametres.php?onglet=<?= $onglet ?>"><fieldset class="champs" <?= $lectureSeule ? 'disabled' : '' ?>>
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="chiffres">
             <?php foreach (CHIFFRES_DEFAUT as $n => [$valeurDefaut, $labelDefaut]): ?>
@@ -146,5 +198,53 @@ admin_header('Paramètres', 'parametres', '<style>.main { max-width: 760px; }</s
         </fieldset></form>
     </div>
 
+    <!-- ── Onglet : Textes du site ── -->
+    <div class="card onglet" id="textes" <?= $onglet !== 'textes' ? 'hidden' : '' ?>>
+        <h2>✏️ Textes du site</h2>
+        <p class="form-hint" style="margin:-8px 0 16px">Titres, sous-titres, boutons et paragraphes affichés sur le site, classés par page.
+            Un champ vide reprend le texte d'origine. Les textes modifiés sont signalés par « modifié ».</p>
+        <form method="POST" action="parametres.php?onglet=<?= $onglet ?>"><fieldset class="champs" <?= $lectureSeule ? 'disabled' : '' ?>>
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="textes">
+            <?php foreach (TEXTES_SITE as $groupe => [$titreGroupe, $champs]):
+                $nbModifies = count(array_filter(array_keys($champs), fn($c) => ($params["texte_$c"] ?? '') !== '')); ?>
+            <details class="textes-groupe">
+                <summary><span><?= $titreGroupe ?><?php if ($nbModifies): ?><span class="texte-modifie"><?= $nbModifies ?> modifié<?= $nbModifies > 1 ? 's' : '' ?></span><?php endif; ?></span></summary>
+                <div class="textes-champs">
+                    <?php foreach ($champs as $cle => $def):
+                        [$libelle, $defaut] = $def;
+                        $long    = ($def[2] ?? '') === 'long';
+                        $modifie = ($params["texte_$cle"] ?? '') !== '';
+                        $valeur  = $modifie ? $params["texte_$cle"] : $defaut; ?>
+                    <div class="form-group">
+                        <label class="texte-label">
+                            <span><?= htmlspecialchars($libelle) ?><?php if ($modifie): ?><span class="texte-modifie">modifié</span><?php endif; ?></span>
+                            <button type="button" class="texte-reset" data-defaut="<?= htmlspecialchars($defaut) ?>" title="<?= htmlspecialchars($defaut) ?>">↺ Texte d'origine</button>
+                        </label>
+                        <?php if ($long): ?>
+                            <textarea name="texte[<?= $cle ?>]" rows="3"><?= htmlspecialchars($valeur) ?></textarea>
+                        <?php else: ?>
+                            <input type="<?= $cle === 'lien_reservation' ? 'url' : 'text' ?>" name="texte[<?= $cle ?>]" value="<?= htmlspecialchars($valeur) ?>">
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </details>
+            <?php endforeach; ?>
+            <button type="submit" class="btn btn-primary" style="margin-top:6px">💾 Enregistrer les textes</button>
+        </fieldset></form>
+    </div>
+
     <p class="form-hint">🔒 Pour changer votre mot de passe, allez dans <a href="compte.php">👤 Mon compte</a>.</p>
-<?php admin_footer(); ?>
+<?php admin_footer(<<<'HTML'
+<script>
+// "↺ Texte d'origine" : remet le texte par défaut dans le champ (enregistré au clic sur "Enregistrer les textes")
+document.querySelectorAll('.texte-reset').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const champ = btn.closest('.form-group').querySelector('input, textarea');
+        champ.value = btn.dataset.defaut;
+        champ.focus();
+    });
+});
+</script>
+HTML); ?>

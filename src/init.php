@@ -2,6 +2,7 @@
 // Point d'entrée commun : connexion BDD + fonctions utilitaires.
 // À inclure à la place de config/database.php.
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/textes.php';
 
 date_default_timezone_set('Europe/Paris');
 // La base de données travaille dans le même fuseau que le site : sans ça, l'hébergeur

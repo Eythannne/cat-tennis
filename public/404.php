@@ -19,8 +19,8 @@ include '../templates/navbar.php';
         <div class="not-found">
             <span class="not-found-icon">🎾</span>
             <h1>404</h1>
-            <h2>Cette page est hors-jeu</h2>
-            <p>La page que vous cherchez n'existe pas ou a été déplacée.</p>
+            <h2><?= t('erreur404_titre') ?></h2>
+            <p><?= t('erreur404_texte') ?></p>
             <a href="<?= BASE_URL ?>/index.php" class="btn-primary">Retour à l'accueil</a>
         </div>
     </div>

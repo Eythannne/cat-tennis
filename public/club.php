@@ -20,8 +20,8 @@ include '../templates/navbar.php';
 <!-- Hero page intérieure -->
 <section class="page-hero page-hero--club">
     <div class="container">
-        <h1>Le club</h1>
-        <p>Notre histoire, nos terrains, nos entraîneurs</p>
+        <h1><?= t('club_hero_titre') ?></h1>
+        <p><?= t('club_hero_sous_titre') ?></p>
     </div>
 </section>
 
@@ -30,8 +30,8 @@ include '../templates/navbar.php';
     <div class="container">
         <div class="about-grid">
             <div class="about-text">
-                <span class="section-tag">Notre histoire</span>
-                <h2>Un club ancré dans Aulnay-sous-Bois</h2>
+                <span class="section-tag"><?= t('club_histoire_etiquette') ?></span>
+                <h2><?= t('club_histoire_titre') ?></h2>
                 <?= format_article(param('presentation_club', presentation_club_defaut())) ?>
             </div>
             <?php include '../templates/stats.php'; ?>
@@ -43,25 +43,17 @@ include '../templates/navbar.php';
 <section class="section-courts">
     <div class="container">
         <div class="section-center">
-            <span class="section-tag">Installations</span>
-            <h2>Nos terrains</h2>
+            <span class="section-tag"><?= t('club_terrains_etiquette') ?></span>
+            <h2><?= t('club_terrains_titre') ?></h2>
         </div>
         <div class="courts-grid">
+            <?php foreach ([1, 2, 3] as $n): ?>
             <div class="court-card">
-                <div class="court-icon">🏟️</div>
-                <h3>Courts couverts</h3>
-                <p>6 courts en dur couverts, disponibles toute l'année quelle que soit la météo.</p>
+                <div class="court-icon"><?= t("club_terrain{$n}_icone") ?></div>
+                <h3><?= t("club_terrain{$n}_titre") ?></h3>
+                <p><?= t("club_terrain{$n}_texte") ?></p>
             </div>
-            <div class="court-card">
-                <div class="court-icon">☀️</div>
-                <h3>Courts extérieurs</h3>
-                <p>Courts en accès libre selon disponibilité. Réservation via Ten'up recommandée.</p>
-            </div>
-            <div class="court-card">
-                <div class="court-icon">🏃</div>
-                <h3>Espace échauffement</h3>
-                <p>Zone dédiée à l'échauffement et aux exercices spécifiques tennis.</p>
-            </div>
+            <?php endforeach; ?>
         </div>
     </div>
 </section>
@@ -71,8 +63,8 @@ include '../templates/navbar.php';
 <section class="section-bureau" id="bureau">
     <div class="container">
         <div class="section-center">
-            <span class="section-tag">Le bureau</span>
-            <h2>L'équipe administrative</h2>
+            <span class="section-tag"><?= t('club_bureau_etiquette') ?></span>
+            <h2><?= t('club_bureau_titre') ?></h2>
         </div>
         <?php $personnes = $bureau; $dossierPhotos = 'bureau'; include '../templates/cartes-personnes.php'; ?>
     </div>
@@ -84,8 +76,8 @@ include '../templates/navbar.php';
 <section class="section-coaches">
     <div class="container">
         <div class="section-center">
-            <span class="section-tag">L'équipe</span>
-            <h2>Nos entraîneurs</h2>
+            <span class="section-tag"><?= t('club_coachs_etiquette') ?></span>
+            <h2><?= t('club_coachs_titre') ?></h2>
         </div>
         <?php $personnes = $entraineurs; $dossierPhotos = 'entraineurs'; include '../templates/cartes-personnes.php'; ?>
     </div>
@@ -97,7 +89,7 @@ include '../templates/navbar.php';
 <section class="section-tarifs" id="tarifs">
     <div class="container">
         <div class="section-center">
-            <span class="section-tag">Adhésion</span>
+            <span class="section-tag"><?= t('club_tarifs_etiquette') ?></span>
             <h2>Tarifs<?= param('saison') ? ' saison ' . htmlspecialchars(param('saison')) : '' ?></h2>
         </div>
         <div class="tarifs-grid">
@@ -121,7 +113,7 @@ include '../templates/navbar.php';
             </div>
             <?php endforeach; ?>
         </div>
-        <p class="tarifs-note">Renseignements au secrétariat du club<?= param('telephone') ? ' : ' . htmlspecialchars(param('telephone')) : '' ?>.</p>
+        <p class="tarifs-note"><?= t('club_tarifs_note') ?><?= param('telephone') ? ' : ' . htmlspecialchars(param('telephone')) : '' ?>.</p>
     </div>
 </section>
 <?php endif; ?>

@@ -18,8 +18,8 @@ include '../templates/navbar.php';
 
 <section class="page-hero page-hero--mentions">
     <div class="container">
-        <h1>Mentions légales</h1>
-        <p>Informations légales et politique de confidentialité</p>
+        <h1><?= t('mentions_titre') ?></h1>
+        <p><?= t('mentions_sous_titre') ?></p>
     </div>
 </section>
 

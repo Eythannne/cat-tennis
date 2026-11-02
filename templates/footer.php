@@ -27,7 +27,7 @@
             <div class="footer-col">
                 <h4>Liens utiles</h4>
                 <ul>
-                    <li><a href="https://tenup.fft.fr/" target="_blank" rel="noopener">Ten'up</a></li>
+                    <li><a href="<?= htmlspecialchars(texte('lien_reservation')) ?>" target="_blank" rel="noopener">Ten'up</a></li>
                     <li><a href="<?= BASE_URL ?>/mentions-legales.php">Mentions légales</a></li>
                 </ul>
             </div>

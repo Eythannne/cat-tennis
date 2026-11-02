@@ -24,8 +24,8 @@ include '../templates/navbar.php';
 
 <section class="page-hero page-hero--calendrier">
     <div class="container">
-        <h1>Calendrier</h1>
-        <p>Animations, cours, tournois et événements du club</p>
+        <h1><?= t('calendrier_titre') ?></h1>
+        <p><?= t('calendrier_sous_titre') ?></p>
     </div>
 </section>
 

@@ -13,6 +13,14 @@ const ROLES = [
 ];
 // Rôles proposés dans le formulaire des comptes (le fondateur n'est jamais attribuable)
 const ROLES_ATTRIBUABLES = ['administrateur', 'moderateur'];
+// Menu de l'admin, par groupes (null = sans titre). « Mon compte » est en bas de la barre latérale.
+const MENU_ADMIN = [
+    [null,             ['index'      => '📊 Dashboard']],
+    ['Contenu',        ['articles'   => '📰 Articles', 'evenements' => '📅 Événements', 'galerie' => '📷 Galerie']],
+    ['Le club',        ['entraineurs'=> '🎾 Entraîneurs', 'bureau' => '🏛️ Bureau', 'tarifs' => '💶 Tarifs']],
+    ['Échanges',       ['messages'   => '✉️ Messages']],
+    ['Administration', ['parametres' => '⚙️ Paramètres', 'admins' => '👥 Administrateurs', 'journal' => '📜 Journal']],
+];
 const PAGES_LECTURE_SEULE   = ['parametres'];  // visibles par les modérateurs, sans modification
 const PAGES_ADMINISTRATEURS = ['admins'];      // masquées et interdites aux modérateurs
 const PAGES_FONDATEUR       = ['journal'];     // masquées et interdites à tous sauf au fondateur
@@ -83,25 +91,12 @@ function admin_header($titre, $page, $head = '') {
     // Identifiant de cette page affichée (voir quitter.php et le script de admin_footer)
     $_SESSION['page_id'] = bin2hex(random_bytes(8));
     $nonLus = $pdo->query("SELECT COUNT(*) FROM messages_contact WHERE lu=0")->fetchColumn();
-    $liens = [
-        'index'      => '📊 Dashboard',
-        'articles'   => '📰 Articles',
-        'messages'   => '✉️ Messages',
-        'evenements' => '📅 Événements',
-        'galerie'    => '📷 Galerie',
-        'entraineurs'=> '🎾 Entraîneurs',
-        'bureau'     => '🏛️ Bureau',
-        'tarifs'     => '💶 Tarifs',
-        'parametres' => '⚙️ Paramètres',
-        'admins'     => '👥 Administrateurs',
-        'journal'    => '📜 Journal',
-        'compte'     => '👤 Mon compte',
-    ];
-    if (!est_administrateur()) {
-        $liens = array_diff_key($liens, array_flip(PAGES_ADMINISTRATEURS));
-    }
-    if (!est_fondateur()) {
-        $liens = array_diff_key($liens, array_flip(PAGES_FONDATEUR));
+    // Menu filtré selon le rôle ; un groupe devenu vide n'est pas affiché
+    $menu = [];
+    foreach (MENU_ADMIN as [$groupe, $liens]) {
+        if (!est_administrateur()) $liens = array_diff_key($liens, array_flip(PAGES_ADMINISTRATEURS));
+        if (!est_fondateur())      $liens = array_diff_key($liens, array_flip(PAGES_FONDATEUR));
+        if ($liens) $menu[] = [$groupe, $liens];
     }
     ?>
 <!DOCTYPE html>
@@ -123,14 +118,18 @@ function admin_header($titre, $page, $head = '') {
         <span class="sidebar-role"><?= ROLES[$_SESSION['admin_role'] ?? ''] ?? '' ?></span>
     </div>
     <nav>
-        <?php foreach ($liens as $fichier => $label): ?>
-        <a href="<?= $fichier ?>.php" <?= $page === $fichier ? 'class="active"' : '' ?>>
-            <?= $label ?><?php if ($fichier === 'messages' && $nonLus > 0): ?> <span class="sidebar-badge"><?= $nonLus ?></span><?php endif; ?>
-            <?php if (!est_administrateur() && in_array($fichier, PAGES_LECTURE_SEULE, true)): ?><span class="sidebar-lecture" title="Lecture seule">👁️</span><?php endif; ?>
-        </a>
+        <?php foreach ($menu as [$groupe, $liens]): ?>
+            <?php if ($groupe): ?><div class="sidebar-groupe"><?= $groupe ?></div><?php endif; ?>
+            <?php foreach ($liens as $fichier => $label): ?>
+            <a href="<?= $fichier ?>.php" <?= $page === $fichier ? 'class="active"' : '' ?>>
+                <?= $label ?><?php if ($fichier === 'messages' && $nonLus > 0): ?> <span class="sidebar-badge"><?= $nonLus ?></span><?php endif; ?>
+                <?php if (!est_administrateur() && in_array($fichier, PAGES_LECTURE_SEULE, true)): ?><span class="sidebar-lecture" title="Lecture seule">👁️</span><?php endif; ?>
+            </a>
+            <?php endforeach; ?>
         <?php endforeach; ?>
     </nav>
     <div class="sidebar-footer">
+        <a href="compte.php" <?= $page === 'compte' ? 'class="active"' : '' ?>>👤 Mon compte</a>
         <a href="<?= BASE_URL ?>/index.php" target="_blank">🌐 Voir le site</a>
         <a href="logout.php">🚪 Déconnexion</a>
     </div>

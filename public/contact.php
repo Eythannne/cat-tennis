@@ -68,8 +68,8 @@ include '../templates/navbar.php';
 
 <section class="page-hero page-hero--contact">
     <div class="container">
-        <h1>Contact</h1>
-        <p>Une question ? Écrivez-nous</p>
+        <h1><?= t('contact_titre') ?></h1>
+        <p><?= t('contact_sous_titre') ?></p>
     </div>
 </section>
 
@@ -79,7 +79,7 @@ include '../templates/navbar.php';
 
             <!-- Infos + Carte -->
             <div class="contact-info">
-                <h2>Nous trouver</h2>
+                <h2><?= t('contact_trouver_titre') ?></h2>
                 <div class="info-block">
                     <span class="info-icon">📍</span>
                     <div>
@@ -116,8 +116,8 @@ include '../templates/navbar.php';
                 <div class="info-block">
                     <span class="info-icon">🎾</span>
                     <div>
-                        <strong>Réservation courts</strong>
-                        <p><a href="https://tenup.fft.fr/" target="_blank" rel="noopener">Via Ten'up →</a></p>
+                        <strong><?= t('contact_resa_titre') ?></strong>
+                        <p><a href="<?= htmlspecialchars(texte('lien_reservation')) ?>" target="_blank" rel="noopener"><?= t('contact_resa_lien') ?></a></p>
                     </div>
                 </div>
                 <div id="map"></div>
@@ -163,7 +163,7 @@ include '../templates/navbar.php';
                             <label for="message">Message *</label>
                             <textarea id="message" name="message" rows="6" required><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
                         </div>
-                        <button type="submit" class="btn-primary">Envoyer le message</button>
+                        <button type="submit" class="btn-primary"><?= t('contact_bouton') ?></button>
                         <p class="form-rgpd">🔒 Vos données (nom, email, message) servent uniquement à vous répondre. Elles ne sont jamais transmises à des tiers et sont supprimées automatiquement après <?= CONSERVATION_MESSAGES_ANS ?> ans. <a href="mentions-legales.php#donnees">En savoir plus</a></p>
                     </form>
                 <?php endif; ?>

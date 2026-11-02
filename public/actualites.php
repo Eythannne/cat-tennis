@@ -73,8 +73,8 @@ include '../templates/navbar.php';
 
 <section class="page-hero page-hero--actualites">
     <div class="container">
-        <h1>Actualités</h1>
-        <p>Articles, événements et galerie photos du club</p>
+        <h1><?= t('actualites_titre') ?></h1>
+        <p><?= t('actualites_sous_titre') ?></p>
     </div>
 </section>
 

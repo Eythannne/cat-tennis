@@ -28,9 +28,9 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
     <!-- HERO -->
     <section class="hero">
         <div class="hero-content">
-            <h1>Club Aulnaysien de Tennis</h1>
-            <p>Rejoignez-nous à Aulnay-sous-Bois</p>
-            <a href="<?= BASE_URL ?>/club.php#tarifs" class="btn-primary">Nous rejoindre</a>
+            <h1><?= t('accueil_hero_titre') ?></h1>
+            <p><?= t('accueil_hero_sous_titre') ?></p>
+            <a href="<?= BASE_URL ?>/club.php#tarifs" class="btn-primary"><?= t('accueil_hero_bouton') ?></a>
         </div>
     </section>
 
@@ -39,10 +39,10 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
         <div class="container">
             <div class="about-grid">
                 <div class="about-text">
-                    <span class="section-tag">Le club</span>
-                    <h2>Bienvenue au CAT</h2>
-                    <p>Fondé à Aulnay-sous-Bois, le Club Aulnaysien de Tennis accueille joueurs de tous niveaux, des débutants aux compétiteurs. Cours collectifs, tournois internes, animations jeunes — il y en a pour tout le monde.</p>
-                    <a href="club.php" class="btn-secondary">En savoir plus</a>
+                    <span class="section-tag"><?= t('accueil_club_etiquette') ?></span>
+                    <h2><?= t('accueil_club_titre') ?></h2>
+                    <p><?= t('accueil_club_texte') ?></p>
+                    <a href="club.php" class="btn-secondary"><?= t('accueil_club_bouton') ?></a>
                 </div>
                 <?php include '../templates/stats.php'; ?>
             </div>
@@ -53,8 +53,8 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
     <section class="section-news">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Actualités</span>
-                <h2>Les dernières nouvelles du club</h2>
+                <span class="section-tag"><?= t('accueil_actus_etiquette') ?></span>
+                <h2><?= t('accueil_actus_titre') ?></h2>
                 <a href="actualites.php" class="btn-link">Voir tout →</a>
             </div>
             <div class="news-grid">
@@ -86,8 +86,8 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
     <section class="section-agenda">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Agenda</span>
-                <h2>Prochains événements</h2>
+                <span class="section-tag"><?= t('accueil_agenda_etiquette') ?></span>
+                <h2><?= t('accueil_agenda_titre') ?></h2>
                 <a href="calendrier.php" class="btn-link">Tout le calendrier →</a>
             </div>
             <div class="agenda-grid">
@@ -121,10 +121,10 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
         <div class="container">
             <div class="reservation-content">
                 <div>
-                    <h2>Réservez votre court</h2>
-                    <p>La réservation des courts se fait via la plateforme Ten'up, le service officiel de la Fédération Française de Tennis.</p>
+                    <h2><?= t('accueil_resa_titre') ?></h2>
+                    <p><?= t('accueil_resa_texte') ?></p>
                 </div>
-                <a href="https://tenup.fft.fr/" target="_blank" rel="noopener" class="btn-primary">Réserver sur Ten'up</a>
+                <a href="<?= htmlspecialchars(texte('lien_reservation')) ?>" target="_blank" rel="noopener" class="btn-primary"><?= t('accueil_resa_bouton') ?></a>
             </div>
         </div>
     </section>
