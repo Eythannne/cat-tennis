@@ -1,9 +1,20 @@
 <?php
-// Cartes de personnes (entraîneurs, bureau) de la page « Le club ».
-// Attend $personnes (lignes de la table) et $dossierPhotos (sous-dossier de assets/uploads/).
+// Photo de groupe + cartes de personnes (entraîneurs, bureau) de la page « Le club ».
+// Attend $personnes (lignes de la table) et $dossierPhotos (sous-dossier de assets/uploads/,
+// identique au nom de la table : sert aussi à retrouver la photo de groupe dans les paramètres).
 /** @var array  $personnes */
 /** @var string $dossierPhotos */
+$photoGroupe   = param("groupe_{$dossierPhotos}_photo");
+$legendeGroupe = param("groupe_{$dossierPhotos}_legende");
 ?>
+<?php if ($photoGroupe): ?>
+<figure class="photo-groupe">
+    <img src="assets/uploads/<?= $dossierPhotos ?>/<?= htmlspecialchars($photoGroupe) ?>"
+         alt="<?= htmlspecialchars($legendeGroupe ?: 'Photo de groupe') ?>" loading="lazy">
+    <?php if ($legendeGroupe): ?><figcaption><?= htmlspecialchars($legendeGroupe) ?></figcaption><?php endif; ?>
+</figure>
+<?php endif; ?>
+<?php if ($personnes): ?>
 <div class="coaches-grid">
     <?php foreach ($personnes as $p): ?>
     <div class="coach-card">
@@ -20,3 +31,4 @@
     </div>
     <?php endforeach; ?>
 </div>
+<?php endif; ?>

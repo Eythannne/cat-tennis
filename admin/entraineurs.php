@@ -17,4 +17,5 @@ page_personnes([
     'label_role'          => 'Rôle / spécialité',
     'exemple_role'        => 'ex : Enfants & Pôle compétition',
     'exemple_description' => 'ex : Cours collectifs enfants, stages vacances...',
+    'exemple_legende'     => "ex : L'équipe des entraîneurs, saison 2026-2027",
 ]);

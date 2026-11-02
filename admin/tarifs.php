@@ -10,11 +10,40 @@ function enregistrer_param($cle, $valeur) {
         ->execute([$cle, $valeur, $valeur]);
 }
 
+// Fiche d'inscription PDF envoyée avec une formule (champ facultatif "pdf").
+// Renvoie [nom du fichier enregistré | null si aucun envoi, message d'erreur | ''].
+function recevoir_pdf_formule() {
+    $f = $_FILES['pdf'] ?? null;
+    if (!$f || $f['error'] === UPLOAD_ERR_NO_FILE) return [null, ''];
+    if ($f['error'] !== UPLOAD_ERR_OK)  return [null, 'Le PDF n\'a pas pu être reçu (fichier trop lourd pour le serveur ?).'];
+    if ($f['size'] > PDF_MAX_SIZE)       return [null, 'Le PDF dépasse 10 Mo.'];
+    // Vérifie le vrai contenu du fichier, pas seulement son nom
+    if (file_get_contents($f['tmp_name'], false, null, 0, 5) !== '%PDF-') return [null, 'Le fichier envoyé n\'est pas un PDF valide.'];
+    if (!is_dir(UPLOAD_DOCUMENTS)) mkdir(UPLOAD_DOCUMENTS, 0755, true);
+    $filename = uniqid('tarif-') . '.pdf';
+    if (!move_uploaded_file($f['tmp_name'], UPLOAD_DOCUMENTS . $filename)) return [null, 'Impossible d\'enregistrer le PDF.'];
+    return [$filename, ''];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $id = (int)($_POST['id'] ?? 0);
 
     if ($action === 'create' || $action === 'edit') {
+        // Le PDF est vérifié en premier : s'il est refusé, rien n'est enregistré
+        [$nouveauPdf, $erreur] = recevoir_pdf_formule();
+        // Formule supprimée entre-temps : on ne garde pas le PDF qui vient d'être envoyé
+        if (!$erreur && $action === 'edit') {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM tarifs WHERE id=?");
+            $stmt->execute([$id]);
+            if (!$stmt->fetchColumn()) {
+                if ($nouveauPdf) delete_upload(UPLOAD_DOCUMENTS, $nouveauPdf);
+                $erreur = 'Cette formule n\'existe plus.';
+            }
+        }
+    }
+
+    if (($action === 'create' || $action === 'edit') && !$erreur) {
         $champs = [
             trim($_POST['nom']),
             trim($_POST['public_cible']),
@@ -26,13 +55,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $resume = "« {$champs[0]} » ({$champs[2]} {$champs[3]})";
         if ($action === 'create') {
             $ordre = (int)$pdo->query("SELECT COALESCE(MAX(ordre), 0) + 1 FROM tarifs")->fetchColumn();
-            $pdo->prepare("INSERT INTO tarifs (nom, public_cible, prix, periode, avantages, mis_en_avant, ordre) VALUES (?,?,?,?,?,?,?)")
-                ->execute([...$champs, $ordre]);
-            journaliser('tarif', "Ajout de la formule $resume");
+            $pdo->prepare("INSERT INTO tarifs (nom, public_cible, prix, periode, avantages, mis_en_avant, pdf, ordre) VALUES (?,?,?,?,?,?,?,?)")
+                ->execute([...$champs, $nouveauPdf, $ordre]);
+            journaliser('tarif', "Ajout de la formule $resume" . ($nouveauPdf ? ' avec sa fiche PDF' : ''));
         } else {
-            $pdo->prepare("UPDATE tarifs SET nom=?, public_cible=?, prix=?, periode=?, avantages=?, mis_en_avant=? WHERE id=?")
-                ->execute([...$champs, $id]);
-            journaliser('tarif', "Modification de la formule $resume");
+            // PDF actuel : lu en base. Remplacé par le nouveau, ou retiré si la case est cochée.
+            $stmt = $pdo->prepare("SELECT pdf FROM tarifs WHERE id=?");
+            $stmt->execute([$id]);
+            $pdf = $stmt->fetchColumn() ?: null;
+            $notePdf = '';
+            if ($pdf && ($nouveauPdf || isset($_POST['supprimer_pdf']))) {
+                delete_upload(UPLOAD_DOCUMENTS, $pdf);
+                $notePdf = $nouveauPdf ? ', fiche PDF remplacée' : ', fiche PDF retirée';
+                $pdf = null;
+            } elseif ($nouveauPdf) {
+                $notePdf = ', fiche PDF ajoutée';
+            }
+            $pdf = $nouveauPdf ?? $pdf;
+            $pdo->prepare("UPDATE tarifs SET nom=?, public_cible=?, prix=?, periode=?, avantages=?, mis_en_avant=?, pdf=? WHERE id=?")
+                ->execute([...$champs, $pdf, $id]);
+            journaliser('tarif', "Modification de la formule $resume$notePdf");
         }
     }
 
@@ -41,9 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'delete') {
-        $stmt = $pdo->prepare("SELECT nom, prix, periode FROM tarifs WHERE id=?");
+        $stmt = $pdo->prepare("SELECT nom, prix, periode, pdf FROM tarifs WHERE id=?");
         $stmt->execute([$id]);
         $formule = $stmt->fetch();
+        if (!empty($formule['pdf'])) delete_upload(UPLOAD_DOCUMENTS, $formule['pdf']);
         $pdo->prepare("DELETE FROM tarifs WHERE id=?")->execute([$id]);
         if ($formule) journaliser('tarif', "Suppression de la formule « {$formule['nom']} » ({$formule['prix']} {$formule['periode']})");
     }
@@ -53,34 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         journaliser('tarif', 'Saison affichée : ' . trim($_POST['saison']));
     }
 
-    // Fiche d'inscription PDF
-    if ($action === 'fiche') {
-        $f = $_FILES['fiche'] ?? null;
-        if (!$f || $f['error'] !== UPLOAD_ERR_OK) {
-            $erreur = 'Aucun fichier reçu (ou fichier trop lourd pour le serveur).';
-        } elseif ($f['size'] > PDF_MAX_SIZE) {
-            $erreur = 'Le PDF dépasse 10 Mo.';
-        } elseif (file_get_contents($f['tmp_name'], false, null, 0, 5) !== '%PDF-') {
-            // Vérifie le vrai contenu du fichier, pas seulement son nom
-            $erreur = 'Le fichier n\'est pas un PDF valide.';
-        } else {
-            if (!is_dir(UPLOAD_DOCUMENTS)) mkdir(UPLOAD_DOCUMENTS, 0755, true);
-            $filename = uniqid('fiche-inscription-') . '.pdf';
-            if (move_uploaded_file($f['tmp_name'], UPLOAD_DOCUMENTS . $filename)) {
-                delete_upload(UPLOAD_DOCUMENTS, param('fiche_inscription'));
-                enregistrer_param('fiche_inscription', $filename);
-                journaliser('tarif', 'Nouvelle fiche d\'inscription PDF envoyée (« ' . mb_substr($f['name'], 0, 80) . ' »)');
-            } else {
-                $erreur = 'Impossible d\'enregistrer le fichier.';
-            }
-        }
-    }
-    if ($action === 'fiche_supprimer') {
-        delete_upload(UPLOAD_DOCUMENTS, param('fiche_inscription'));
-        enregistrer_param('fiche_inscription', '');
-        journaliser('tarif', 'Fiche d\'inscription PDF retirée du site');
-    }
-
     if (!$erreur) {
         header('Location: tarifs.php');
         exit;
@@ -88,76 +103,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $tarifs = $pdo->query("SELECT * FROM tarifs ORDER BY ordre, id")->fetchAll();
-$fiche  = param('fiche_inscription');
 $edit = null;
-if (isset($_GET['edit'])) {
+$idEdit = (int)($_GET['edit'] ?? ($erreur && ($_POST['action'] ?? '') === 'edit' ? $_POST['id'] : 0));
+if ($idEdit) {
     $stmt = $pdo->prepare("SELECT * FROM tarifs WHERE id=?");
-    $stmt->execute([(int)$_GET['edit']]);
+    $stmt->execute([$idEdit]);
     $edit = $stmt->fetch();
 }
+// Après une erreur (PDF refusé), on réaffiche ce qui avait été saisi
+if ($erreur) {
+    $edit = array_merge($edit ?: [], array_intersect_key($_POST, array_flip(['nom', 'public_cible', 'prix', 'periode', 'avantages'])),
+                        ['mis_en_avant' => isset($_POST['mis_en_avant']) ? 1 : 0]);
+}
+$modeEdition = !empty($edit['id']);   // sans id : formulaire d'ajout (éventuellement pré-rempli après une erreur)
 
 admin_header('Tarifs', 'tarifs', '<style>
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .fiche-actuelle { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: #f6faf7; border: 1px solid var(--vert-light); border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; font-size: 0.88rem; }
+    .fiche-actuelle { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; background: #f6faf7; border: 1px solid var(--vert-light); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; font-size: 0.88rem; }
     .fiche-actuelle a { color: var(--vert); font-weight: 600; }
     .avantages { font-size: 0.8rem; color: #888; }
-    @media (max-width: 1000px) { .grid-2 { grid-template-columns: 1fr; } }
+    .lien-pdf { color: var(--vert); font-weight: 600; text-decoration: none; white-space: nowrap; }
 </style>');
 ?>
     <h1>💶 Tarifs & inscription</h1>
-    <?php if ($erreur): ?><div class="alert alert-error">❌ <?= htmlspecialchars($erreur) ?></div><?php endif; ?>
+    <?php if ($erreur): ?><div class="alert alert-error">❌ <?= htmlspecialchars($erreur) ?> Rien n'a été enregistré.</div><?php endif; ?>
 
-    <div class="grid-2">
-        <!-- Fiche d'inscription -->
-        <div class="card">
-            <h2>📄 Fiche d'inscription (PDF)</h2>
-            <?php if ($fiche): ?>
-                <div class="fiche-actuelle">
-                    ✅ Fiche en ligne :
-                    <a href="../public/assets/uploads/documents/<?= htmlspecialchars($fiche) ?>" target="_blank">Voir le PDF</a>
-                    <form method="POST" onsubmit="return confirm('Retirer la fiche du site ?')" style="margin-left:auto">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="action" value="fiche_supprimer">
-                        <button type="submit" class="btn btn-danger btn-sm">🗑️ Retirer</button>
-                    </form>
-                </div>
-            <?php else: ?>
-                <p class="form-hint" style="margin-bottom:14px">Aucune fiche : le bouton « Fiche d'inscription » n'apparaît pas sur le site.</p>
-            <?php endif; ?>
-            <form method="POST" enctype="multipart/form-data">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="fiche">
-                <div class="form-group">
-                    <label><?= $fiche ? 'Remplacer par une nouvelle fiche' : 'Envoyer la fiche' ?> (PDF, max 10 Mo)</label>
-                    <input type="file" name="fiche" accept="application/pdf,.pdf" required>
-                </div>
-                <button type="submit" class="btn btn-primary">📤 Envoyer</button>
-            </form>
-        </div>
-
-        <!-- Saison -->
-        <div class="card">
-            <h2>📅 Saison affichée</h2>
-            <form method="POST">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="saison">
-                <div class="form-group">
-                    <label>Saison</label>
-                    <input type="text" name="saison" value="<?= htmlspecialchars(param('saison')) ?>" placeholder="2026-2027">
-                    <div class="form-hint">Titre de la section sur le site : « Tarifs saison <?= htmlspecialchars(param('saison', '…')) ?> ».</div>
-                </div>
-                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
-            </form>
-        </div>
+    <!-- Saison -->
+    <div class="card">
+        <h2>📅 Saison affichée</h2>
+        <form method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="saison">
+            <div class="form-group">
+                <label>Saison</label>
+                <input type="text" name="saison" value="<?= htmlspecialchars(param('saison')) ?>" placeholder="2026-2027" style="max-width:260px">
+                <div class="form-hint">Titre de la section sur le site : « Tarifs saison <?= htmlspecialchars(param('saison', '…')) ?> ».</div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+        </form>
     </div>
 
     <!-- Formulaire formule -->
     <div class="card">
-        <h2><?= $edit ? 'Modifier la formule' : 'Ajouter une formule' ?></h2>
-        <form method="POST">
+        <h2><?= $modeEdition ? 'Modifier la formule' : 'Ajouter une formule' ?></h2>
+        <form method="POST" enctype="multipart/form-data">
             <?= csrf_field() ?>
-            <input type="hidden" name="action" value="<?= $edit ? 'edit' : 'create' ?>">
-            <?php if ($edit): ?><input type="hidden" name="id" value="<?= $edit['id'] ?>"><?php endif; ?>
+            <input type="hidden" name="action" value="<?= $modeEdition ? 'edit' : 'create' ?>">
+            <?php if ($modeEdition): ?><input type="hidden" name="id" value="<?= $edit['id'] ?>"><?php endif; ?>
             <div class="form-row">
                 <div class="form-group">
                     <label>Nom de la formule</label>
@@ -185,12 +176,25 @@ admin_header('Tarifs', 'tarifs', '<style>
             <div class="form-group">
                 <label class="form-check">
                     <input type="checkbox" name="mis_en_avant" <?= ($edit['mis_en_avant'] ?? 0) ? 'checked' : '' ?>>
-                    Mettre en avant (carte verte, un peu plus grande)
+                    Mettre en avant (carte jaune « Populaire »)
                 </label>
             </div>
+            <div class="form-group">
+                <label>Fiche d'inscription de cette formule (PDF, optionnel, max 10 Mo)</label>
+                <?php if (!empty($edit['pdf'])): ?>
+                    <div class="fiche-actuelle">
+                        ✅ Fiche actuelle : <a href="../public/assets/uploads/documents/<?= htmlspecialchars($edit['pdf']) ?>" target="_blank">Voir le PDF</a>
+                        <label class="form-check" style="font-weight:400"><input type="checkbox" name="supprimer_pdf"> Retirer ce PDF</label>
+                    </div>
+                <?php endif; ?>
+                <input type="file" name="pdf" accept="application/pdf,.pdf">
+                <div class="form-hint">
+                    <?= !empty($edit['pdf']) ? 'Choisir un fichier remplace la fiche actuelle.' : 'Sans PDF, la carte de cette formule n\'affiche pas de bouton « Voir la fiche d\'inscription ».' ?>
+                </div>
+            </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><?= $edit ? 'Mettre à jour' : 'Ajouter' ?></button>
-                <?php if ($edit): ?><a href="tarifs.php" class="link-cancel">Annuler</a><?php endif; ?>
+                <button type="submit" class="btn btn-primary"><?= $modeEdition ? 'Mettre à jour' : 'Ajouter' ?></button>
+                <?php if ($modeEdition): ?><a href="tarifs.php" class="link-cancel">Annuler</a><?php endif; ?>
             </div>
         </form>
     </div>
@@ -203,7 +207,7 @@ admin_header('Tarifs', 'tarifs', '<style>
         <?php else: ?>
         <div class="table-wrap">
         <table>
-            <thead><tr><th>Formule</th><th>Prix</th><th>Points importants</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Formule</th><th>Prix</th><th>Points importants</th><th>Fiche PDF</th><th>Actions</th></tr></thead>
             <tbody>
             <?php foreach ($tarifs as $i => $t): ?>
             <tr>
@@ -214,6 +218,13 @@ admin_header('Tarifs', 'tarifs', '<style>
                 </td>
                 <td style="white-space:nowrap"><?= htmlspecialchars($t['prix'] . ' ' . $t['periode']) ?></td>
                 <td class="avantages"><?= nl2br(htmlspecialchars($t['avantages'] ?? '')) ?></td>
+                <td>
+                    <?php if (!empty($t['pdf'])): ?>
+                        <a href="../public/assets/uploads/documents/<?= htmlspecialchars($t['pdf']) ?>" target="_blank" class="lien-pdf">📄 Voir</a>
+                    <?php else: ?>
+                        <span class="avantages">—</span>
+                    <?php endif; ?>
+                </td>
                 <td>
                     <div class="actions">
                         <?php boutons_ordre($t['id'], $i, count($tarifs)); ?>

@@ -18,6 +18,7 @@ page_personnes([
     'label_role'          => 'Fonction',
     'exemple_role'        => 'ex : Président',
     'exemple_description' => 'ex : Joueur au club depuis 1995, en charge des relations avec la mairie...',
+    'exemple_legende'     => "ex : Le bureau élu lors de l'assemblée générale 2026",
     'suggestions_role'    => ['Président', 'Présidente', 'Vice-président', 'Vice-présidente', 'Secrétaire',
                               'Secrétaire adjoint(e)', 'Trésorier', 'Trésorière', 'Trésorier adjoint(e)', 'Membre du bureau'],
 ]);

@@ -94,6 +94,7 @@ CREATE TABLE `tarifs` (
   `periode` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT '/an',
   `avantages` text COLLATE utf8mb4_unicode_ci,
   `mis_en_avant` tinyint(1) DEFAULT '0',
+  `pdf` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ordre` int DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -134,7 +135,7 @@ INSERT INTO parametres (cle, valeur) VALUES
     ('horaires',      'Lundi – Vendredi : 14h – 18h\nSamedi : 9h – 12h'),
     ('description',   'Club de tennis à Aulnay-sous-Bois'),
     ('saison',        '2026-2027'),
-    ('fiche_inscription', '');
+    ('fiche_inscription', '');  -- inutilisé depuis les PDF par formule (tarifs.pdf)
 
 -- ── Premier compte administrateur ───────────────────────────────────────────
 -- Le mot de passe est stocké chiffré. Pour obtenir le hash d'un mot de passe,

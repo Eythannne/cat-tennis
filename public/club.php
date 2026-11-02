@@ -5,7 +5,6 @@ $pageDesc = "Découvrez le Club Aulnaysien de Tennis : son histoire, ses terrain
 $entraineurs = $pdo->query("SELECT * FROM entraineurs ORDER BY ordre, id")->fetchAll();
 $bureau      = $pdo->query("SELECT * FROM bureau ORDER BY ordre, id")->fetchAll();
 $tarifs      = $pdo->query("SELECT * FROM tarifs ORDER BY ordre, id")->fetchAll();
-$fiche       = param('fiche_inscription');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -68,7 +67,7 @@ include '../templates/navbar.php';
 </section>
 
 <!-- Équipe administrative (gérée dans l'admin, page Bureau) -->
-<?php if ($bureau): ?>
+<?php if ($bureau || param('groupe_bureau_photo')): ?>
 <section class="section-bureau" id="bureau">
     <div class="container">
         <div class="section-center">
@@ -81,7 +80,7 @@ include '../templates/navbar.php';
 <?php endif; ?>
 
 <!-- Entraîneurs (gérés dans l'admin) -->
-<?php if ($entraineurs): ?>
+<?php if ($entraineurs || param('groupe_entraineurs_photo')): ?>
 <section class="section-coaches">
     <div class="container">
         <div class="section-center">
@@ -114,38 +113,33 @@ include '../templates/navbar.php';
                     <li>✓ <?= htmlspecialchars($avantage) ?></li>
                     <?php endforeach; ?>
                 </ul>
-                <?php if ($fiche): ?>
-                <button type="button" class="tarif-btn" data-ouvrir-fiche>S'inscrire</button>
+                <?php if (!empty($t['pdf'])): ?>
+                <button type="button" class="tarif-btn"
+                        data-fiche="assets/uploads/documents/<?= rawurlencode($t['pdf']) ?>"
+                        data-formule="<?= htmlspecialchars($t['nom']) ?>">📄 Voir la fiche d'inscription</button>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>
-        <?php if ($fiche): ?>
-        <div class="tarifs-cta">
-            <button type="button" class="btn-primary" data-ouvrir-fiche>📄 Voir la fiche d'inscription</button>
-        </div>
-        <?php endif; ?>
         <p class="tarifs-note">Renseignements au secrétariat du club<?= param('telephone') ? ' : ' . htmlspecialchars(param('telephone')) : '' ?>.</p>
     </div>
 </section>
 <?php endif; ?>
 
-<?php if ($fiche): $urlFiche = 'assets/uploads/documents/' . rawurlencode($fiche); ?>
-<!-- Pop-up fiche d'inscription -->
+<?php if (array_filter(array_column($tarifs, 'pdf'))): ?>
+<!-- Pop-up fiche d'inscription : le PDF affiché est celui de la formule cliquée -->
 <div class="fiche-modal" id="fiche-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fiche-titre">
     <div class="fiche-modal-box">
         <div class="fiche-modal-header">
-            <h3 id="fiche-titre">📄 Fiche d'inscription<?= param('saison') ? ' — saison ' . htmlspecialchars(param('saison')) : '' ?></h3>
+            <h3 id="fiche-titre">📄 Fiche d'inscription</h3>
             <button type="button" class="event-modal-close" id="fiche-fermer" aria-label="Fermer">✕</button>
         </div>
         <p class="fiche-modal-aide">Imprimez la fiche, remplissez-la et rapportez-la au secrétariat du club avec votre règlement.</p>
-        <object class="fiche-modal-pdf" data="<?= $urlFiche ?>" type="application/pdf">
-            <p class="fiche-modal-fallback">L'aperçu du PDF n'est pas disponible sur cet appareil. Utilisez les boutons ci-dessous pour l'ouvrir ou le télécharger.</p>
-        </object>
+        <div id="fiche-apercu"></div>
         <p class="fiche-modal-mobile">📱 Sur téléphone, ouvrez la fiche en plein écran ou téléchargez-la pour l'imprimer.</p>
         <div class="fiche-modal-actions">
-            <a href="<?= $urlFiche ?>" download="fiche-inscription-CAT.pdf" class="btn-primary">⬇️ Télécharger</a>
-            <a href="<?= $urlFiche ?>" target="_blank" rel="noopener" class="btn-secondary">↗ Ouvrir en plein écran</a>
+            <a href="#" id="fiche-telecharger" download class="btn-primary">⬇️ Télécharger</a>
+            <a href="#" id="fiche-ouvrir" target="_blank" rel="noopener" class="btn-secondary">↗ Ouvrir en plein écran</a>
         </div>
     </div>
 </div>
@@ -156,18 +150,41 @@ include '../templates/navbar.php';
 
 <script src="assets/js/main.js"></script>
 <script>
-// Pop-up de la fiche d'inscription
+// Pop-up de la fiche d'inscription : chaque carte de tarif ouvre le PDF de sa formule
 (function() {
     const modal = document.getElementById('fiche-modal');
     if (!modal) return;
-    const ouvrir = () => { modal.hidden = false; document.body.style.overflow = 'hidden'; document.getElementById('fiche-fermer').focus(); };
-    const fermer = () => { modal.hidden = true; document.body.style.overflow = ''; };
-    document.querySelectorAll('[data-ouvrir-fiche]').forEach(btn => btn.addEventListener('click', ouvrir));
+    const apercu = document.getElementById('fiche-apercu');
+
+    function ouvrir(btn) {
+        const url = btn.dataset.fiche;
+        const formule = btn.dataset.formule;
+        document.getElementById('fiche-titre').textContent = '📄 Fiche d\'inscription — ' + formule;
+        // Nouvel aperçu à chaque ouverture (un <object> ne recharge pas toujours un nouveau PDF)
+        const objet = document.createElement('object');
+        objet.className = 'fiche-modal-pdf';
+        objet.type = 'application/pdf';
+        objet.data = url;
+        objet.innerHTML = '<p class="fiche-modal-fallback">L\'aperçu du PDF n\'est pas disponible sur cet appareil. Utilisez les boutons ci-dessous pour l\'ouvrir ou le télécharger.</p>';
+        apercu.replaceChildren(objet);
+        const telecharger = document.getElementById('fiche-telecharger');
+        telecharger.href = url;
+        telecharger.download = 'fiche-inscription-' + formule.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-') + '.pdf';
+        document.getElementById('fiche-ouvrir').href = url;
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        document.getElementById('fiche-fermer').focus();
+    }
+    function fermer() {
+        modal.hidden = true;
+        document.body.style.overflow = '';
+        apercu.replaceChildren();
+    }
+
+    document.querySelectorAll('[data-fiche]').forEach(btn => btn.addEventListener('click', () => ouvrir(btn)));
     document.getElementById('fiche-fermer').addEventListener('click', fermer);
     modal.addEventListener('click', e => { if (e.target === modal) fermer(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) fermer(); });
-    // Lien direct : club.php#inscription ouvre la fiche
-    if (location.hash === '#inscription') ouvrir();
 })();
 </script>
 </body>
