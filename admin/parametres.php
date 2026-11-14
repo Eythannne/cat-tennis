@@ -1,12 +1,16 @@
 <?php
 require_once 'auth.php';
+require_once __DIR__ . '/../src/ia.php';
 $lectureSeule = lecture_seule_pour_moderateur();
+// Onglet Intelligence artificielle (clé API payante) : modifiable par le fondateur uniquement
+$iaLectureSeule = !est_fondateur();
 
 // La page est découpée en onglets (?onglet=...) pour rester lisible
 const ONGLETS_PARAMETRES = [
     'infos'    => '🏛️ Informations du club',
     'chiffres' => '🔢 Chiffres clés',
     'textes'   => '✏️ Textes du site',
+    'ia'       => '✨ Intelligence artificielle',
 ];
 $onglet = isset(ONGLETS_PARAMETRES[$_GET['onglet'] ?? '']) ? $_GET['onglet'] : 'infos';
 
@@ -78,7 +82,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'texte
     $saved = true;
 }
 
+// ── Intelligence artificielle (génération d'articles, voir src/ia.php) ────────
+$erreurIa = $avertissementIa = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'ia') {
+    if ($iaLectureSeule) {
+        journaliser('parametres', "Tentative refusée de modifier les réglages de l'intelligence artificielle");
+        acces_refuse();
+    }
+    $cleActuelle = param_brut('gemini_api_key') ?? '';
+    $cleSaisie   = trim($_POST['gemini_api_key'] ?? '');
+    // Champ vide = on garde la clé enregistrée (elle n'est jamais réaffichée dans la page)
+    $cle    = !empty($_POST['supprimer_cle']) ? '' : ($cleSaisie !== '' ? $cleSaisie : $cleActuelle);
+    $modele = trim($_POST['gemini_modele'] ?? '');
+    $prompt = trim(str_replace("\r\n", "\n", $_POST['prompt_ia_articles'] ?? ''));
+
+    if ($modele !== '' && !preg_match('/^[a-z0-9][a-z0-9.\-]*$/', $modele)) {
+        $erreurIa = 'Nom de modèle invalide (ex : gemini-flash-latest).';
+    } elseif ($cle !== '' && preg_match('/\s/', $cle)) {
+        $erreurIa = 'La clé API ne doit pas contenir d\'espace.';
+    } elseif ($cle !== '' && ($cle !== $cleActuelle || $modele !== (param_brut('gemini_modele') ?? ''))) {
+        // Nouvelle clé ou nouveau modèle : on vérifie auprès de Google avant d'enregistrer
+        $verification = gemini_verifier($cle, $modele ?: GEMINI_MODELE_DEFAUT);
+        $erreurIa        = $verification['erreur'] ?? null;
+        $avertissementIa = $verification['avertissement'] ?? null;
+    }
+
+    if ($erreurIa === null) {
+        $modifies = enregistrer_parametres([
+            'gemini_api_key'     => $cle,
+            'gemini_modele'      => $modele === GEMINI_MODELE_DEFAUT ? '' : $modele,
+            'prompt_ia_articles' => $prompt === PROMPT_IA_ARTICLES_DEFAUT ? '' : $prompt,
+        ]);
+        $libelles = ['gemini_api_key' => $cle === '' ? 'clé API supprimée' : 'clé API', 'gemini_modele' => 'modèle', 'prompt_ia_articles' => 'consigne'];
+        if ($modifies) {
+            journaliser('parametres', 'Modification de l\'intelligence artificielle : ' . implode(', ', array_map(fn($c) => $libelles[$c], $modifies)));
+        }
+        $saved = true;
+    }
+}
+
 $params = $pdo->query("SELECT cle, valeur FROM parametres")->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// Valeurs affichées dans l'onglet IA (celles saisies si l'enregistrement a été refusé)
+$cleIa    = $params['gemini_api_key'] ?? '';
+$modeleIa = $erreurIa ? trim($_POST['gemini_modele'] ?? '') : ($params['gemini_modele'] ?? '');
+$promptIa = $erreurIa ? (trim($_POST['prompt_ia_articles'] ?? '') ?: PROMPT_IA_ARTICLES_DEFAUT) : (($params['prompt_ia_articles'] ?? '') ?: PROMPT_IA_ARTICLES_DEFAUT);
 
 admin_header('Paramètres', 'parametres', '<style>
     .main { max-width: 760px; }
@@ -97,12 +145,22 @@ admin_header('Paramètres', 'parametres', '<style>
     .onglets a:hover { color: var(--vert); background: #fff; }
     .onglets a.actif { color: var(--vert); border-bottom-color: var(--jaune); background: #fff; }
     .onglet[hidden] { display: none; }
+    .cle-statut { font-size: 0.85rem; padding: 7px 10px; border-radius: 6px; margin-bottom: 8px; }
+    .cle-ok { background: var(--vert-light); color: var(--vert); }
+    .cle-absente { background: #FFF4C2; color: #8a6d00; }
+    .cle-statut code { background: rgba(255,255,255,0.6); padding: 1px 5px; border-radius: 3px; }
 </style>');
 ?>
     <h1>⚙️ Paramètres du site</h1>
     <?php if ($lectureSeule) bandeau_lecture_seule(); ?>
     <?php if ($saved): ?>
         <div class="alert alert-success">✅ Paramètres enregistrés.</div>
+    <?php endif; ?>
+    <?php if ($erreurIa): ?>
+        <div class="alert alert-error">⚠️ Rien n'a été enregistré : <?= htmlspecialchars($erreurIa) ?></div>
+    <?php endif; ?>
+    <?php if ($avertissementIa): ?>
+        <div class="alert alert-info">ℹ️ <?= htmlspecialchars($avertissementIa) ?></div>
     <?php endif; ?>
 
     <!-- Onglets : une seule partie affichée à la fois -->
@@ -232,6 +290,47 @@ admin_header('Paramètres', 'parametres', '<style>
             </details>
             <?php endforeach; ?>
             <button type="submit" class="btn btn-primary" style="margin-top:6px">💾 Enregistrer les textes</button>
+        </fieldset></form>
+    </div>
+
+    <!-- ── Onglet : Intelligence artificielle ── -->
+    <div class="card onglet" <?= $onglet !== 'ia' ? 'hidden' : '' ?>>
+        <h2>✨ Intelligence artificielle</h2>
+        <p class="form-hint" style="margin:-8px 0 16px">Sert au bouton <strong>✨ Générer</strong> de la page Articles : l'IA Gemini de Google rédige l'article à partir du titre et des notes.</p>
+        <?php if ($iaLectureSeule): ?>
+            <div class="alert alert-info">👁️ <strong>Lecture seule</strong> — seul le fondateur peut modifier les réglages de l'intelligence artificielle.</div>
+        <?php endif; ?>
+        <form method="POST" action="parametres.php?onglet=<?= $onglet ?>"><fieldset class="champs" <?= $iaLectureSeule ? 'disabled' : '' ?>>
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="ia">
+            <div class="form-group">
+                <label for="gemini_api_key">Clé API Gemini</label>
+                <?php if ($cleIa !== ''): ?>
+                    <div class="cle-statut cle-ok">✅ Clé enregistrée (se termine par <code>…<?= htmlspecialchars(substr($cleIa, -4)) ?></code>)</div>
+                <?php else: ?>
+                    <div class="cle-statut cle-absente">Aucune clé enregistrée : le bouton ✨ Générer est inactif.</div>
+                <?php endif; ?>
+                <input type="password" id="gemini_api_key" name="gemini_api_key" autocomplete="new-password" spellcheck="false"
+                       placeholder="<?= $cleIa !== '' ? 'Laisser vide pour garder la clé actuelle' : 'Collez votre clé (commence par AIza…)' ?>">
+                <div class="form-hint">Clé gratuite à créer sur <strong>aistudio.google.com/apikey</strong> (compte Google du club). Elle est vérifiée auprès de Google à l'enregistrement et n'est jamais réaffichée.</div>
+                <?php if ($cleIa !== ''): ?>
+                    <label class="form-check" style="margin-top:8px"><input type="checkbox" name="supprimer_cle" value="1"> Supprimer la clé enregistrée</label>
+                <?php endif; ?>
+            </div>
+            <div class="form-group">
+                <label for="gemini_modele">Modèle</label>
+                <input type="text" id="gemini_modele" name="gemini_modele" value="<?= htmlspecialchars($modeleIa) ?>" placeholder="<?= GEMINI_MODELE_DEFAUT ?>" spellcheck="false" style="max-width:320px">
+                <div class="form-hint">Vide = <code><?= GEMINI_MODELE_DEFAUT ?></code> (rapide, quelques secondes). Si le modèle est surchargé, un modèle de secours est essayé automatiquement. À changer seulement si Google arrête un modèle.</div>
+            </div>
+            <div class="form-group">
+                <label class="texte-label" for="prompt_ia_articles">
+                    <span>Prompt IA (consigne donnée à l'IA)<?php if (($params['prompt_ia_articles'] ?? '') !== ''): ?><span class="texte-modifie">modifié</span><?php endif; ?></span>
+                    <button type="button" class="texte-reset" data-defaut="<?= htmlspecialchars(PROMPT_IA_ARTICLES_DEFAUT) ?>">↺ Texte d'origine</button>
+                </label>
+                <textarea id="prompt_ia_articles" name="prompt_ia_articles" style="height:140px"><?= htmlspecialchars($promptIa) ?></textarea>
+                <div class="form-hint">Ton, longueur, style… Les règles de mise en forme du site (intertitres, gras, listes) et l'interdiction d'inventer des dates ou des prix sont ajoutées automatiquement.</div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
         </fieldset></form>
     </div>
 

@@ -1,12 +1,22 @@
 <?php
 require_once __DIR__ . '/session.php';
 
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: login.php');
+// Accès refusé : redirection vers la connexion, ou réponse JSON pour les appels AJAX (admin/ajax/)
+function auth_refuser($url) {
+    if (defined('ADMIN_AJAX')) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        exit(json_encode(['erreur' => 'Session expirée : rechargez la page et reconnectez-vous.']));
+    }
+    header('Location: ' . $url);
     exit;
 }
 
-require_once '../src/init.php';
+if (!isset($_SESSION['admin_id'])) {
+    auth_refuser('login.php');
+}
+
+require_once __DIR__ . '/../src/init.php';
 require_once __DIR__ . '/_layout.php';
 
 // ── Déconnexion automatique ──────────────────────────────────────────────────
@@ -28,8 +38,7 @@ if ($raison) {
         : 'Déconnexion automatique (30 minutes d\'inactivité)');
     $_SESSION = [];
     session_destroy();
-    header('Location: login.php?raison=' . $raison);
-    exit;
+    auth_refuser('login.php?raison=' . $raison);
 }
 unset($_SESSION['quitte_a']);           // une page admin a été chargée : on est toujours là
 $_SESSION['derniere_activite'] = time();
@@ -44,8 +53,7 @@ if ($role === false) {
     // Compte supprimé entre-temps (page Administrateurs) : la session n'est plus valable
     $_SESSION = [];
     session_destroy();
-    header('Location: login.php');
-    exit;
+    auth_refuser('login.php');
 }
 $_SESSION['admin_role'] = $role;
 

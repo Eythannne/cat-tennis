@@ -97,6 +97,15 @@ admin_header('Articles', 'articles', CROP_HEAD . '<style>
     .editeur-barre .sep { width: 1px; background: #ddd; margin: 4px 4px; }
     .editeur-aide { font-size: 0.8rem; color: #888; margin-top: 6px; }
     .editeur-aide code { background: #f1f1f1; padding: 1px 5px; border-radius: 3px; }
+    .form-group textarea.notes-ia { height: 130px; background: #fffdf3; border-color: #eadfa8; line-height: 1.5; }
+    .label-note { font-weight: 400; color: #888; font-size: 0.8rem; }
+    .editeur-barre button.bouton-ia { background: linear-gradient(120deg, var(--vert), #2E8B47); color: #fff; font-weight: 600; }
+    .editeur-barre button.bouton-ia:hover { background: var(--vert-dark); color: #fff; border-color: transparent; }
+    .editeur-barre button.bouton-ia:disabled { opacity: 0.7; cursor: wait; }
+    .ia-statut { margin-top: 8px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; }
+    .ia-statut.ia-info    { background: #eaf2fb; color: #1f4e79; }
+    .ia-statut.ia-succes  { background: var(--vert-light); color: var(--vert); }
+    .ia-statut.ia-erreur  { background: #fde8e8; color: var(--danger); }
 </style>');
 ?>
     <h1>📰 Gestion des articles</h1>
@@ -114,8 +123,14 @@ admin_header('Articles', 'articles', CROP_HEAD . '<style>
                 <label>Titre</label>
                 <input type="text" name="titre" value="<?= htmlspecialchars($edit['titre'] ?? '') ?>" required>
             </div>
+            <!-- Notes brutes : servent seulement à la génération (pas de name : jamais envoyées au formulaire) -->
             <div class="form-group">
-                <label for="contenu">Contenu</label>
+                <label for="notes">📝 Infos / notes brutes</label>
+                <textarea id="notes" class="notes-ia" placeholder="Points clés, infos pratiques, résultats, citations…&#10;ex : tournoi interne samedi 14 décembre, 32 inscrits, finale gagnée par Léa, goûter offert par le club"></textarea>
+                <div class="form-hint">Écrivez vos notes en vrac puis cliquez sur <strong>✨ Générer</strong> : l'IA rédige l'article ci-dessous. Les notes ne sont ni publiées ni enregistrées. Évitez d'y mettre des données personnelles (téléphone, adresse…).</div>
+            </div>
+            <div class="form-group">
+                <label for="contenu">✍️ Contenu généré <span class="label-note">— c'est ce texte qui est publié : relisez-le et modifiez-le librement</span></label>
                 <div class="editeur-barre" role="toolbar" aria-label="Mise en forme">
                     <button type="button" data-format="gras" title="Gras (Ctrl+B)"><strong>G</strong></button>
                     <button type="button" data-format="italique" title="Italique (Ctrl+I)"><em>I</em></button>
@@ -125,8 +140,11 @@ admin_header('Articles', 'articles', CROP_HEAD . '<style>
                     <button type="button" data-format="numeros" title="Liste numérotée">1. Liste</button>
                     <span class="sep"></span>
                     <button type="button" data-format="lien" title="Insérer un lien">🔗 Lien</button>
+                    <span class="sep"></span>
+                    <button type="button" id="generer-ia" class="bouton-ia" title="Rédiger le contenu avec l'IA à partir du titre et des notes">✨ Générer</button>
                 </div>
                 <textarea name="contenu" id="contenu"><?= htmlspecialchars($edit['contenu'] ?? '') ?></textarea>
+                <div class="ia-statut" id="ia-statut" role="status" hidden></div>
                 <div class="editeur-aide">
                     Sélectionnez du texte puis cliquez sur un bouton. Syntaxe : <code>**gras**</code> <code>*italique*</code>
                     <code>## Titre</code> <code>- liste</code> <code>[texte](https://lien)</code>. Une ligne vide = nouveau paragraphe.
