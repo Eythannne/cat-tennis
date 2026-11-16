@@ -2,6 +2,10 @@
 
 Les modifications du site, de la plus récente à la plus ancienne. Le détail de chaque changement est dans l'historique Git.
 
+## 16 novembre 2026 — Petites améliorations
+- Messages : bouton **« Marquer comme non lu »**.
+- Images allégées : logo du club (306 Ko → 74 Ko) et image par défaut des articles (379 Ko → 66 Ko).
+
 ## 16 novembre 2026 — Rangement et documentation
 - Documentation complète dans `docs/` : cahier des charges, dossier technique, guides d'installation, de mise en ligne et d'utilisation, rôles et droits, passation.
 - `README.md` à la racine.

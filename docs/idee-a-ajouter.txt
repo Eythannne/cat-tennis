@@ -17,7 +17,16 @@
     durée de conservation des messages (3 ans, suppression automatique), cookies, services tiers
 --> police d'écriture hébergée directement sur le site (plus de Google Fonts)
 --> phrase pour la carte OpenStreetMap et la météo Open-Meteo
-    (reste à saisir les infos du club : voir "Reste à faire")
+
+[FAIT] Infos légales saisies sur le site en ligne (responsable de publication, numéro RNA)
+--> optionnel : numéro SIRET, à ajouter dans Paramètres > Informations du club si le club en a un
+
+[FAIT le 16/11/2026] Admin Messages : bouton "Marquer comme non lu"
+--> le message redevient "Nouveau" dans la liste, pour le traiter plus tard
+
+[FAIT le 16/11/2026] Images allégées (site plus rapide, surtout sur téléphone)
+--> logo du club (favicon.png) : 306 Ko → 74 Ko (512 → 256 px, transparence conservée)
+--> image par défaut des articles (placeholder.png) : 379 Ko → 66 Ko (palette de couleurs réduite)
 
 [FAIT le 16/11/2026] Structuration du projet + documentation complète de A à Z
 --> rangement : sql/ (schema.sql à jour, migrations datées dans sql/migrations/, sql/README.md),
@@ -33,12 +42,6 @@
 =================================================================================
                               🔜 RESTE À FAIRE
 =================================================================================
-
-Infos légales à saisir (avant l'ouverture officielle)
---> dans l'admin, Paramètres > Informations du club : nom du responsable de publication
-    (président·e du club en général) et numéro RNA de l'association, à demander au bureau
-
----------------------------------------------------------------------------------
 
 Site multilingue (sélecteur de langue dans la navbar)
 
@@ -74,7 +77,6 @@ Langues à envisager (très parlées en Île-de-France / Seine-Saint-Denis) :
 V2
 - Espace membre (déjà annoncé "Bientôt" dans le menu)
 - Notification par email quand un message de contact arrive
-- Admin Messages : bouton "Marquer comme non lu"
 - Admin Messages : pouvoir répondre directement depuis l'admin
   --> aujourd'hui le bouton "Répondre" ouvre seulement le logiciel de mail de l'ordinateur (lien mailto),
       ce qui ne marche pas si aucun logiciel de mail n'est configuré

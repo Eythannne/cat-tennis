@@ -92,7 +92,7 @@ Sur le site, les visiteurs peuvent voir, télécharger ou imprimer la fiche PDF 
 ## ✉️ Messages
 
 - Les messages envoyés par le formulaire de contact arrivent ici. Le nombre de **non lus** s'affiche dans le menu.
-- Cliquer sur un message pour le lire : il passe en « lu ».
+- Cliquer sur un message pour le lire : il passe en « lu ». **✉️ Marquer comme non lu** le fait redevenir « Nouveau », pour le traiter plus tard.
 - **↩️ Répondre** ouvre le logiciel de messagerie de l'ordinateur, avec l'adresse de la personne déjà remplie.
 - Les messages sont **supprimés automatiquement après 3 ans** (RGPD). On peut aussi les supprimer à la main.
 

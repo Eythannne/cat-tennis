@@ -4,6 +4,11 @@ require_once 'auth.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $id = (int)($_POST['id'] ?? 0);
+    // Remet le message en « non lu » (à traiter plus tard). Retour à la liste : rouvrir
+    // le message le marquerait de nouveau comme lu.
+    if ($action === 'non_lu') {
+        $pdo->prepare("UPDATE messages_contact SET lu=0 WHERE id=?")->execute([$id]);
+    }
     if ($action === 'delete') {
         $stmt = $pdo->prepare("SELECT nom, sujet, created_at FROM messages_contact WHERE id=?");
         $stmt->execute([$id]);
@@ -71,6 +76,12 @@ admin_header('Messages', 'messages', '<style>
             <div class="detail-body"><?= htmlspecialchars($detail['message']) ?></div>
             <div class="actions">
                 <a href="mailto:<?= htmlspecialchars($detail['email']) ?>" class="btn btn-secondary">↩️ Répondre</a>
+                <form method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="non_lu">
+                    <input type="hidden" name="id" value="<?= $detail['id'] ?>">
+                    <button type="submit" class="btn btn-secondary" title="Le message redevient « Nouveau » dans la liste">✉️ Marquer comme non lu</button>
+                </form>
                 <form method="POST" onsubmit="return confirm('Supprimer ce message ?')">
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="delete">
