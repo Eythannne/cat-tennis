@@ -1,17 +1,42 @@
-[FAIT le 27/10/2026] bouton publier pour les articles quand ils sont en brouillons
-en gros deplacer le bouton
---> action : je crée un nouvel article, je le mets en brouillon puis il y a un bouton publier mais on ne peut pas le publier quand on le crée
+=================================================================================
+                              ✅ FAIT
+=================================================================================
 
-[FAIT le 27/10/2026] idée, publier programmé (champ "Date de publication" dans le formulaire article)
+[FAIT le 27/10/2026] Bouton "Publier" pour les articles en brouillon
+--> je crée un article, je le mets en brouillon, puis un bouton "Publier" apparaît dans la liste
+
+[FAIT le 27/10/2026] Publication programmée (champ "Date de publication" dans le formulaire article)
+
+[FAIT le 02/11/2026] Dates en français
+--> articles : "28 octobre 2026" (avec "1er" pour le premier du mois)
+--> calendrier : affiché en français, semaine du lundi au dimanche, "Toute la journée"
+    (la date dans la langue choisie sera à refaire avec le multilingue, voir plus bas)
+
+[FAIT] Mentions légales et RGPD : la partie technique
+--> page Mentions légales complète : éditeur, responsable de publication, hébergeur (InfinityFree),
+    durée de conservation des messages (3 ans, suppression automatique), cookies, services tiers
+--> police d'écriture hébergée directement sur le site (plus de Google Fonts)
+--> phrase pour la carte OpenStreetMap et la météo Open-Meteo
+    (reste à saisir les infos du club : voir "Reste à faire")
+
+[EN PARTIE] Structuration du projet (voir le détail dans "Reste à faire")
+--> fait : modèle de configuration src/config/database.example.php (sans mot de passe)
+--> fait : dossier de présentation du site (resume-site-cat-presentation.md)
+--> fait le 16/11/2026 : rangement du projet
+    - sql/ : schema.sql vérifié à jour + migrations rangées dans sql/migrations/ (datées, dans l'ordre)
+      + sql/README.md (créer une base neuve, mettre à jour une base, ajouter une migration)
+    - image inutilisée supprimée (hero-pages.jpg), paramètre inutilisé retiré du schéma
+    - aucune fonction ni constante morte dans le code
+    - .gitignore commenté (+ protection de .git.zip)
 
 
----------------------------------------------------------------------------------
+=================================================================================
+                              🔜 RESTE À FAIRE
+=================================================================================
 
-Dates en français
---> aujourd'hui les dates des articles s'affichent en anglais ("27 October 2026")
---> à faire en même temps que le multilingue : la date doit suivre la langue choisie
-    (IntlDateFormatter de PHP le fait tout seul : fr → "27 octobre 2026", en → "October 27, 2026"...)
---> penser aussi au calendrier (FullCalendar a besoin de ses fichiers de langue)
+Infos légales à saisir (avant l'ouverture officielle)
+--> dans l'admin, Paramètres > Informations du club : nom du responsable de publication
+    (président·e du club en général) et numéro RNA de l'association, à demander au bureau
 
 ---------------------------------------------------------------------------------
 
@@ -37,24 +62,19 @@ Langues à envisager (très parlées en Île-de-France / Seine-Saint-Denis) :
 
 À prévoir :
 - textes fixes du site (menus, boutons, pages club / contact...) dans des fichiers de traduction (un par langue)
+  (les textes modifiables de Paramètres > Textes du site existent déjà en français : src/textes.php)
 - contenu de l'admin (articles, événements) : soit traduit à la main par langue, soit seulement en français
 - mémoriser la langue choisie (cookie) + détecter la langue du navigateur au premier passage
 - garder le français si une traduction manque
-
----------------------------------------------------------------------------------
-
-Avant l'hébergement (légal)
-- mentions légales : nom du responsable de publication, numéro RNA de l'association,
-  adresse de l'hébergeur (InfinityFree), durée de conservation des messages de contact
-- RGPD : le site utilise Google Fonts, la carte OpenStreetMap et la météo Open-Meteo
-  → héberger la police sur le site + ajouter une phrase pour la carte et la météo
+- dates dans la langue choisie (IntlDateFormatter de PHP : fr → "27 octobre 2026", en → "October 27, 2026"...)
+- calendrier : FullCalendar a besoin de ses fichiers de langue
 
 ---------------------------------------------------------------------------------
 
 V2
 - Espace membre (déjà annoncé "Bientôt" dans le menu)
 - Notification par email quand un message de contact arrive
-- Admin Messages : bouton "Marquer comme non lu" (en attente)
+- Admin Messages : bouton "Marquer comme non lu"
 - Admin Messages : pouvoir répondre directement depuis l'admin
   --> aujourd'hui le bouton "Répondre" ouvre seulement le logiciel de mail de l'ordinateur (lien mailto),
       ce qui ne marche pas si aucun logiciel de mail n'est configuré
@@ -107,17 +127,11 @@ l'installer et le mettre en ligne sans moi.
       - le dossier technique (architecture, base de données, sécurité, choix techniques)
       - les guides (installation, mise en ligne, utilisation de l'admin)
       - le tableau des rôles et des droits
-      - le dossier de présentation du site (resume-site-cat-presentation.md à y ranger)
+      - le dossier de présentation du site (resume-site-cat-presentation.md, déjà écrit : à y ranger)
       - les captures d'écran, maquettes, schémas
       - la liste des évolutions prévues (le contenu de ce fichier d'idées)
       - un sommaire (docs/README.md) qui renvoie vers chaque document
 
-  --> Ranger le projet proprement :
-      - vérifier que chaque dossier a un rôle clair (public/, admin/, src/, templates/, sql/)
-      - regrouper les scripts SQL : un schéma complet à jour + les migrations dans l'ordre (datées)
-      - supprimer les fichiers inutiles ou de test, garder des noms de fichiers cohérents
-      - un exemple de configuration (src/config/database.example.php) sans mot de passe,
-        à copier en database.php
   --> README.md à la racine (la porte d'entrée du projet) :
       - à quoi sert le site, pour qui, captures d'écran
       - technologies utilisées (PHP, MySQL, JS, FullCalendar, Leaflet, Gemini...)

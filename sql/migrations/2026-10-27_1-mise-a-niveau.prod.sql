@@ -7,7 +7,7 @@
 --
 -- Relançable sans risque : chaque étape vérifie si elle a déjà été faite
 -- (syntaxe "IF NOT EXISTS" propre à MariaDB : ne pas l'exécuter sur le MySQL de Laragon,
---  qui utilise sql/migration-2026-10-27.sql).
+--  qui utilise 2026-10-27_1-mise-a-niveau.local.sql).
 --
 -- Utilisation : phpMyAdmin → cliquer sur la base if0_..._cat_tennis → onglet SQL → coller → Go.
 -- ════════════════════════════════════════════════════════════════════════════

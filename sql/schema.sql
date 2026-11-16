@@ -1,10 +1,10 @@
 -- ════════════════════════════════════════════════════════════════════════════
 -- Schéma complet de la base du site CAT
 -- Sert à créer une base NEUVE (nouveau PC, nouvel hébergeur...).
--- Pour une base existante, utiliser plutôt les fichiers sql/migration-*.sql.
+-- Pour mettre à jour une base existante, utiliser les fichiers de sql/migrations/ (voir sql/README.md).
 --
 -- Utilisation : phpMyAdmin → sélectionner la base vide → onglet "Importer".
--- ⚠ À tenir à jour : après chaque migration, régénérer ce fichier.
+-- ⚠ À tenir à jour : après chaque nouvelle migration, reporter le changement ici.
 -- ════════════════════════════════════════════════════════════════════════════
 
 SET NAMES utf8mb4;
@@ -134,8 +134,7 @@ INSERT INTO parametres (cle, valeur) VALUES
     ('telephone',     ''),
     ('horaires',      'Lundi – Vendredi : 14h – 18h\nSamedi : 9h – 12h'),
     ('description',   'Club de tennis à Aulnay-sous-Bois'),
-    ('saison',        '2026-2027'),
-    ('fiche_inscription', '');  -- inutilisé depuis les PDF par formule (tarifs.pdf)
+    ('saison',        '2026-2027');
 
 -- ── Premier compte administrateur ───────────────────────────────────────────
 -- Le mot de passe est stocké chiffré. Pour obtenir le hash d'un mot de passe,

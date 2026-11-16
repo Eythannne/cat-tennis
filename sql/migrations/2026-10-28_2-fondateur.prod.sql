@@ -1,6 +1,9 @@
 -- Migration du 28/10/2026 — rôle "fondateur" (compte unique, ni modifiable ni supprimable par les admins)
--- Base LOCALE (MySQL de Laragon). Pour la base en ligne : sql/migration-prod-2026-10-28-fondateur.sql
--- À exécuter APRÈS migration-2026-10-28-roles.sql.
+-- Base EN LIGNE (InfinityFree, MariaDB). Relançable sans risque.
+-- À exécuter APRÈS 2026-10-28_1-roles.prod.sql.
+--
+-- Utilisation : phpMyAdmin → cliquer sur la base if0_..._cat_tennis → onglet SQL → coller → Go.
+-- ⚠ Si ton compte en ligne utilise un autre email, remplace-le dans la dernière ligne.
 
 ALTER TABLE admins MODIFY role ENUM('fondateur','administrateur','moderateur')
     COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'moderateur';

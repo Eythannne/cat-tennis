@@ -3,8 +3,8 @@
 
 // ── Rôles ────────────────────────────────────────────────────────────────────
 // Fondateur : compte unique, accès complet, ni modifiable ni supprimable par les administrateurs.
-//             Désigné en base de données (sql/migration-*-fondateur.sql), jamais depuis l'admin.
-// Administrateur : accès complet (sauf toucher au compte fondateur).
+//             Désigné en base de données (sql/migrations/*-fondateur.*.sql), jamais depuis l'admin.
+// Administrateur : accès complet, sauf le compte fondateur, le Journal et les réglages de l'IA.
 // Modérateur : tout le contenu, Paramètres en lecture seule, pas d'accès aux Administrateurs.
 const ROLES = [
     'fondateur'      => 'Fondateur',

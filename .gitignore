@@ -1,2 +1,8 @@
+# Fichiers envoyés depuis l'admin (images, PDF) : propres à chaque installation
 /public/assets/uploads/
+
+# Identifiants de la base de données : jamais sur GitHub (modèle : src/config/database.example.php)
 src/config/database.php
+
+# Sauvegarde locale de l'ancien historique Git (contient d'anciens identifiants)
+.git.zip

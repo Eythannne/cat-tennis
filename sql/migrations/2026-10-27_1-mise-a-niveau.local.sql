@@ -1,5 +1,5 @@
 -- Migration du 27/10/2026 — base LOCALE (MySQL de Laragon).
--- Pour la base en ligne (InfinityFree), utiliser sql/migration-prod-infinityfree.sql.
+-- Pour la base en ligne (InfinityFree), utiliser 2026-10-27_1-mise-a-niveau.prod.sql.
 -- Relançable : seule la ligne "ADD COLUMN published_at" (étape 2) échoue si elle a déjà été
 -- exécutée ("Duplicate column name"). Dans ce cas, exécuter tout ce qui suit cette ligne.
 
