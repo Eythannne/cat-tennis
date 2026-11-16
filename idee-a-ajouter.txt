@@ -65,3 +65,5 @@ V2
       (SMTP Gmail, Brevo, etc.) — même besoin que pour la notification des nouveaux messages
 
 ---------------------------------------------------------------------------------
+
+pour le calendrier mettre deja automatiquement les vacances scolaire Zone C
