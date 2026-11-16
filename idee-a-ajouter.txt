@@ -66,4 +66,74 @@ V2
 
 ---------------------------------------------------------------------------------
 
-pour le calendrier mettre deja automatiquement les vacances scolaire Zone C
+- Chatbot d'aide SANS IA, par mots-clés (ajouté le 14/11/2026) — version retenue
+  Principe : c'est le club qui écrit les questions / réponses, le chatbot cherche la bonne fiche
+  avec des mots-clés. 0 €, aucun quota, rien n'est envoyé à Google, jamais de mauvaise réponse.
+
+  --> Admin : nouvelle page "Chatbot" pour gérer des fiches :
+      - question type      (ex : "Comment s'inscrire au club ?")
+      - réponse            (ex : "Téléchargez la fiche d'inscription sur la page Tarifs...")
+      - mots-clés          (ex : inscription, inscrire, adhérer, adhésion, licence, rejoindre)
+      - lien optionnel     (ex : "Voir les tarifs →")
+      - ordre / afficher en bouton "question fréquente" ou non
+  --> Site public : bulle en bas de l'écran avec
+      - des boutons de questions fréquentes (S'inscrire, Tarifs, Réserver un court, Horaires...)
+      - un champ de recherche libre
+  --> Recherche :
+      - nettoyer le texte : minuscules, sans accents, sans les petits mots (je, veux, mon, le...)
+      - tolérer les variantes (inscrire / inscription / inscriptions)
+      - donner des points à chaque fiche selon les mots-clés trouvés
+      - afficher la meilleure réponse + 2 ou 3 suggestions ("Vous cherchiez peut-être : ...")
+      - rien trouvé : "Posez votre question au club" + lien vers le formulaire de contact
+  --> Réponses "vivantes" : certaines fiches reprennent les vraies données du site
+      (prochains tournois = événements du calendrier, horaires = Paramètres, tarifs = page Tarifs)
+  --> Bonus : enregistrer les questions SANS réponse, visibles dans l'admin
+      (ex : "12 personnes ont cherché parking") pour ajouter la fiche en 2 clics
+  --> Préparer une trentaine de fiches de départ (inscription, tarifs, réservation Ten'up,
+      horaires, adresse, cours, stages, tournois, contact...) à faire relire par le club
+  --> Plus tard (option) : l'IA Gemini seulement en dernier recours, quand aucune fiche ne correspond
+      /!\ dans ce cas : limite de questions par visiteur (quota partagé avec "Générer") et mention
+          dans les mentions légales (les questions partiraient chez Google)
+  Estimation : environ une journée de travail.
+
+---------------------------------------------------------------------------------
+
+Structurer le projet + documentation complète de A à Z (ajouté le 16/11/2026)
+Objectif : si un jour quelqu'un d'autre reprend le site, il doit pouvoir tout comprendre,
+l'installer et le mettre en ligne sans moi.
+
+  --> TOUT regrouper dans un seul dossier de documentation (ex : docs/ à la racine), avec :
+      - le cahier des charges (besoins du club, objectifs, fonctionnalités attendues, contraintes)
+      - le dossier technique (architecture, base de données, sécurité, choix techniques)
+      - les guides (installation, mise en ligne, utilisation de l'admin)
+      - le tableau des rôles et des droits
+      - le dossier de présentation du site (resume-site-cat-presentation.md à y ranger)
+      - les captures d'écran, maquettes, schémas
+      - la liste des évolutions prévues (le contenu de ce fichier d'idées)
+      - un sommaire (docs/README.md) qui renvoie vers chaque document
+
+  --> Ranger le projet proprement :
+      - vérifier que chaque dossier a un rôle clair (public/, admin/, src/, templates/, sql/)
+      - regrouper les scripts SQL : un schéma complet à jour + les migrations dans l'ordre (datées)
+      - supprimer les fichiers inutiles ou de test, garder des noms de fichiers cohérents
+      - un exemple de configuration (src/config/database.example.php) sans mot de passe,
+        à copier en database.php
+  --> README.md à la racine (la porte d'entrée du projet) :
+      - à quoi sert le site, pour qui, captures d'écran
+      - technologies utilisées (PHP, MySQL, JS, FullCalendar, Leaflet, Gemini...)
+      - organisation des dossiers et des fichiers importants
+  --> Guide d'installation en local (Laragon) : étape par étape, de zéro jusqu'au site qui tourne
+      (récupérer le code, créer la base, importer le schéma, configurer database.php, créer le compte fondateur)
+  --> Guide de mise en ligne (InfinityFree) : préparer le zip, ce qu'il ne faut PAS mettre dedans
+      (.git, uploads de test...), scripts SQL dans phpMyAdmin, ordre des étapes, vérifications après
+  --> Guide d'utilisation de l'admin pour le club (sans technique) : publier un article,
+      ajouter un événement, gérer les tarifs et PDF, les comptes et les rôles, la génération IA...
+  --> Documentation technique pour un développeur :
+      - schéma de la base (tables, colonnes, à quoi elles servent)
+      - fonctionnement des rôles (fondateur / administrateur / modérateur) + tableau des droits
+      - fonctions importantes (src/init.php, src/ia.php, src/textes.php...)
+      - sécurité : CSRF, mots de passe, limites anti-spam, déconnexion auto, journal
+      - où sont les réglages (table parametres, clé Gemini, textes du site)
+  --> Passation : liste des accès à transmettre (hébergeur, base de données, GitHub, compte Google
+      de la clé Gemini, compte fondateur), sans jamais les écrire dans le code ni sur GitHub
+  --> Historique des versions (CHANGELOG) : ce qui a été ajouté et quand
