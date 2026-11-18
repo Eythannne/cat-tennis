@@ -93,6 +93,7 @@ const JOURNAL_CATEGORIES = [
     'bureau'     => ['🏛️', 'Bureau'],
     'tarif'      => ['💶', 'Tarifs'],
     'message'    => ['✉️', 'Messages'],
+    'jeu'        => ['🕹️', 'Jeux'],
 ];
 
 // Enregistre une action. Par défaut, l'auteur est le compte connecté ;

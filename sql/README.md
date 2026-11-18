@@ -26,8 +26,9 @@ AAAA-MM-JJ_N-description[.local|.prod].sql
 | `2026-10-28_3-journal` | Journal des actions importantes |
 | `2026-10-28_4-bureau` | Équipe administrative (bureau) |
 | `2026-11-02_1-pdf-tarifs` | Une fiche d'inscription PDF par formule de tarif |
+| `2026-11-19_1-jeux-scores` | Scores des jeux de l'espace Jeux |
 
-Toutes ces migrations sont **déjà appliquées** sur la base locale et sur la base en ligne. Elles ne servent plus qu'à mettre à jour une ancienne copie de la base.
+Toutes ces migrations sont **déjà appliquées** sur la base locale et sur la base en ligne, sauf la dernière (`jeux-scores`), à exécuter en ligne avant d'envoyer les fichiers de l'espace Jeux. Elles ne servent plus qu'à mettre à jour une ancienne copie de la base.
 
 ## Ajouter une migration
 

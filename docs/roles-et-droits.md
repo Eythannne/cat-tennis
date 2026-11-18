@@ -4,7 +4,7 @@ L'administration distingue **3 rôles**. Chaque compte en a un seul.
 
 | Rôle | Pour qui | En résumé |
 |---|---|---|
-| 👑 **Fondateur** | Le créateur et responsable technique du site (un seul compte) | Accès complet, réglages de l'IA, journal des actions |
+| 👑 **Fondateur** | Le créateur et responsable technique du site (un seul compte) | Accès complet, réglages de l'IA, journal des actions, scores des jeux |
 | 🛡️ **Administrateur** | Membres du bureau (président·e, secrétaire…) | Tout le site, y compris les comptes et les paramètres (sauf l'IA) |
 | 🧑‍💼 **Modérateur** | Entraîneurs, bénévoles qui publient | Tout le contenu, mais ni les réglages ni les comptes |
 
@@ -33,6 +33,7 @@ L'administration distingue **3 rôles**. Chaque compte en a un seul.
 | Modifier le compte fondateur | ✅ Le sien uniquement | ❌ | ❌ |
 | Supprimer le compte fondateur | ❌ | ❌ | ❌ |
 | **Journal** des actions | ✅ | ❌ Masqué et refusé | ❌ Masqué et refusé |
+| **Jeux** : voir les scores, en supprimer, remettre à zéro | ✅ | ❌ Masqué et refusé | ❌ Masqué et refusé |
 | Bloc « Dernières actions » du Dashboard | ✅ | ❌ | ❌ |
 | **Mon compte** | | | |
 | Changer son propre mot de passe | ✅ | ✅ | ✅ |

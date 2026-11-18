@@ -125,6 +125,20 @@ CREATE TABLE `journal` (
   KEY `idx_categorie` (`categorie`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `jeux_scores` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `jeu` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pseudo` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `score` int NOT NULL,
+  `duree` int NOT NULL DEFAULT '0',
+  `membre_id` int DEFAULT NULL,
+  `jeton` char(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `jeton` (`jeton`),
+  KEY `idx_jeu_score` (`jeu`,`score`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- ── Données de départ ───────────────────────────────────────────────────────
 INSERT INTO parametres (cle, valeur) VALUES

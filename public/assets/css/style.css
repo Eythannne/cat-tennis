@@ -412,6 +412,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .page-hero--contact     { --banniere: url('../images/banniere-contact.jpg'); }
 .page-hero--mentions    { --banniere: url('../images/banniere-mentions.jpg'); }
 .page-hero--article     { --banniere: url('../images/banniere-article.jpg'); }
+.page-hero--jeux        { --banniere: url('../images/fond-web-cat.jpg'); }  /* remplaçable par une banniere-jeux.jpg dédiée */
 
 /* ── MÉTÉO ── */
 .meteo-pill {
@@ -880,4 +881,53 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     /* Météo : un peu plus compacte, panneau sur toute la largeur */
     .meteo-pill { bottom: 16px; right: 12px; }
     .meteo-panel { right: 12px; left: 12px; width: auto; bottom: 62px; }
+}
+
+/* ── Balle flottante vers l'espace Jeux (bas à gauche de chaque page, voir templates/footer.php) ── */
+.balle-jeu { position: fixed; left: 20px; bottom: 24px; z-index: 900; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.balle-jeu-balle {
+    position: relative; overflow: hidden; flex-shrink: 0;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #F6FF8A 0%, #D9EF2C 45%, #A8C219 100%);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25), inset -4px -6px 10px rgba(0,0,0,0.12);
+    animation: balle-rebond 7s ease-in-out infinite;
+    transition: transform 0.2s ease;
+}
+/* Les deux coutures blanches de la balle */
+.balle-jeu-balle::before, .balle-jeu-balle::after {
+    content: ''; position: absolute; top: -4%; width: 100%; height: 108%;
+    border: 3px solid rgba(255,255,255,0.92); border-radius: 50%;
+}
+.balle-jeu-balle::before { left: -68%; }
+.balle-jeu-balle::after  { right: -68%; }
+.balle-jeu:hover .balle-jeu-balle, .balle-jeu:focus-visible .balle-jeu-balle { animation: none; transform: scale(1.12) rotate(-20deg); }
+.balle-jeu-bulle {
+    position: relative; padding: 8px 13px; border-radius: 12px;
+    background: var(--white); color: var(--vert-dark); font-weight: 700; font-size: 0.85rem; white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    opacity: 0; transform: translateX(-6px); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+    animation: bulle-apparait 5s ease 2.5s 1;   /* s'affiche une fois tout seule, peu après l'arrivée sur la page */
+}
+.balle-jeu-bulle::before { content: ''; position: absolute; left: -6px; top: 50%; margin-top: -6px; border: 6px solid transparent; border-left: 0; border-right-color: var(--white); }
+.balle-jeu:hover .balle-jeu-bulle, .balle-jeu:focus-visible .balle-jeu-bulle { opacity: 1; transform: none; }
+.balle-jeu:focus-visible { outline: none; }
+.balle-jeu:focus-visible .balle-jeu-balle { box-shadow: 0 0 0 3px var(--white), 0 0 0 6px var(--vert); }
+@keyframes balle-rebond {
+    0%, 84%, 100% { transform: translateY(0) rotate(0); }
+    88% { transform: translateY(-18px) rotate(-25deg); }
+    92% { transform: translateY(0) rotate(-40deg); }
+    95% { transform: translateY(-7px) rotate(-50deg); }
+    98% { transform: translateY(0) rotate(-55deg); }
+}
+@keyframes bulle-apparait {
+    0%   { opacity: 0; transform: translateX(-6px); }
+    10%, 85% { opacity: 1; transform: none; }
+    100% { opacity: 0; transform: translateX(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .balle-jeu-balle, .balle-jeu-bulle { animation: none; }
+}
+@media (max-width: 600px) {
+    .balle-jeu { left: 14px; bottom: 16px; }
+    .balle-jeu-balle { width: 44px; height: 44px; }
 }

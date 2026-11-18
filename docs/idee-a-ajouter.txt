@@ -39,6 +39,19 @@
 --> modèle de configuration src/config/database.example.php (sans mot de passe)
 
 
+[FAIT le 19/11/2026] Espace Jeux + premier jeu « Un petit échange » (tennis) avec tableau des scores en ligne
+--> page jeux.php : une carte par jeu (record, nombre de joueurs), prévue pour ajouter d'autres jeux
+    (liste JEUX dans src/jeux.php, voir "Ajouter un jeu" dans docs/dossier-technique.md)
+--> page jeu-echange.php : choix parmi 8 personnages en style dessin animé (Federer, Nadal, Djokovic,
+    Serena Williams, Alcaraz, Noah, Shelton, Joueur du CAT ; adversaire au hasard), court vu de dessus, le joueur se déplace de gauche à droite (flèches du clavier,
+    boutons ← → ou glisser le doigt sur téléphone), la balle accélère à chaque échange,
+    score = nombre d'échanges, top 15 des meilleurs joueurs de chaque jeu (meilleur score de chaque pseudo)
+--> accès : une balle de tennis flottante en bas à gauche de chaque page, qui rebondit et affiche
+    « Une petite partie ? »
+--> pseudo en invité (mémorisé dans le navigateur), anti-triche (jeton de partie signé, durée
+    vérifiée par le serveur, un seul score par partie), filtre des pseudos grossiers
+--> admin : page Jeux réservée au fondateur (un onglet par jeu : scores, suppression, remise à zéro)
+
 =================================================================================
                               🔜 RESTE À FAIRE
 =================================================================================
@@ -220,3 +233,13 @@ Questions à poser au club ce soir :
   --> Qui peut prendre de belles photos des installations ?
   --> Par quoi commencer ? (proposition : réseaux sociaux et photos du club, rapides,
       puis "Documents du club", puis "Partenaires" + page Partenariat)
+
+---------------------------------------------------------------------------------
+
+Espace Jeux : ce qui reste (en place depuis le 19/11/2026, voir "Fait")
+  --> le jour où l'espace membre existera : un joueur connecté joue sur son compte (scores rattachés
+      à son profil, meilleur score personnel) ; un joueur non connecté joue toujours en invité
+      (la colonne membre_id de la table jeux_scores est déjà prévue pour ça)
+  --> ajouter d'autres jeux (idées à trouver avec le club)
+  --> ajouter d'autres personnages (une ligne dans public/assets/js/personnages.js)
+  --> idée possible : "meilleur score de la semaine" sur l'accueil

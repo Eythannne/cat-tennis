@@ -9,6 +9,8 @@ $pages = [
     ['actualites.php',       'weekly',  '0.8'],
     ['calendrier.php',       'weekly',  '0.7'],
     ['contact.php',          'yearly',  '0.6'],
+    ['jeux.php',             'monthly', '0.3'],
+    ['jeu-echange.php',      'monthly', '0.3'],
     ['mentions-legales.php', 'yearly',  '0.2'],
 ];
 $articles = $pdo->query(

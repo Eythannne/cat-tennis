@@ -117,6 +117,19 @@ Sur le site, les visiteurs peuvent voir, télécharger ou imprimer la fiche PDF 
 
 ---
 
+## 🕹️ Jeux (fondateur uniquement)
+
+Sur le site, une balle de tennis en bas à gauche de chaque page mène à l'**espace Jeux**, qui regroupe les petits jeux du site (pour l'instant « Un petit échange »). Les visiteurs y entrent un pseudo, et leurs meilleurs scores apparaissent dans le top 15 de chaque jeu.
+
+Dans l'admin, la page **Jeux** a un onglet par jeu, qui permet de :
+- voir les chiffres (scores enregistrés, joueurs, meilleur score) et tous les scores ;
+- **supprimer un score**, par exemple un pseudo insultant ou un score suspect ;
+- **remettre le tableau du jeu à zéro**, par exemple au début d'une nouvelle saison. Cette action est définitive.
+
+Les pseudos grossiers sont refusés automatiquement, et les scores impossibles sont rejetés par le serveur.
+
+---
+
 ## 📜 Journal (fondateur uniquement)
 
 L'historique des actions importantes : connexions (et tentatives échouées), comptes créés ou supprimés, articles publiés, paramètres modifiés… On peut filtrer par catégorie et par compte. Les entrées sont conservées 12 mois.

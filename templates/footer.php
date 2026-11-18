@@ -37,3 +37,11 @@
         </div>
     </div>
 </footer>
+
+<?php if (($activePage ?? '') !== 'jeux'): ?>
+<!-- Balle flottante qui mène à l'espace Jeux (rebondit de temps en temps, bulle au survol) -->
+<a href="<?= BASE_URL ?>/jeux.php" class="balle-jeu" aria-label="Espace jeux : <?= t('jeux_bulle') ?>">
+    <span class="balle-jeu-balle" aria-hidden="true"></span>
+    <span class="balle-jeu-bulle" aria-hidden="true"><?= t('jeux_bulle') ?></span>
+</a>
+<?php endif; ?>

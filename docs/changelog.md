@@ -2,6 +2,16 @@
 
 Les modifications du site, de la plus récente à la plus ancienne. Le détail de chaque changement est dans l'historique Git.
 
+## 19 novembre 2026 — Espace Jeux
+- Nouvelle page **Jeux**, qui regroupe les petits jeux du site (prévue pour en ajouter d'autres facilement).
+- Premier jeu, **« Un petit échange »** : renvoyer la balle le plus longtemps possible, elle accélère à chaque échange. Jouable au clavier et sur téléphone.
+- **8 personnages** en style dessin animé à choisir avant la partie (Federer, Nadal, Djokovic, Serena Williams, Alcaraz, Noah, Ben Shelton et le Joueur du CAT), avec un adversaire tiré au hasard.
+- Tableau des 15 meilleurs joueurs de chaque jeu, avec un pseudo en invité.
+- Balle de tennis flottante en bas à gauche de chaque page pour accéder aux jeux.
+- Protections anti-triche (jeton de partie signé, durée vérifiée par le serveur) et filtre des pseudos.
+- Page Jeux dans l'admin, réservée au fondateur : un onglet par jeu, scores, suppression, remise à zéro.
+- Nouvelle table `jeux_scores` (migration `2026-11-19_1-jeux-scores`).
+
 ## 16 novembre 2026 — Petites améliorations
 - Messages : bouton **« Marquer comme non lu »**.
 - Images allégées : logo du club (306 Ko → 74 Ko) et image par défaut des articles (379 Ko → 66 Ko).

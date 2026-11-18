@@ -53,6 +53,9 @@ const TEXTES_SITE = [
         'contact_sous_titre'      => ['Contact — sous-titre', 'Une question ? Écrivez-nous'],
         'mentions_titre'          => ['Mentions légales — titre', 'Mentions légales'],
         'mentions_sous_titre'     => ['Mentions légales — sous-titre', 'Informations légales et politique de confidentialité'],
+        'jeux_titre'              => ['Jeux — titre', 'Espace jeux'],
+        'jeux_sous_titre'         => ['Jeux — sous-titre', 'Des petits jeux pour s\'amuser entre deux matchs… et grimper au classement !'],
+        'jeux_bulle'              => ['Jeux — bulle de la balle en bas des pages', 'Une petite partie ?'],
     ]],
     'contact' => ['✉️ Page Contact', [
         'contact_trouver_titre'   => ['Titre de la colonne d\'informations', 'Nous trouver'],

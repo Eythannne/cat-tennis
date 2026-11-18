@@ -56,6 +56,14 @@ Le menu contient : **Accueil · Le club · Actualités · Calendrier · Contact*
 - **Carte interactive** (OpenStreetMap) pour situer le club.
 - Coordonnées du club (adresse, email, téléphone, horaires du secrétariat).
 
+### Espace Jeux
+- Une **balle de tennis** en bas à gauche de chaque page rebondit de temps en temps et propose « Une petite partie ? ».
+- Elle mène à l'**espace Jeux**, une page qui regroupe les petits jeux du site. D'autres jeux pourront s'y ajouter facilement.
+- Premier jeu, **« Un petit échange »** : on renvoie la balle le plus longtemps possible, et elle accélère à chaque échange. Il se joue au clavier sur ordinateur, avec des boutons ou au doigt sur téléphone.
+- Avant la partie, on choisit son **personnage en style dessin animé** : Federer, Nadal, Djokovic, Serena Williams, Alcaraz, Yannick Noah, Ben Shelton ou le Joueur du CAT. L'adversaire est tiré au hasard.
+- Les **15 meilleurs joueurs** de chaque jeu apparaissent dans un tableau des scores en ligne. Il suffit d'un pseudo pour jouer, et les pseudos grossiers sont refusés.
+- Objectif : rendre le site plus vivant et donner envie d'y revenir. Plus tard, avec l'espace membre, chacun pourra jouer avec son compte.
+
 ### Autres éléments
 - **Mentions légales** complètes : éditeur, hébergeur, RGPD, cookies, services tiers.
 - **Page d'erreur 404** personnalisée, aux couleurs du club.
@@ -229,6 +237,7 @@ Fonctionnalité phare, à montrer en direct si possible.
 - **Modifier un texte du site** (par exemple un titre de l'accueil) dans Paramètres > Textes du site, et montrer le résultat.
 - Montrer la **fiche d'inscription PDF** depuis la page Tarifs.
 - Envoyer un **message par le formulaire de contact** et le montrer arriver dans l'admin.
+- Pour finir sur une note ludique : cliquer sur la **balle en bas à gauche** et lancer un **défi au jeu de tennis**. Qui fera le meilleur score de la salle ?
 
 ## 12. Questions probables du public (et éléments de réponse)
 

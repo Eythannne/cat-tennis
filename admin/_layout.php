@@ -19,11 +19,11 @@ const MENU_ADMIN = [
     ['Contenu',        ['articles'   => '📰 Articles', 'evenements' => '📅 Événements', 'galerie' => '📷 Galerie']],
     ['Le club',        ['entraineurs'=> '🎾 Entraîneurs', 'bureau' => '🏛️ Bureau', 'tarifs' => '💶 Tarifs']],
     ['Échanges',       ['messages'   => '✉️ Messages']],
-    ['Administration', ['parametres' => '⚙️ Paramètres', 'admins' => '👥 Administrateurs', 'journal' => '📜 Journal']],
+    ['Administration', ['parametres' => '⚙️ Paramètres', 'admins' => '👥 Administrateurs', 'journal' => '📜 Journal', 'jeux' => '🕹️ Jeux']],
 ];
-const PAGES_LECTURE_SEULE   = ['parametres'];  // visibles par les modérateurs, sans modification
-const PAGES_ADMINISTRATEURS = ['admins'];      // masquées et interdites aux modérateurs
-const PAGES_FONDATEUR       = ['journal'];     // masquées et interdites à tous sauf au fondateur
+const PAGES_LECTURE_SEULE   = ['parametres'];      // visibles par les modérateurs, sans modification
+const PAGES_ADMINISTRATEURS = ['admins'];          // masquées et interdites aux modérateurs
+const PAGES_FONDATEUR       = ['journal', 'jeux'];  // masquées et interdites à tous sauf au fondateur
 
 function est_fondateur() {
     return ($_SESSION['admin_role'] ?? '') === 'fondateur';

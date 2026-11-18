@@ -54,13 +54,14 @@ include '../templates/navbar.php';
             <h2 id="donnees">Données personnelles (RGPD)</h2>
             <p><strong>Responsable du traitement :</strong> le <?= htmlspecialchars($nomClub) ?>, joignable à <?= htmlspecialchars($emailClub) ?>.</p>
             <p><strong>Données collectées :</strong> uniquement celles que vous saisissez dans le formulaire de contact (nom, adresse email, sujet et message). Aucun compte visiteur n'est créé et aucune donnée n'est collectée à votre insu.</p>
+            <p><strong>Espace Jeux :</strong> pour chaque jeu, le pseudo choisi et le score sont enregistrés pour le tableau des scores, visible par tous. Aucune autre information n'est demandée : choisissez un pseudo qui ne permet pas de vous identifier. Pour faire retirer un score, écrivez au club.</p>
             <p><strong>Finalité et base légale :</strong> ces données servent uniquement à répondre à votre demande (intérêt légitime du club à traiter les demandes qui lui sont adressées).</p>
             <p><strong>Destinataires :</strong> les seuls membres du bureau du club chargés de répondre. Elles ne sont ni vendues, ni cédées, ni transmises à des tiers.</p>
             <p><strong>Durée de conservation :</strong> <?= CONSERVATION_MESSAGES_ANS ?> ans à compter de l'envoi du message ; elles sont ensuite supprimées automatiquement.</p>
             <p><strong>Vos droits :</strong> vous pouvez demander l'accès, la rectification, l'effacement ou la limitation du traitement de vos données, et vous opposer à ce traitement, en écrivant à <strong><?= htmlspecialchars($emailClub) ?></strong>. Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (<a href="https://www.cnil.fr" target="_blank" rel="noopener">www.cnil.fr</a>).</p>
 
             <h2>Cookies</h2>
-            <p>Ce site ne dépose <strong>aucun cookie publicitaire ni de mesure d'audience</strong> : aucun bandeau de consentement n'est donc nécessaire. Seul un cookie technique de session est utilisé dans l'espace d'administration, réservé aux membres du bureau.</p>
+            <p>Ce site ne dépose <strong>aucun cookie publicitaire ni de mesure d'audience</strong> : aucun bandeau de consentement n'est donc nécessaire. Seul un cookie technique de session est utilisé dans l'espace d'administration, réservé aux membres du bureau. L'espace Jeux mémorise votre pseudo et vos records dans votre navigateur (stockage local, jamais transmis à des tiers), pour vous éviter de les ressaisir.</p>
 
             <h2>Services tiers</h2>
             <p>Pour afficher certains contenus, votre navigateur contacte directement des services extérieurs, qui reçoivent alors votre adresse IP (comme pour toute visite d'un site web) :</p>

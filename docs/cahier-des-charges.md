@@ -39,6 +39,7 @@ Le club a besoin d'un site internet moderne pour présenter ses activités, info
 | Contact | Formulaire avec choix du sujet, protection anti-spam, coordonnées, carte interactive |
 | Mentions légales | Éditeur, responsable de publication, hébergeur, RGPD, cookies, services tiers |
 | Erreur 404 | Page personnalisée aux couleurs du club |
+| Jeux | Espace qui regroupe des petits jeux (premier jeu : tennis), avec un tableau des 15 meilleurs scores par jeu, accessible par une balle flottante sur chaque page |
 
 ### Administration
 
@@ -54,6 +55,7 @@ Le club a besoin d'un site internet moderne pour présenter ses activités, info
 | Paramètres | Informations du club, chiffres clés, environ 50 textes du site, réglages de l'IA |
 | Administrateurs | Comptes et rôles |
 | Journal | Historique des actions importantes |
+| Jeux | Scores de chaque jeu, suppression d'un score, remise à zéro (fondateur uniquement) |
 
 ## 5. Exigences non fonctionnelles
 

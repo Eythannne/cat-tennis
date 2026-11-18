@@ -28,12 +28,17 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 |---|---|
 | `public/*.php` | Pages publiques : `index`, `club`, `actualites`, `article`, `calendrier`, `contact`, `mentions-legales`, `404`, plus `robots` et `sitemap` |
 | `public/api/evenements.php` | Flux JSON des événements et jours fériés pour FullCalendar |
+| `public/jeux.php` | Espace Jeux : une carte par jeu de la liste `JEUX` |
+| `public/jeu-echange.php`, `public/assets/js/jeu-echange.js` | Jeu « Un petit échange » : page et jeu (canvas) |
+| `public/assets/js/personnages.js` | Personnages des jeux en style dessin animé (dessinés en canvas, réutilisables) |
+| `public/api/jeux.php` | API des scores, commune à tous les jeux |
 | `public/assets/` | `css/style.css` (site), `js/main.js` (menu, interactions), images, polices et bibliothèques (FullCalendar, Leaflet, Cropper) |
 | `public/assets/uploads/` | Fichiers envoyés depuis l'admin (`articles/`, `entraineurs/`, `bureau/`, `documents/`, galerie). **Hors Git.** |
 | `templates/` | Morceaux communs : `head.php` (balises meta, partage), `navbar.php`, `footer.php`, `stats.php` (chiffres clés), `cartes-personnes.php` (bureau / entraîneurs), `article-contenu.php` (article et aperçu) |
 | `src/init.php` | Point d'entrée commun : connexion, fuseau horaire, constantes, fonctions utilitaires |
 | `src/textes.php` | Textes du site modifiables dans l'admin, avec leurs valeurs par défaut |
 | `src/ia.php` | Génération d'articles avec l'API Gemini |
+| `src/jeux.php` | Espace Jeux côté serveur : liste des jeux (`JEUX`), jetons de partie, pseudos, classements |
 | `src/config/database.php` | Identifiants de la base. **Hors Git** (modèle : `database.example.php`) |
 | `admin/session.php` | Session sécurisée, CSRF, traitement des images et des fichiers envoyés |
 | `admin/auth.php` | À inclure en haut de chaque page admin : connexion obligatoire, déconnexion automatique, rôle, purges RGPD |
@@ -46,7 +51,7 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 
 ## 3. Base de données
 
-10 tables, toutes en `utf8mb4_unicode_ci` (accents et emojis).
+11 tables, toutes en `utf8mb4_unicode_ci` (accents et emojis).
 
 | Table | Contenu | Colonnes notables |
 |---|---|---|
@@ -59,6 +64,7 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 | `messages_contact` | Formulaire de contact | `sujet` (clé de `SUJETS_CONTACT`), `lu` — supprimés automatiquement après 3 ans |
 | `parametres` | Réglages clé / valeur | `cle` unique, `valeur` (voir ci-dessous) |
 | `journal` | Actions importantes | `admin_nom` (conservé même si le compte est supprimé), `categorie`, `ip` — conservées 12 mois |
+| `jeux_scores` | Scores de tous les jeux | `jeu` (identifiant du jeu), `pseudo`, `score`, `duree` (mesurée par le serveur), `jeton` unique (un score par partie), `membre_id` (prévu pour le futur espace membre) |
 
 ### Clés de la table `parametres`
 
@@ -71,6 +77,7 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 | `saison` | Saison affichée au-dessus des tarifs |
 | `groupe_entraineurs_photo`, `groupe_bureau_photo` (+ `_legende`) | Photos de groupe |
 | `gemini_api_key`, `gemini_modele`, `prompt_ia_articles` | Réglages de l'IA (vides = valeurs par défaut de `src/ia.php`) |
+| `jeux_secret` | Clé qui signe les jetons des jeux, créée automatiquement au premier usage (propre à chaque installation) |
 
 Les paramètres se lisent avec `param('cle', 'défaut')`. Une valeur vide renvoie le défaut.
 
@@ -97,7 +104,7 @@ Trois rôles, stockés dans `admins.role`. Le tableau complet est dans [roles-et
 - **Menu** : `MENU_ADMIN` dans `admin/_layout.php`, filtré selon les listes `PAGES_ADMINISTRATEURS`, `PAGES_FONDATEUR` et `PAGES_LECTURE_SEULE`.
 - **Contrôle côté serveur** (jamais seulement à l'affichage) :
   - `exiger_administrateur()` en haut de `admins.php` ;
-  - `exiger_fondateur()` en haut de `journal.php` ;
+  - `exiger_fondateur()` en haut de `journal.php` et de `jeux.php` ;
   - `lecture_seule_pour_moderateur()` en haut de `parametres.php` (refuse tout envoi de formulaire d'un modérateur) ;
   - l'onglet IA de `parametres.php` refuse tout envoi qui ne vient pas du fondateur.
 - **Rôle relu à chaque page** (`auth.php`) : un changement de rôle ou une suppression de compte s'applique immédiatement.
@@ -115,7 +122,42 @@ Les articles sont stockés en **texte simple**, converti en HTML à l'affichage 
 
 La barre d'outils (`admin/editeur.js`) insère cette syntaxe, et la génération par IA la produit (`IA_CONSIGNE_FORMAT` dans `src/ia.php`).
 
-## 7. Sécurité
+## 7. Espace Jeux
+
+La page `jeux.php` affiche une carte par jeu de la liste **`JEUX`** (`src/jeux.php`). Chaque jeu tourne entièrement dans le navigateur ; le premier, « Un petit échange », est dessiné dans un `<canvas>` de 400 × 600 (`public/assets/js/jeu-echange.js`). Le serveur ne sert qu'à valider et stocker les scores, avec une API commune (`api/jeux.php`) et une seule table (`jeux_scores`, colonne `jeu`) :
+
+1. **Début de partie** : action `debut` avec l'identifiant du jeu. Le serveur renvoie un **jeton signé** (HMAC avec `jeux_secret`) contenant un identifiant unique, le jeu et l'heure de début. Aucun cookie n'est utilisé.
+2. **Fin de partie** : le navigateur envoie le jeton, le pseudo et le score (action `score`). Le serveur vérifie :
+   - la signature du jeton ;
+   - la durée réelle de la partie : un score marqué plus vite que `ms_par_point` (réglage du jeu dans `JEUX`, 500 ms pour le tennis) est impossible, donc refusé ;
+   - le pseudo : 2 à 16 caractères et filtre des mots grossiers, y compris déguisés (« c0n », « s.a.l.o.p.e ») ;
+   - l'unicité : contrainte `UNIQUE` sur le jeton, donc un seul score par partie.
+3. **Classement** : action `classement` avec l'identifiant du jeu, le meilleur score de chaque pseudo (top `JEU_TOP` = 15).
+
+Les réglages du jeu sont des constantes en haut des fichiers :
+- **gameplay du tennis** (`jeu-echange.js`) : `VITESSE_DEPART`, `VITESSE_MAX`, `ACCELERATION`, `RAQUETTE`, `VITESSE_JOUEUR`. Si on augmente `VITESSE_MAX`, il faut vérifier que `ms_par_point` (dans `JEUX`) reste en dessous de la durée minimale réelle d'un échange ;
+- **limites communes** (`src/jeux.php`) : `JEU_PARTIES_HEURE`, `JEU_SCORES_HEURE`, `JEU_MOTS_INTERDITS`.
+
+La balle flottante qui mène à l'espace Jeux est dans `templates/footer.php` (style `.balle-jeu` dans `style.css`). Elle est masquée sur les pages des jeux.
+
+### Personnages
+
+`public/assets/js/personnages.js` décrit les personnages (liste `LISTE`) : couleur de peau, coiffure (`court`, `mi-long`, `boucles`, `chignon`, `dreads`), bandeau, bandana ou casquette, maillot, short, débardeur, gaucher, expression (`sourire`, `grand-sourire`, `concentre`, `cri`). La fonction `PersonnagesTennis.dessiner(ctx, x, y, perso, options)` les dessine tous, avec le geste de frappe (`frappe`) et la course (`marche`).
+
+- **Ajouter un personnage** : une entrée dans `LISTE`. Il apparaît tout seul dans l'écran de choix.
+- Le choix du joueur est mémorisé dans le navigateur (`jeux_perso`) ; l'adversaire est tiré au hasard à chaque partie.
+- Les personnages s'inspirent de joueurs réels. Ce sont des caricatures humoristiques, sans logo de marque, avec une mention « sans lien officiel » sur la page du jeu.
+
+### Ajouter un jeu
+
+1. Ajouter une entrée dans **`JEUX`** (`src/jeux.php`) : identifiant (lettres minuscules, sans point), titre, icône, description, page, unité du score, `ms_par_point` et `score_max` (anti-triche).
+2. Créer sa page **`public/jeu-<identifiant>.php`** sur le modèle de `jeu-echange.php` (même structure, `data-jeu` = identifiant), et son script dans `public/assets/js/`. Les personnages de `personnages.js` peuvent être réutilisés.
+3. Dans le script, appeler l'API `api/jeux.php` comme `jeu-echange.js` : `debut` au lancement, `score` à la fin, `classement` pour le tableau.
+4. Ajouter la page au plan du site (`public/sitemap.php`).
+
+Le jeu apparaît alors tout seul sur la page Jeux, dans l'API des scores et dans l'admin (un onglet par jeu). Aucune migration n'est nécessaire.
+
+## 8. Sécurité
 
 | Mesure | Détail |
 |---|---|
@@ -131,7 +173,7 @@ La barre d'outils (`admin/editeur.js`) insère cette syntaxe, et la génération
 | IA | Clé jamais réaffichée, modifiable par le fondateur uniquement, 20 générations par heure et par IP |
 | RGPD | Messages supprimés après 3 ans, journal après 12 mois (purges dans `auth.php`) |
 
-## 8. Services externes
+## 9. Services externes
 
 | Service | Utilisation | Où |
 |---|---|---|
@@ -142,7 +184,7 @@ La barre d'outils (`admin/editeur.js`) insère cette syntaxe, et la génération
 
 Les bibliothèques JavaScript et la police d'écriture sont **hébergées dans le projet** (aucun appel à un CDN ni à Google Fonts).
 
-## 9. Ajouter ou modifier quelque chose
+## 10. Ajouter ou modifier quelque chose
 
 - **Un texte modifiable** : ajouter une entrée dans `TEXTES_SITE` (`src/textes.php`), puis l'afficher avec `<?= t('ma_cle') ?>`. Il apparaît automatiquement dans Paramètres > Textes du site.
 - **Une page admin** : créer `admin/ma-page.php` commençant par `require_once 'auth.php';`, puis l'ajouter à `MENU_ADMIN`. L'ajouter aussi à `PAGES_ADMINISTRATEURS` ou `PAGES_FONDATEUR` si elle doit être restreinte, et appeler `exiger_*()` en haut du fichier.
@@ -150,7 +192,7 @@ Les bibliothèques JavaScript et la police d'écriture sont **hébergées dans l
 - **Un changement de structure de la base** : suivre la procédure de [sql/README.md](../sql/README.md).
 - **Une action à tracer** : appeler `journaliser('categorie', 'description')`. La catégorie doit exister dans `JOURNAL_CATEGORIES`.
 
-## 10. Conventions
+## 11. Conventions
 
 - Code, variables, commentaires et messages en **français**.
 - Une constante en haut de fichier pour chaque réglage (délais, limites, tailles).
