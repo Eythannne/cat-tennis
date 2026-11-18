@@ -125,3 +125,98 @@ Documentation : ce qui reste (ajouté le 16/11/2026)
   --> éventuellement : maquettes, schéma de la base en image
   --> tenir la doc à jour à chaque nouvelle fonctionnalité (dossier technique, guide de l'admin,
       historique des versions docs/changelog.md, et sql/README.md pour les migrations)
+
+---------------------------------------------------------------------------------
+
+Idées pour la réunion du club (ajoutées le 18/11/2026) — à mettre en place plus tard
+Plusieurs idées se regroupent en 2 grandes fonctionnalités : "Documents du club" (1, 5, 7)
+et "Partenaires / sponsors" (4, 6). Les autres (2, 3) sont petites et indépendantes.
+
+1) Fiche santé / médecin
+  --> À quoi ça sert : pour s'inscrire, un joueur doit fournir un certificat médical ou remplir
+      un questionnaire de santé (selon son âge et s'il fait de la compétition). Mettre ces documents
+      à télécharger évite les allers-retours au secrétariat.
+  --> Sur le site : dans la partie Tarifs / inscription de la page "Le club", des documents à télécharger :
+      questionnaire de santé (adulte), questionnaire de santé (mineur), modèle de certificat médical,
+      avec une phrase qui explique lequel fournir.
+  --> Dans l'admin : envoyer / remplacer ces PDF (voir "Documents du club" ci-dessous).
+  /!\ Le site propose seulement les documents à télécharger : il ne doit JAMAIS recueillir
+      d'informations de santé en ligne (données très sensibles, interdit sans précautions lourdes - RGPD).
+      Les fiches remplies restent sur papier, remises au club.
+  /!\ Les règles exactes (certificat ou questionnaire, tous les combien d'années...) dépendent
+      de la FFT : à faire vérifier par le club.
+
+2) Réseaux sociaux du club
+  --> À quoi ça sert : faire connaître les comptes du club (Instagram, Facebook, TikTok, YouTube...)
+      et faire venir les visiteurs du site dessus.
+  --> Sur le site : icônes cliquables dans le pied de page (visibles sur toutes les pages),
+      et éventuellement sur la page Contact.
+  --> Dans l'admin : Paramètres > Informations du club : un champ par réseau (adresse du compte).
+      Champ vide = icône masquée.
+  /!\ Mettre de simples liens, et NE PAS intégrer les publications (fil Instagram, etc.) :
+      ça alourdit le site et ajoute des cookies publicitaires (bandeau de consentement obligatoire).
+  Estimation : environ 1 heure.
+
+3) Le club en images (photos du club)
+  --> À quoi ça sert : montrer les installations (courts, club-house, vestiaires...) et l'ambiance,
+      pour donner envie de venir.
+  --> Sur le site : une section photos sur la page "Le club" (galerie ou diaporama),
+      par exemple à côté de la partie "Les terrains".
+  --> Dans l'admin : réutiliser la Galerie qui existe déjà, avec une catégorie spéciale
+      (ex : "Le club") dont les photos s'affichent aussi sur la page Le club. Rien de nouveau à apprendre.
+  Estimation : environ 2 heures.
+
+4) Mettre les sponsors
+  --> À quoi ça sert : remercier et mettre en avant les entreprises qui soutiennent le club
+      (c'est souvent une contrepartie promise aux sponsors).
+  --> Sur le site : un bandeau de logos sur l'accueil (et/ou dans le pied de page),
+      chaque logo menant au site du sponsor ; la liste complète sur la page Partenariat (idée 6).
+  --> Dans l'admin : nouvelle page "Partenaires" : logo, nom, lien vers leur site, ordre d'affichage,
+      afficher ou non (sur le modèle des pages Entraîneurs / Bureau).
+  /!\ Demander l'accord des sponsors pour utiliser leur logo.
+
+5) Règlement intérieur du club
+  --> À quoi ça sert : que chaque adhérent puisse lire le règlement avant de s'inscrire
+      (souvent, la fiche d'inscription demande de l'avoir lu et accepté).
+  --> Sur le site : un PDF à télécharger sur la page "Le club" (partie inscription)
+      + un lien dans le pied de page.
+  --> Dans l'admin : envoyer / remplacer le PDF (voir "Documents du club" ci-dessous).
+  --> Option : afficher le règlement directement en texte sur une page, plutôt qu'en PDF.
+
+6) Page Partenariat
+  --> À quoi ça sert : trouver de nouveaux sponsors en expliquant aux entreprises pourquoi
+      et comment soutenir le club.
+  --> Sur le site : une page "Devenir partenaire" (lien dans le menu ou le pied de page) :
+      présentation du club en chiffres (adhérents, équipes, événements), ce que le club propose
+      en échange (logo sur le site, banderole aux courts, maillots, tournois...), la liste
+      des partenaires actuels (idée 4), une plaquette PDF à télécharger, et un bouton de contact.
+  --> Dans l'admin : les textes de la page dans Paramètres > Textes du site, les logos dans
+      la page "Partenaires", et un nouveau sujet "Partenariat" dans le formulaire de contact.
+  Estimation des idées 4 + 6 ensemble : environ une journée.
+
+7) *Faire plusieurs fiches d'inscription*
+  --> Aujourd'hui : une seule fiche PDF par formule de tarif (page Tarifs de l'admin).
+  --> Besoin : plusieurs documents selon le cas, par exemple fiche adulte, fiche enfant /
+      école de tennis, fiche compétition, fiche stage, autorisation parentale, droit à l'image...
+  --> Deux solutions possibles (à choisir) :
+      a) plusieurs PDF par formule (ex : la formule "Enfant" a la fiche + l'autorisation parentale) ;
+      b) une page "Documents du club" (voir ci-dessous) où l'on range tous les documents
+         par catégorie, la fiche principale restant attachée à chaque formule.
+
+=> Fonctionnalité commune "Documents du club" (regroupe les idées 1, 5 et 7)
+  --> Dans l'admin : une seule page "Documents" pour envoyer des PDF avec un titre, une catégorie
+      (Inscription, Santé, Règlement...) et un ordre d'affichage.
+  --> Sur le site : une partie "Documents utiles" sur la page Le club (ou une page à part),
+      avec pour chaque document : voir / télécharger / imprimer (comme les fiches des tarifs aujourd'hui).
+  --> Avantage : une seule chose à apprendre pour le club, et les futurs documents s'y ajoutent sans code.
+  Estimation : environ une demi-journée.
+
+Questions à poser au club ce soir :
+  --> Quels documents d'inscription existent (fiches, questionnaire de santé, autorisation parentale,
+      droit à l'image, règlement) ? Qui peut les fournir en PDF ?
+  --> Le club a-t-il des comptes sur les réseaux sociaux ? Lesquels, et qui les gère ?
+  --> Quels sont les sponsors actuels ? Ont-ils donné leur accord pour leur logo ? Qui fournit les logos ?
+  --> Le club cherche-t-il de nouveaux partenaires ? Que peut-il leur proposer en échange ?
+  --> Qui peut prendre de belles photos des installations ?
+  --> Par quoi commencer ? (proposition : réseaux sociaux et photos du club, rapides,
+      puis "Documents du club", puis "Partenaires" + page Partenariat)
