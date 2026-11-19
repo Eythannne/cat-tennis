@@ -129,8 +129,8 @@ include '../templates/navbar.php';
 
 <?php include '../templates/footer.php'; ?>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/personnages.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/jeu-echange.js"></script>
+<script src="<?= ressource('js/main.js') ?>"></script>
+<script src="<?= ressource('js/personnages.js') ?>"></script>
+<script src="<?= ressource('js/jeu-echange.js') ?>"></script>
 </body>
 </html>

@@ -140,7 +140,7 @@ include '../templates/navbar.php';
 <!-- Footer -->
 <?php include '../templates/footer.php'; ?>
 
-<script src="assets/js/main.js"></script>
+<script src="<?= ressource('js/main.js') ?>"></script>
 <script>
 // Pop-up de la fiche d'inscription : chaque carte de tarif ouvre le PDF de sa formule
 (function() {

@@ -32,6 +32,7 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 | `public/jeu-echange.php`, `public/assets/js/jeu-echange.js` | Jeu « Un petit échange » : page et jeu (canvas) |
 | `public/assets/js/personnages.js` | Personnages des jeux en style dessin animé (dessinés en canvas, réutilisables) |
 | `public/api/jeux.php` | API des scores, commune à tous les jeux |
+| `public/pedagogie.php`, `templates/pedagogie/*.php`, `public/assets/css/pedagogie.css`, `public/assets/js/pedagogie.js`, `public/api/pedagogie.php` | Page Pédagogie : page, un fichier par onglet, style, script, flux du calendrier interne |
 | `public/assets/` | `css/style.css` (site), `js/main.js` (menu, interactions), images, polices et bibliothèques (FullCalendar, Leaflet, Cropper) |
 | `public/assets/uploads/` | Fichiers envoyés depuis l'admin (`articles/`, `entraineurs/`, `bureau/`, `documents/`, galerie). **Hors Git.** |
 | `templates/` | Morceaux communs : `head.php` (balises meta, partage), `navbar.php`, `footer.php`, `stats.php` (chiffres clés), `cartes-personnes.php` (bureau / entraîneurs), `article-contenu.php` (article et aperçu) |
@@ -39,6 +40,7 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 | `src/textes.php` | Textes du site modifiables dans l'admin, avec leurs valeurs par défaut |
 | `src/ia.php` | Génération d'articles avec l'API Gemini |
 | `src/jeux.php` | Espace Jeux côté serveur : liste des jeux (`JEUX`), jetons de partie, pseudos, classements |
+| `src/pedagogie.php` | Page Pédagogie côté serveur : listes (niveaux, âges, catégories, lieux), validation, publication sur le calendrier public |
 | `src/config/database.php` | Identifiants de la base. **Hors Git** (modèle : `database.example.php`) |
 | `admin/session.php` | Session sécurisée, CSRF, traitement des images et des fichiers envoyés |
 | `admin/auth.php` | À inclure en haut de chaque page admin : connexion obligatoire, déconnexion automatique, rôle, purges RGPD |
@@ -51,11 +53,11 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 
 ## 3. Base de données
 
-11 tables, toutes en `utf8mb4_unicode_ci` (accents et emojis).
+14 tables, toutes en `utf8mb4_unicode_ci` (accents et emojis).
 
 | Table | Contenu | Colonnes notables |
 |---|---|---|
-| `admins` | Comptes de l'administration | `role` (`fondateur`, `administrateur`, `moderateur`), `email` unique, `mot_de_passe` (hash) |
+| `admins` | Comptes de l'administration | `role` (`fondateur`, `administrateur`, `moderateur`, `peda`), `email` unique, `mot_de_passe` (hash) |
 | `articles` | Actualités | `contenu` (syntaxe simplifiée, voir §6), `image`, `publie`, `published_at` (date de publication, future = programmée) |
 | `evenements` | Calendrier | `date_debut`, `date_fin`, `type` (`tournoi`, `cours`, `evenement`, `vacances`, `autre`) — la couleur dépend du type |
 | `galerie` | Photos | `fichier`, `categorie`, `ordre` |
@@ -64,6 +66,9 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 | `messages_contact` | Formulaire de contact | `sujet` (clé de `SUJETS_CONTACT`), `lu` — supprimés automatiquement après 3 ans |
 | `parametres` | Réglages clé / valeur | `cle` unique, `valeur` (voir ci-dessous) |
 | `journal` | Actions importantes | `admin_nom` (conservé même si le compte est supprimé), `categorie`, `ip` — conservées 12 mois |
+| `peda_animations` | Fiches d'animations (page Pédagogie) | `categorie`, `niveaux` et `ages` (clés séparées par des virgules, voir `PEDA_NIVEAUX` / `PEDA_AGES`), `prix`, `main_oeuvre_nb`, `participation_prix` |
+| `peda_calendrier` | Calendrier interne des animations | `animation_id` (fiche d'origine, peut être NULL), `evenement_id` (événement public si publiée) |
+| `peda_exercices` | Bibliothèque d'exercices | `description`, `utilite`, `cas_usage`, `points_attention` |
 | `jeux_scores` | Scores de tous les jeux | `jeu` (identifiant du jeu), `pseudo`, `score`, `duree` (mesurée par le serveur), `jeton` unique (un score par partie), `membre_id` (prévu pour le futur espace membre) |
 
 ### Clés de la table `parametres`
@@ -77,6 +82,7 @@ Navigateur ──► .htaccess (racine) ──► public/   (site public, racine
 | `saison` | Saison affichée au-dessus des tarifs |
 | `groupe_entraineurs_photo`, `groupe_bureau_photo` (+ `_legende`) | Photos de groupe |
 | `gemini_api_key`, `gemini_modele`, `prompt_ia_articles` | Réglages de l'IA (vides = valeurs par défaut de `src/ia.php`) |
+| `peda_programmation_pdf`, `peda_programmation_notes`, `peda_criteres_<niveau>` | Page Pédagogie : document de programmation annuelle (dans `uploads/pedagogie/`), notes, critères de passage |
 | `jeux_secret` | Clé qui signe les jetons des jeux, créée automatiquement au premier usage (propre à chaque installation) |
 
 Les paramètres se lisent avec `param('cle', 'défaut')`. Une valeur vide renvoie le défaut.
@@ -91,6 +97,7 @@ Les paramètres se lisent avec `param('cle', 'défaut')`. Une valeur vide renvoi
 | `limite_atteinte()`, `limite_enregistrer()` | `src/init.php` | Limiter des actions par adresse IP (connexion, contact, IA) |
 | `format_article()`, `texte_brut()` | `src/init.php` | Convertir la syntaxe des articles en HTML / en texte seul |
 | `sql_article_visible()` | `src/init.php` | Condition SQL « publié et date de publication passée » |
+| `ressource()`, `ressource_admin()` | `src/init.php` | Adresse d'un fichier CSS ou JS avec sa date de modification (`?v=…`), pour que les navigateurs rechargent la nouvelle version après une mise à jour |
 | `jours_feries()`, `quand_evenement()`, `date_fr()` | `src/init.php` | Jours fériés (calculés, Pâques comprise), dates en français |
 | `est_fondateur()`, `est_administrateur()`, `exiger_*()`, `lecture_seule_pour_moderateur()` | `admin/_layout.php` | Contrôle des droits |
 | `csrf_field()`, `csrf_check()` | `admin/session.php` | Jeton anti-falsification des formulaires |
@@ -157,6 +164,14 @@ La balle flottante qui mène à l'espace Jeux est dans `templates/footer.php` (s
 
 Le jeu apparaît alors tout seul sur la page Jeux, dans l'API des scores et dans l'admin (un onglet par jeu). Aucune migration n'est nécessaire.
 
+### Page Pédagogie
+
+La page `public/pedagogie.php` charge un fichier par onglet (`templates/pedagogie/animations.php`, `calendrier.php`, `exercices.php`). Tous les formulaires sont traités par `peda_traiter()` (`src/pedagogie.php`), puis la page est rechargée (?ok=…).
+
+- **Publication** : `peda_publier()` crée un événement de type « Animation » dans `evenements` et garde son identifiant dans `peda_calendrier.evenement_id`. Modifier une date publiée met l'événement public à jour ; retirer ou supprimer la date le supprime. Si l'événement public a été supprimé depuis l'admin, il n'est pas recréé sans action.
+- **Accès** : ⚠ ouvert à tous pendant la phase de test, sans compte. En contrepartie : 120 modifications maximum par heure et par IP, chaque action notée dans le Journal (« Visiteur (page Pédagogie) », catégorie `pedagogie`), page en `noindex` et interdite dans `robots.txt`. À terme : réservée au rôle `peda` (voir `docs/idee-a-ajouter.txt`), il faudra alors exiger une session admin et un jeton CSRF sur les formulaires.
+- **Rôle Peda** : `PAGES_PEDA` (`admin/_layout.php`) et un contrôle dans `admin/auth.php` limitent pour l'instant ces comptes à « Mon compte ».
+
 ## 8. Sécurité
 
 | Mesure | Détail |
@@ -188,6 +203,7 @@ Les bibliothèques JavaScript et la police d'écriture sont **hébergées dans l
 
 - **Un texte modifiable** : ajouter une entrée dans `TEXTES_SITE` (`src/textes.php`), puis l'afficher avec `<?= t('ma_cle') ?>`. Il apparaît automatiquement dans Paramètres > Textes du site.
 - **Une page admin** : créer `admin/ma-page.php` commençant par `require_once 'auth.php';`, puis l'ajouter à `MENU_ADMIN`. L'ajouter aussi à `PAGES_ADMINISTRATEURS` ou `PAGES_FONDATEUR` si elle doit être restreinte, et appeler `exiger_*()` en haut du fichier.
+- **Un fichier CSS ou JS** : toujours le charger avec `ressource('css/mon-fichier.css')` (fichiers de `public/assets/`) ou `ressource_admin('mon-fichier.js')` (dossier `admin/`), jamais avec une adresse écrite à la main : sinon les visiteurs risquent de garder l'ancienne version en cache.
 - **Une page publique** : créer `public/ma-page.php` sur le modèle d'une page existante (`require_once '../src/init.php'`, puis `head.php`, `navbar.php`, `footer.php`), et l'ajouter au menu (`templates/navbar.php`) et au sitemap.
 - **Un changement de structure de la base** : suivre la procédure de [sql/README.md](../sql/README.md).
 - **Une action à tracer** : appeler `journaliser('categorie', 'description')`. La catégorie doit exister dans `JOURNAL_CATEGORIES`.

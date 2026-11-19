@@ -64,6 +64,13 @@ Le menu contient : **Accueil · Le club · Actualités · Calendrier · Contact*
 - Les **15 meilleurs joueurs** de chaque jeu apparaissent dans un tableau des scores en ligne. Il suffit d'un pseudo pour jouer, et les pseudos grossiers sont refusés.
 - Objectif : rendre le site plus vivant et donner envie d'y revenir. Plus tard, avec l'espace membre, chacun pourra jouer avec son compte.
 
+### Espace pédagogique (entraîneurs)
+- Un lien discret **« Espace pédagogique »** en bas du site mène à l'espace des entraîneurs.
+- **Animations** : une bibliothèque de fiches d'animations de club (olympiade, soirée jeux vidéo, galette des rois…), avec niveaux, âges, durée, coût, besoin de bénévoles et participation demandée aux membres.
+- **Calendrier** interne pour planifier ces animations sur l'année, et un bouton pour les **publier sur le calendrier public** en un clic.
+- **Exercices** : une bibliothèque d'exercices de tennis, la programmation annuelle du directeur sportif et les critères de passage d'une balle à l'autre.
+- Un rôle **Peda** est prévu pour les comptes des entraîneurs : à terme, cet espace leur sera réservé.
+
 ### Autres éléments
 - **Mentions légales** complètes : éditeur, hébergeur, RGPD, cookies, services tiers.
 - **Page d'erreur 404** personnalisée, aux couleurs du club.

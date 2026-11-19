@@ -59,6 +59,10 @@ admin_header('Mon compte', 'compte', '<style>
         <?php if (!est_administrateur()): ?>
             <p class="form-hint" style="margin-top:14px">Pour modifier votre nom, votre email ou votre rôle, demandez à un administrateur.</p>
         <?php endif; ?>
+        <?php if (est_peda()): ?>
+            <div class="alert alert-info" style="margin:14px 0 0">🧑‍🏫 Votre compte <strong>Peda</strong> (entraîneurs) n'a pas encore d'accès dans l'administration.
+                L'espace pédagogique est accessible depuis le lien « Espace pédagogique » en bas du site.</div>
+        <?php endif; ?>
     </div>
 
     <div class="card">

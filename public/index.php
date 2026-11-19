@@ -149,7 +149,7 @@ $pageDesc = param('description', "Bienvenue sur le site officiel du Club Aulnays
     <div class="meteo-week" id="mp-week"></div>
 </div>
 
-    <script src="assets/js/main.js"></script>
+    <script src="<?= ressource('js/main.js') ?>"></script>
     <script>
     /* ══ WIDGET MÉTÉO FIXE — Open-Meteo, Aulnay-sous-Bois ══ */
     const METEO_URL = 'https://api.open-meteo.com/v1/forecast'

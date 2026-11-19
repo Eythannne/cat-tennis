@@ -12,7 +12,7 @@ SET NAMES utf8mb4;
 CREATE TABLE `admins` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `role` enum('fondateur','administrateur','moderateur') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'moderateur',
+  `role` enum('fondateur','administrateur','moderateur','peda') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'moderateur',
   `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `mot_de_passe` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -137,6 +137,52 @@ CREATE TABLE `jeux_scores` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `jeton` (`jeton`),
   KEY `idx_jeu_score` (`jeu`,`score`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `peda_animations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `categorie` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'tennistique',
+  `categorie_autre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `lieu` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `lieu_precision` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `niveaux` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `ages` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `duree` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `deroulement` text COLLATE utf8mb4_unicode_ci,
+  `prix` decimal(8,2) DEFAULT NULL,
+  `main_oeuvre` tinyint(1) NOT NULL DEFAULT '0',
+  `main_oeuvre_nb` int DEFAULT NULL,
+  `participation` tinyint(1) NOT NULL DEFAULT '0',
+  `participation_prix` decimal(8,2) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `peda_calendrier` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `animation_id` int DEFAULT NULL,
+  `titre` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `date_debut` datetime NOT NULL,
+  `date_fin` datetime DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `evenement_id` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_date` (`date_debut`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `peda_exercices` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `titre` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `utilite` text COLLATE utf8mb4_unicode_ci,
+  `cas_usage` text COLLATE utf8mb4_unicode_ci,
+  `points_attention` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

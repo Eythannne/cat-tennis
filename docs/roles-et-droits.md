@@ -1,12 +1,13 @@
 # Rôles et droits
 
-L'administration distingue **3 rôles**. Chaque compte en a un seul.
+L'administration distingue **4 rôles**. Chaque compte en a un seul.
 
 | Rôle | Pour qui | En résumé |
 |---|---|---|
 | 👑 **Fondateur** | Le créateur et responsable technique du site (un seul compte) | Accès complet, réglages de l'IA, journal des actions, scores des jeux |
 | 🛡️ **Administrateur** | Membres du bureau (président·e, secrétaire…) | Tout le site, y compris les comptes et les paramètres (sauf l'IA) |
 | 🧑‍💼 **Modérateur** | Entraîneurs, bénévoles qui publient | Tout le contenu, mais ni les réglages ni les comptes |
+| 🧑‍🏫 **Peda** | Entraîneurs (page Pédagogie) | Aucun droit pour l'instant : uniquement « Mon compte » (voir plus bas) |
 
 ## Tableau complet
 
@@ -40,6 +41,12 @@ L'administration distingue **3 rôles**. Chaque compte en a un seul.
 | Changer son propre nom ou email | ✅ | ✅ | ❌ Doit le demander à un administrateur |
 | Changer son propre rôle | ❌ | ❌ | ❌ |
 | Supprimer son propre compte | ❌ | ❌ | ❌ |
+
+## Rôle Peda
+
+Le rôle **Peda** est prévu pour les entraîneurs. Pour l'instant, il n'a **aucun droit** dans l'administration : un compte Peda peut se connecter, mais il est renvoyé vers « Mon compte », et toutes les autres pages lui sont refusées.
+
+La **page Pédagogie** (lien « Espace pédagogique » en bas du site) est pour l'instant **ouverte à tous**, pendant la phase de test du site. À terme, elle sera réservée aux comptes Peda (voir `docs/idee-a-ajouter.txt`).
 
 ## À retenir
 

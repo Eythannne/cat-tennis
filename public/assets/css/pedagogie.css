@@ -1,0 +1,128 @@
+/* ── Page Pédagogie (public/pedagogie.php) ─────────────────────────────────── */
+.page-hero--pedagogie { --banniere: url('../images/banniere-club.jpg'); }  /* remplaçable par une banniere-pedagogie.jpg dédiée */
+.section-peda { padding: 36px 0 70px; }
+.section-peda .container { max-width: 1100px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Onglets */
+.peda-onglets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 22px; border-bottom: 2px solid var(--border); }
+.peda-onglets a { padding: 12px 20px; text-decoration: none; color: var(--muted); font-weight: 700; font-family: 'Outfit', sans-serif;
+    border-bottom: 3px solid transparent; margin-bottom: -2px; border-radius: 8px 8px 0 0; }
+.peda-onglets a:hover { color: var(--vert); background: var(--white); }
+.peda-onglets a.actif { color: var(--vert); border-bottom-color: var(--jaune); background: var(--white); }
+.peda-sous-onglets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+
+/* Messages */
+.peda-alerte { padding: 12px 16px; border-radius: 10px; margin-bottom: 18px; font-size: 0.92rem; }
+.peda-alerte ul { margin: 6px 0 0 20px; }
+.peda-alerte--ok { background: var(--vert-light); color: var(--vert-dark); }
+.peda-alerte--erreur { background: #FDECEA; color: #A93226; }
+
+.peda-entete { margin-bottom: 16px; color: var(--muted); font-size: 0.92rem; }
+.peda-vide { color: var(--muted); text-align: center; padding: 20px; }
+.peda-aide { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
+
+/* Cartes */
+.peda-carte { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow-card); margin-bottom: 18px; }
+.peda-titre-carte { font-size: 1.1rem; margin-bottom: 12px; }
+
+/* Formulaire repliable */
+.peda-formulaire > summary { cursor: pointer; font-weight: 700; color: var(--vert); font-family: 'Outfit', sans-serif; font-size: 1.05rem; list-style: none; }
+.peda-formulaire > summary::-webkit-details-marker { display: none; }
+.peda-formulaire[open] > summary { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.peda-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; }
+.peda-champ { display: flex; flex-direction: column; gap: 6px; border: none; padding: 0; margin: 0; min-width: 0; }
+.peda-champ--large, .peda-champ--duo, .peda-actions { grid-column: 1 / -1; }
+.peda-champ--duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; }
+.peda-champ--duo > div { display: flex; flex-direction: column; gap: 6px; }
+.peda-champ label, .peda-champ legend { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+.peda-champ legend { margin-bottom: 6px; }
+.peda-form input[type=text], .peda-form input[type=number], .peda-form input[type=time], .peda-form input[type=datetime-local], .peda-form input[type=file],
+.peda-form select, .peda-form textarea, .peda-recherche {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 0.92rem; background: var(--white); }
+.peda-form textarea { resize: vertical; line-height: 1.5; }
+.peda-form input:focus, .peda-form select:focus, .peda-form textarea:focus, .peda-recherche:focus { outline: none; border-color: var(--vert); }
+.peda-conditionnel { margin-top: 4px; }
+.peda-conditionnel[hidden] { display: none !important; }
+.peda-case { display: flex !important; align-items: center; gap: 8px; cursor: pointer; }
+.peda-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.peda-actions .btn-primary { border: none; cursor: pointer; font-family: inherit; font-size: 0.95rem; }
+.peda-lien { color: var(--muted); font-size: 0.9rem; }
+
+/* Puces (choix multiples, filtres, sous-onglets) */
+.peda-choix { display: flex; flex-wrap: wrap; gap: 8px; }
+.peda-puce { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 20px;
+    background: var(--white); font-size: 0.85rem; font-weight: 600; color: var(--text); cursor: pointer; text-decoration: none; font-family: inherit; }
+.peda-puce:hover { border-color: var(--vert); }
+.peda-puce:has(input:checked), .peda-puce.actif { background: var(--vert-light); border-color: var(--vert); color: var(--vert-dark); }
+.peda-puce input { accent-color: var(--vert); }
+.peda-pastille { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); flex-shrink: 0; }
+
+/* Recherche et filtres */
+.peda-filtres { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+.peda-filtres .peda-recherche { max-width: 340px; }
+
+/* Fiches d'animations */
+.peda-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.peda-grille .peda-carte { margin-bottom: 0; display: flex; flex-direction: column; gap: 10px; }
+.peda-fiche[hidden], .peda-exercice[hidden] { display: none; }
+.peda-fiche-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.peda-fiche-tete h3 { font-size: 1.08rem; color: var(--dark); }
+.peda-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.peda-badge--tennistique { background: var(--vert-light); color: var(--vert-dark); }
+.peda-badge--extrasportif { background: #EDE3F5; color: #6C3483; }
+.peda-badge--autre { background: #FFF4C2; color: #8a6d00; }
+.peda-badge--publie { background: var(--vert-light); color: var(--vert-dark); }
+.peda-badge--interne { background: #EDE3F5; color: #6C3483; }
+.peda-infos { list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; color: var(--text); }
+.peda-etiquettes { display: flex; flex-wrap: wrap; gap: 6px; }
+.peda-etiquette { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; background: var(--bg); font-size: 0.78rem; font-weight: 600; }
+.peda-etiquette--age { background: #EAF2FB; color: #1f4e79; }
+.peda-deroulement summary { cursor: pointer; font-size: 0.85rem; font-weight: 700; color: var(--vert); }
+.peda-deroulement div { margin-top: 8px; font-size: 0.88rem; line-height: 1.6; color: var(--text); }
+.peda-fiche-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 6px; }
+.peda-bouton { display: inline-flex; align-items: center; gap: 4px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--white); color: var(--text); font-size: 0.82rem; font-weight: 600; text-decoration: none; cursor: pointer; font-family: inherit; }
+.peda-bouton:hover { border-color: var(--vert); color: var(--vert); }
+.peda-bouton--danger:hover { border-color: #C0392B; color: #C0392B; }
+.peda-bouton--publier { background: var(--vert); border-color: var(--vert); color: #fff; }
+.peda-bouton--publier:hover { background: var(--vert-dark); color: #fff; }
+
+/* Calendrier interne */
+.peda-legende { margin-bottom: 12px; }
+.section-peda #calendar { margin-bottom: 22px; }
+.peda-planifs { list-style: none; }
+.peda-planif { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.peda-planif:last-child { border-bottom: none; }
+.peda-planif-date { width: 58px; text-align: center; border-radius: 10px; background: var(--vert-light); color: var(--vert-dark); padding: 6px 0; flex-shrink: 0; }
+.peda-planif-date b { display: block; font-size: 1.3rem; line-height: 1; }
+.peda-planif-date small { font-size: 0.7rem; text-transform: uppercase; line-height: 1.2; display: block; }
+.peda-planif-infos { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 3px; }
+.peda-planif-infos span { font-size: 0.84rem; color: var(--muted); }
+.peda-planif-infos .peda-badge { align-self: flex-start; }
+.peda-planif .peda-fiche-actions { margin-top: 0; padding-top: 0; }
+.peda-passees { margin-top: 12px; }
+.peda-passees summary { cursor: pointer; font-weight: 700; color: var(--muted); font-size: 0.9rem; }
+
+/* Exercices */
+.peda-exercice > summary { cursor: pointer; font-weight: 700; font-size: 1.02rem; color: var(--dark); }
+.peda-exercice[open] > summary { margin-bottom: 12px; color: var(--vert); }
+.peda-exercice-corps { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+.peda-exercice-corps .peda-fiche-actions { grid-column: 1 / -1; }
+.peda-rubrique h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--vert); margin-bottom: 4px; }
+.peda-rubrique p { font-size: 0.9rem; line-height: 1.6; }
+.peda-rubrique--description { grid-column: 1 / -1; }
+.peda-rubrique--points_attention { background: #FFF8E1; border-left: 3px solid var(--jaune); padding: 10px 12px; border-radius: 6px; }
+.peda-pdf { width: 100%; height: 640px; border: 1px solid var(--border); border-radius: 8px; margin-top: 14px; }
+.peda-pdf-actions { margin-top: 0; padding-top: 0; }
+.peda-criteres { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; grid-column: 1 / -1; }
+.peda-criteres .peda-carte { margin-bottom: 0; }
+.peda-critere h3 { display: flex; align-items: center; gap: 8px; font-size: 1rem; margin-bottom: 10px; }
+.peda-critere textarea { width: 100%; }
+
+@media (max-width: 700px) {
+    .peda-form, .peda-champ--duo, .peda-exercice-corps { grid-template-columns: 1fr; }
+    .peda-onglets a { padding: 10px 12px; font-size: 0.9rem; }
+    .peda-carte { padding: 16px; }
+    .peda-pdf { height: 420px; }
+}

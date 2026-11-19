@@ -117,6 +117,27 @@ Sur le site, les visiteurs peuvent voir, télécharger ou imprimer la fiche PDF 
 
 ---
 
+## 🧑‍🏫 Page Pédagogie (entraîneurs)
+
+Lien **« Espace pédagogique »** tout en bas du site (dans la ligne du copyright). Pour l'instant, la page est accessible sans compte.
+
+**🎉 Animations** : la bibliothèque des animations de club.
+- **＋ Nouvelle animation** : nom, catégorie (tennistique, extrasportif ou autre, à préciser), lieu (et une précision), niveaux concernés, âges, durée, prix (coût pour le club), déroulement.
+- Cocher **« Besoin de main d'œuvre »** pour indiquer combien de personnes il faut, et **« Demander une participation »** pour indiquer le prix demandé aux membres.
+- Sur chaque fiche : **Modifier**, **Planifier** (ouvre le calendrier avec l'animation déjà choisie) et 🗑️ supprimer. Une recherche et un filtre par catégorie aident à retrouver une animation.
+
+**📅 Calendrier** : le calendrier interne des entraîneurs, invisible sur le site.
+- **＋ Planifier une animation** : choisir une animation de la bibliothèque (ou saisir un titre libre), les dates et une description.
+- **🌐 Publier sur le calendrier public** : l'animation apparaît dans le calendrier que voient tous les visiteurs. Une fois publiée, toute modification est aussi appliquée au calendrier public. **↩️ Retirer du calendrier public** l'enlève du site, mais elle reste dans le calendrier interne.
+- Cliquer sur une animation du calendrier ouvre sa fiche de modification. Violet = interne, vert = publiée.
+
+**🎾 Exercices**, en trois parties :
+- **Bibliothèque d'exercices** : une fiche par exercice (description, à quoi ça sert, dans quel cas l'utiliser, points d'attention), avec une recherche.
+- **Programmation annuelle** : le document PDF du directeur sportif, affiché dans la page, avec des notes sur la répartition des thèmes. On peut le remplacer ou le supprimer.
+- **Critères de passage** : pour chaque étape (Blanc → Violet → Rouge → Orange → Vert → Dur → Pôle compétition), les critères qu'un enfant doit remplir. Une ligne par critère, puis **Enregistrer les critères**.
+
+---
+
 ## 🕹️ Jeux (fondateur uniquement)
 
 Sur le site, une balle de tennis en bas à gauche de chaque page mène à l'**espace Jeux**, qui regroupe les petits jeux du site (pour l'instant « Un petit échange »). Les visiteurs y entrent un pseudo, et leurs meilleurs scores apparaissent dans le top 15 de chaque jeu.

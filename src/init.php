@@ -37,6 +37,20 @@ const MOIS_FR = ['01' => 'Janvier', '02' => 'Février', '03' => 'Mars', '04' => 
                  '05' => 'Mai', '06' => 'Juin', '07' => 'Juillet', '08' => 'Août',
                  '09' => 'Septembre', '10' => 'Octobre', '11' => 'Novembre', '12' => 'Décembre'];
 
+// ── Fichiers CSS / JS avec leur date de modification (?v=...) ─────────────────
+// Le navigateur garde ces fichiers en cache : dès qu'un fichier change, sa date change aussi,
+// donc son adresse, et les visiteurs reçoivent la nouvelle version sans avoir à faire Ctrl+F5.
+// ressource('css/style.css') → /assets/css/style.css?v=1763548800 (fichiers de public/assets/)
+function ressource($chemin) {
+    $fichier = __DIR__ . '/../public/assets/' . $chemin;
+    return BASE_URL . '/assets/' . $chemin . (is_file($fichier) ? '?v=' . filemtime($fichier) : '');
+}
+// ressource_admin('admin.css') → admin.css?v=... (fichiers du dossier admin/, adresse relative)
+function ressource_admin($fichier) {
+    $chemin = __DIR__ . '/../admin/' . $fichier;
+    return $fichier . (is_file($chemin) ? '?v=' . filemtime($chemin) : '');
+}
+
 // ── Adresses complètes (partage sur les réseaux, sitemap) ─────────────────────
 function url_site($chemin = '') {
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
@@ -94,6 +108,7 @@ const JOURNAL_CATEGORIES = [
     'tarif'      => ['💶', 'Tarifs'],
     'message'    => ['✉️', 'Messages'],
     'jeu'        => ['🕹️', 'Jeux'],
+    'pedagogie'  => ['🧑‍🏫', 'Pédagogie'],
 ];
 
 // Enregistre une action. Par défaut, l'auteur est le compte connecté ;

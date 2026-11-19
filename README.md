@@ -2,7 +2,7 @@
 
 Site internet du **Club Aulnaysien de Tennis** (Aulnay-sous-Bois, 93), avec un espace d'administration complet qui permet au club de tout gérer lui-même, sans connaissance technique.
 
-- **Site public** : accueil, présentation du club (terrains, bureau, entraîneurs, tarifs et fiches d'inscription PDF), actualités et galerie photos, calendrier des événements, formulaire de contact avec carte, et un espace Jeux (premier jeu : tennis) avec tableaux des scores.
+- **Site public** : accueil, présentation du club (terrains, bureau, entraîneurs, tarifs et fiches d'inscription PDF), actualités et galerie photos, calendrier des événements, formulaire de contact avec carte, un espace Jeux (premier jeu : tennis) avec tableaux des scores, et un espace pédagogique pour les entraîneurs.
 - **Administration** : articles (brouillon, publication programmée, génération par IA), événements, galerie, équipe, tarifs, messages, textes du site, comptes avec 3 rôles (fondateur, administrateur, modérateur), journal des actions.
 
 ## Technologies

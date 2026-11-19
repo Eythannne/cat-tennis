@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Connexion — Back-office CAT</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="../public/favicon.png">
-    <link rel="stylesheet" href="../public/assets/css/style.css">
+    <link rel="stylesheet" href="<?= ressource('css/style.css') ?>">
     <style>
         body { background: var(--vert-dark); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
         .login-box { background: #fff; padding: 40px 36px; border-radius: 10px; border-top: 4px solid var(--jaune); box-shadow: 0 8px 32px rgba(0,0,0,0.25); width: 100%; max-width: 420px; }

@@ -42,7 +42,7 @@ Clic droit sur la sélection, puis « Compresser dans un fichier ZIP ». Si `pub
 
 ## 5. Vérifier après la mise en ligne
 
-- Ouvrir le site et faire **Ctrl + F5** pour charger les nouveaux CSS et JavaScript.
+- Ouvrir le site : les nouveaux CSS et JavaScript sont chargés automatiquement (leur adresse contient leur date de modification), il n'est plus nécessaire de faire Ctrl + F5.
 - Parcourir les pages modifiées, sur ordinateur et sur téléphone.
 - Se connecter à l'admin et tester la fonctionnalité ajoutée.
 - En cas de page blanche ou d'erreur : vérifier qu'une migration n'a pas été oubliée (étape 2).

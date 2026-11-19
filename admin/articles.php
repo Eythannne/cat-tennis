@@ -235,4 +235,4 @@ admin_header('Articles', 'articles', CROP_HEAD . '<style>
     </div>
 
 <?php crop_modal(); ?>
-<?php admin_footer(CROP_SCRIPTS . '<script src="editeur.js"></script>'); ?>
+<?php admin_footer(CROP_SCRIPTS . '<script src="' . ressource_admin('editeur.js') . '"></script>'); ?>

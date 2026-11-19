@@ -6,13 +6,18 @@
 //             Désigné en base de données (sql/migrations/*-fondateur.*.sql), jamais depuis l'admin.
 // Administrateur : accès complet, sauf le compte fondateur, le Journal et les réglages de l'IA.
 // Modérateur : tout le contenu, Paramètres en lecture seule, pas d'accès aux Administrateurs.
+// Peda : entraîneurs, aucun droit pour l'instant (uniquement « Mon compte »).
 const ROLES = [
     'fondateur'      => 'Fondateur',
     'administrateur' => 'Administrateur',
     'moderateur'     => 'Modérateur',
+    'peda'           => 'Peda',
 ];
 // Rôles proposés dans le formulaire des comptes (le fondateur n'est jamais attribuable)
-const ROLES_ATTRIBUABLES = ['administrateur', 'moderateur'];
+const ROLES_ATTRIBUABLES = ['administrateur', 'moderateur', 'peda'];
+// Peda (entraîneurs) : aucun droit pour l'instant, seule la page « Mon compte » est accessible.
+// À terme : accès à la page Pédagogie (voir docs/idee-a-ajouter.txt).
+const PAGES_PEDA = ['compte'];
 // Menu de l'admin, par groupes (null = sans titre). « Mon compte » est en bas de la barre latérale.
 const MENU_ADMIN = [
     [null,             ['index'      => '📊 Dashboard']],
@@ -32,6 +37,10 @@ function est_fondateur() {
 // Fondateur ou administrateur : accès complet au back-office
 function est_administrateur() {
     return in_array($_SESSION['admin_role'] ?? '', ['fondateur', 'administrateur'], true);
+}
+
+function est_peda() {
+    return ($_SESSION['admin_role'] ?? '') === 'peda';
 }
 
 // Badge coloré d'un rôle
@@ -96,6 +105,7 @@ function admin_header($titre, $page, $head = '') {
     foreach (MENU_ADMIN as [$groupe, $liens]) {
         if (!est_administrateur()) $liens = array_diff_key($liens, array_flip(PAGES_ADMINISTRATEURS));
         if (!est_fondateur())      $liens = array_diff_key($liens, array_flip(PAGES_FONDATEUR));
+        if (est_peda())            $liens = array_intersect_key($liens, array_flip(PAGES_PEDA));
         if ($liens) $menu[] = [$groupe, $liens];
     }
     ?>
@@ -107,7 +117,7 @@ function admin_header($titre, $page, $head = '') {
     <title><?= htmlspecialchars($titre) ?> — Admin CAT</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="../public/favicon.png">
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="<?= ressource_admin('admin.css') ?>">
     <?= $head ?>
 </head>
 <body>
@@ -167,10 +177,10 @@ function boutons_ordre($id, $i, $total, $fleches = ['avant' => '↑', 'apres' =>
 }
 
 // ── Recadrage d'image (voir crop.js) ─────────────────────────────────────────
-// À mettre dans le <head> de la page
-const CROP_HEAD = '<link rel="stylesheet" href="../public/assets/css/cropper.min.css">';
+// À mettre dans le <head> de la page (define et non const : l'adresse contient la date du fichier)
+define('CROP_HEAD', '<link rel="stylesheet" href="' . ressource('css/cropper.min.css') . '">');
 // À passer à admin_footer()
-const CROP_SCRIPTS = '<script src="../public/assets/js/cropper.min.js"></script><script src="crop.js"></script>';
+define('CROP_SCRIPTS', '<script src="' . ressource('js/cropper.min.js') . '"></script><script src="' . ressource_admin('crop.js') . '"></script>');
 
 // Champ "choisir une image" + aperçu, à placer dans le formulaire
 function crop_field($ratio, $width, $height) {

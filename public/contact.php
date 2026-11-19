@@ -48,7 +48,7 @@ $emailClub = param('email_contact', 'contact@cat-tennis.fr');
 $telephone = param('telephone');
 $horaires  = param('horaires');
 
-$extraHead = '<link rel="stylesheet" href="' . BASE_URL . '/assets/css/leaflet.css">
+$extraHead = '<link rel="stylesheet" href="' . ressource('css/leaflet.css') . '">
     <style>
         #map { height: 280px; border-radius: 10px; margin-top: 28px; z-index: 1; }
         /* Champ piège anti-spam : invisible pour les humains */
@@ -175,8 +175,8 @@ include '../templates/navbar.php';
 
 <?php include '../templates/footer.php'; ?>
 
-<script src="assets/js/main.js"></script>
-<script src="assets/js/leaflet.js"></script>
+<script src="<?= ressource('js/main.js') ?>"></script>
+<script src="<?= ressource('js/leaflet.js') ?>"></script>
 <script>
     // Fix chemin des images markers (servis localement)
     L.Icon.Default.imagePath = 'assets/images/';

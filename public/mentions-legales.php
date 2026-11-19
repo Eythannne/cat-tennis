@@ -82,6 +82,6 @@ include '../templates/navbar.php';
 
 <?php include '../templates/footer.php'; ?>
 
-<script src="assets/js/main.js"></script>
+<script src="<?= ressource('js/main.js') ?>"></script>
 </body>
 </html>

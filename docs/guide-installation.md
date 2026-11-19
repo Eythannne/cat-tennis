@@ -76,5 +76,5 @@ La base est vide : il faut créer le premier compte à la main.
 |---|---|
 | « Le site est momentanément indisponible » | MySQL n'est pas démarré, ou `database.php` est absent ou incorrect |
 | Page introuvable (404) sur tout le site | Le dossier ne s'appelle pas `cat-tennis`, ou Apache n'est pas démarré |
-| Le CSS ne s'affiche pas après une modification | Recharger sans le cache : **Ctrl + F5** |
+| Le CSS ne s'affiche pas après une modification | Vérifier que le fichier est chargé avec `ressource()` (voir le dossier technique) ; sinon, recharger sans le cache : **Ctrl + F5** |
 | Impossible de se connecter à l'admin | Vérifier le compte dans la table `admins` ; après 5 échecs, attendre 15 minutes |

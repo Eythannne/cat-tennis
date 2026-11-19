@@ -33,7 +33,8 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© <?= date('Y') ?> <?= htmlspecialchars(param('nom_club', 'Club Aulnaysien de Tennis')) ?> — Tous droits réservés</p>
+            <p>© <?= date('Y') ?> <?= htmlspecialchars(param('nom_club', 'Club Aulnaysien de Tennis')) ?> — Tous droits réservés
+               · <a href="<?= BASE_URL ?>/pedagogie.php" class="footer-discret">Espace pédagogique</a></p>
         </div>
     </div>
 </footer>

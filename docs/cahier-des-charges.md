@@ -24,6 +24,7 @@ Le club a besoin d'un site internet moderne pour présenter ses activités, info
 | **Adhérent** | Suivre les actualités et le calendrier du club. |
 | **Modérateur** (entraîneur, bénévole) | Publier des actualités, des événements et des photos, répondre aux messages. |
 | **Administrateur** (membre du bureau) | Tout gérer, y compris les informations du club et les comptes. |
+| **Entraîneur** (page Pédagogie, rôle Peda) | Préparer les animations, les planifier sur l'année et les publier, partager les exercices et les critères de passage. |
 | **Fondateur** (créateur et responsable technique du site) | Accès complet, gestion des réglages sensibles (clé de l'IA), journal des actions. |
 
 ## 4. Fonctionnalités attendues
@@ -39,6 +40,7 @@ Le club a besoin d'un site internet moderne pour présenter ses activités, info
 | Contact | Formulaire avec choix du sujet, protection anti-spam, coordonnées, carte interactive |
 | Mentions légales | Éditeur, responsable de publication, hébergeur, RGPD, cookies, services tiers |
 | Erreur 404 | Page personnalisée aux couleurs du club |
+| Pédagogie | Espace des entraîneurs (lien discret) : animations de club, calendrier interne avec publication sur le calendrier public, exercices, programmation annuelle, critères de passage |
 | Jeux | Espace qui regroupe des petits jeux (premier jeu : tennis), avec un tableau des 15 meilleurs scores par jeu, accessible par une balle flottante sur chaque page |
 
 ### Administration

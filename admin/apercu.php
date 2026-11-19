@@ -48,6 +48,6 @@ include '../templates/footer.php';
     👁️ Aperçu — cet article n'est pas encore enregistré
     <button type="button" onclick="window.close()">Fermer l'aperçu</button>
 </div>
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script src="<?= ressource('js/main.js') ?>"></script>
 </body>
 </html>

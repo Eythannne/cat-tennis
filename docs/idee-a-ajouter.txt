@@ -52,6 +52,15 @@
     vérifiée par le serveur, un seul score par partie), filtre des pseudos grossiers
 --> admin : page Jeux réservée au fondateur (un onglet par jeu : scores, suppression, remise à zéro)
 
+[FAIT le 19/11/2026] Page Pédagogie (entraîneurs) + rôle « Peda »
+--> lien discret « Espace pédagogique » en bas du site (page cachée des moteurs de recherche)
+--> onglet Animations : fiches (catégorie, lieu, niveaux, âges, durée, déroulement, prix, main d'œuvre,
+    participation des membres), recherche et filtre par catégorie
+--> onglet Calendrier : calendrier interne + bouton « Publier sur le calendrier public » (synchronisé)
+--> onglet Exercices : bibliothèque d'exercices, programmation annuelle (PDF + notes), critères de passage
+--> rôle Peda créé (aucun droit pour l'instant : uniquement « Mon compte »)
+
+
 =================================================================================
                               🔜 RESTE À FAIRE
 =================================================================================
@@ -243,3 +252,17 @@ Espace Jeux : ce qui reste (en place depuis le 19/11/2026, voir "Fait")
   --> ajouter d'autres jeux (idées à trouver avec le club)
   --> ajouter d'autres personnages (une ligne dans public/assets/js/personnages.js)
   --> idée possible : "meilleur score de la semaine" sur l'accueil
+
+
+flappy bird balle de tennis
+
+---------------------------------------------------------------------------------
+
+Page Pédagogie : réserver l'accès au rôle Peda (ajouté le 19/11/2026)
+Pour l'instant, la page est ouverte à tous (site en phase de test).
+  --> seuls les comptes ayant le rôle Peda (et le fondateur ?) auront accès à la page Pédagogie,
+      avec tous les droits sur cette partie (créer, modifier, supprimer, publier sur le calendrier public)
+  --> technique : exiger une connexion (session de l'admin) sur public/pedagogie.php et public/api/pedagogie.php,
+      ajouter le jeton CSRF sur les formulaires, et ajouter la page dans les droits du rôle Peda
+      (PAGES_PEDA dans admin/_layout.php) ; le Journal indiquera alors le vrai nom de l'entraîneur
+  --> à faire au plus tard avant l'ouverture officielle du site

@@ -26,6 +26,6 @@ include '../templates/navbar.php';
     </div>
 </section>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script src="<?= ressource('js/main.js') ?>"></script>
 </body>
 </html>

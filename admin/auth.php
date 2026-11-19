@@ -57,6 +57,14 @@ if ($role === false) {
 }
 $_SESSION['admin_role'] = $role;
 
+// Rôle Peda : aucun droit pour l'instant, seule la page « Mon compte » est accessible
+// (le Dashboard, qui affiche les messages de contact, renvoie vers « Mon compte »)
+$pageAdmin = basename($_SERVER['SCRIPT_NAME'], '.php');
+if ($role === 'peda' && !in_array($pageAdmin, [...PAGES_PEDA, 'quitter'], true)) {
+    if ($pageAdmin === 'index') auth_refuser('compte.php');
+    acces_refuse();
+}
+
 // RGPD : suppression automatique des messages de contact trop anciens
 $pdo->prepare("DELETE FROM messages_contact WHERE created_at < ?")
     ->execute([date('Y-m-d H:i:s', strtotime('-' . CONSERVATION_MESSAGES_ANS . ' years'))]);

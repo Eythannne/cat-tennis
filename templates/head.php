@@ -28,6 +28,6 @@ $ogUrl   = url_site(basename($_SERVER['SCRIPT_NAME']) . (!empty($_SERVER['QUERY_
 
     <link rel="icon" type="image/png" href="<?= BASE_URL ?>/favicon.png">
     <link rel="apple-touch-icon" href="<?= BASE_URL ?>/favicon.png">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?= ressource('css/style.css') ?>">
     <?= $extraHead ?? '' ?>
 </head>

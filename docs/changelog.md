@@ -2,6 +2,19 @@
 
 Les modifications du site, de la plus récente à la plus ancienne. Le détail de chaque changement est dans l'historique Git.
 
+## 19 novembre 2026 — Mise à jour automatique des CSS et JS
+- Tous les fichiers CSS et JavaScript sont chargés avec leur date de modification (`?v=…`) : après une mise en ligne, les visiteurs reçoivent la nouvelle version sans avoir à vider leur cache (fonctions `ressource()` et `ressource_admin()`).
+- Page Pédagogie : la durée d'une animation se saisit au format heures:minutes et s'affiche « 2 h 30 ».
+
+## 19 novembre 2026 — Page Pédagogie (entraîneurs)
+- Nouvelle page **Pédagogie**, accessible par un lien discret « Espace pédagogique » en bas du site, avec 3 onglets :
+  - **Animations** : fiches d'animations de club (catégorie, lieu, niveaux, âges, durée, déroulement, prix, main d'œuvre, participation des membres) ;
+  - **Calendrier** : calendrier interne pour planifier les animations, avec un bouton « Publier sur le calendrier public » (les modifications suivent, le retrait est possible) ;
+  - **Exercices** : bibliothèque d'exercices, programmation annuelle (PDF du directeur sportif + notes), critères de passage à la balle supérieure.
+- Nouveau rôle **Peda** pour les comptes des entraîneurs (sans droits pour l'instant).
+- Accès ouvert pendant la phase de test : modifications limitées par adresse IP, notées dans le Journal, page cachée des moteurs de recherche.
+- Nouvelles tables `peda_animations`, `peda_calendrier`, `peda_exercices` (migration `2026-11-19_2-pedagogie`).
+
 ## 19 novembre 2026 — Espace Jeux
 - Nouvelle page **Jeux**, qui regroupe les petits jeux du site (prévue pour en ajouter d'autres facilement).
 - Premier jeu, **« Un petit échange »** : renvoyer la balle le plus longtemps possible, elle accélère à chaque échange. Jouable au clavier et sur téléphone.

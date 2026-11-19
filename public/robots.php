@@ -10,5 +10,7 @@ Disallow: <?= $admin ?>
 
 Disallow: <?= BASE_URL ?>/api/
 
+Disallow: <?= BASE_URL ?>/pedagogie.php
+
 Sitemap: <?= url_site('sitemap.xml') ?>
 
